@@ -14,7 +14,7 @@ export async function Header() {
           {session && (
             <nav className="hidden items-center gap-1 rounded-full border border-white/8 bg-white/[0.03] p-1 md:flex">
               <a
-                href="#overview"
+                href="#home"
                 className="rounded-full px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-white/7 hover:text-zinc-100"
               >
                 หน้าหลัก

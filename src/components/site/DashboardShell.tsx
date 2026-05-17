@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
@@ -58,6 +58,30 @@ export function DashboardShell({
   const [uploadOpen, setUploadOpen] = useState(false);
   const deferredSearch = useDeferredValue(search);
 
+  useEffect(() => {
+    function syncUiFromHash() {
+      const hash = window.location.hash;
+      if (hash === "#upload") {
+        setUploadOpen(true);
+      }
+    }
+
+    syncUiFromHash();
+    window.addEventListener("hashchange", syncUiFromHash);
+    return () => window.removeEventListener("hashchange", syncUiFromHash);
+  }, []);
+
+  useEffect(() => {
+    if (uploadOpen) return;
+    if (window.location.hash !== "#upload") return;
+
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${window.location.search}#library`,
+    );
+  }, [uploadOpen]);
+
   const filteredItems = useMemo(() => {
     const keyword = deferredSearch.trim().toLowerCase();
     return items.filter((item) => {
@@ -107,8 +131,8 @@ export function DashboardShell({
       <div className="mx-auto max-w-7xl space-y-7 px-6 pb-16">
         {/* biome-ignore lint/correctness/useUniqueElementIds: top-level page anchor */}
         <section
-          id="overview"
-          className="relative overflow-hidden rounded-[34px] border border-white/10 bg-white/[0.035] p-6 shadow-[0_35px_120px_-65px_rgba(34,211,238,0.45)] sm:p-7"
+          id="home"
+          className="scroll-mt-200 relative overflow-hidden rounded-[34px] border border-white/10 bg-white/[0.035] p-6 shadow-[0_35px_120px_-65px_rgba(34,211,238,0.45)] sm:p-7"
         >
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent" />
           <div className="pointer-events-none absolute -right-14 top-0 h-52 w-52 rounded-full bg-cyan-400/12 blur-3xl" />
@@ -140,7 +164,7 @@ export function DashboardShell({
               <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    สมาชิก
+                    สมาชิก 👤
                   </p>
                   <p className="mt-3 text-3xl font-semibold text-white">
                     {totalMembers}
@@ -152,7 +176,7 @@ export function DashboardShell({
 
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    คลัง
+                    คลัง 📁
                   </p>
                   <p className="mt-3 text-3xl font-semibold text-white">
                     {totalItems}
@@ -164,7 +188,7 @@ export function DashboardShell({
 
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    หมวดหมู่
+                    หมวดหมู่ 🏷️
                   </p>
                   <p className="mt-3 text-3xl font-semibold text-white">
                     {categories.length}
@@ -176,7 +200,7 @@ export function DashboardShell({
 
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    ขนาดไฟล์
+                    ขนาดไฟล์ 📄
                   </p>
                   <p className="mt-3 text-3xl font-semibold text-white">
                     {formatBytes(totalBytes)}
@@ -190,7 +214,7 @@ export function DashboardShell({
 
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    พื้นที่ว่าง
+                    พื้นที่ว่าง ☁️
                   </p>
                   <p className="mt-3 text-3xl font-semibold text-white">
                     {driveConnected && remainingDriveBytes !== null
@@ -210,7 +234,7 @@ export function DashboardShell({
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                      สถานะ Cloud ⚙️
+                      สถานะ Cloud Server ⚙️
                     </p>
                     <p className="mt-3 text-lg font-semibold text-white">
                       {driveConnected
@@ -264,7 +288,7 @@ export function DashboardShell({
 
         <section className="space-y-6">
           {/* biome-ignore lint/correctness/useUniqueElementIds: top-level page anchor */}
-          <Card id="library" className="rounded-[32px]">
+          <Card id="library" className="scroll-mt-22.5 rounded-[32px]">
             <CardHeader className="border-b border-white/8 pb-5">
               <div className="flex flex-col gap-5">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -462,7 +486,7 @@ export function DashboardShell({
             <Card className="rounded-[30px]">
               <CardHeader>
                 <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                  category heat
+                  ฮิตจังอะเรา 🔥
                 </p>
                 <div className="mt-5 space-y-4">
                   {categories.length ? (
@@ -497,7 +521,7 @@ export function DashboardShell({
             <Card className="rounded-[30px]">
               <CardHeader>
                 <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                  Leaderboard
+                  จำนวนอัปโหลด 📊
                 </p>
                 <div className="mt-5 space-y-3">
                   {topMembers.length ? (
@@ -512,7 +536,7 @@ export function DashboardShell({
                           </p>
                         </div>
                         <span className="text-sm text-cyan-200">
-                          {member.uploads} อัปโหลด
+                          {member.uploads} ครั้ง
                         </span>
                       </div>
                     ))
@@ -525,15 +549,15 @@ export function DashboardShell({
 
                 <div className="mt-5 rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
                   <p className="text-[11px] uppercase tracking-[0.22em] text-zinc-500">
-                    ขยันมากมั้ง
+                    ขยันมากมั้ง (เยอะสุด)
                   </p>
                   <p className="mt-2 text-base font-semibold text-white">
                     {topMember ? topMember.name : ""}
                   </p>
                   <p className="mt-1 text-sm text-zinc-400">
                     {topMember
-                      ? `${topMember.uploads} อัปโหลด`
-                      : "เริ่มอัปโหลดแล้ว leaderboard จะเริ่มทำงาน"}
+                      ? `${topMember.uploads} ครั้ง`
+                      : "อัปโหลดไฟล์เพื่อเริ่ม Leaderboard"}
                   </p>
                 </div>
               </CardHeader>
