@@ -453,9 +453,8 @@ export function DashboardShell({
               </div>
             </div>
 
-            <div className="grid min-w-0 gap-4 xl:grid-cols-[1.55fr_0.95fr] xl:items-stretch">
-              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
-                <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
+            <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+              <div className="rounded-[26px] border border-white/10 bg-black/20 p-4 xl:order-1">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
@@ -470,9 +469,9 @@ export function DashboardShell({
                     </span>
                   </div>
                   <p className="mt-2 text-sm text-zinc-400">สมาชิกในระบบ</p>
-                </div>
+              </div>
 
-                <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
+              <div className="rounded-[26px] border border-white/10 bg-black/20 p-4 xl:order-2">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
@@ -487,9 +486,9 @@ export function DashboardShell({
                     </span>
                   </div>
                   <p className="mt-2 text-sm text-zinc-400">ไฟล์ในระบบ</p>
-                </div>
+              </div>
 
-                <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
+              <div className="rounded-[26px] border border-white/10 bg-black/20 p-4 xl:order-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
@@ -504,9 +503,9 @@ export function DashboardShell({
                     </span>
                   </div>
                   <p className="mt-2 text-sm text-zinc-400">หมวดหมู่ในระบบ</p>
-                </div>
+              </div>
 
-                <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
+              <div className="rounded-[26px] border border-white/10 bg-black/20 p-4 xl:order-5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
@@ -523,9 +522,9 @@ export function DashboardShell({
                   <p className="mt-2 text-sm text-zinc-400">
                     {driveConnected ? "ใน Cloud" : "ยังไม่ได้เชื่อมต่อกับ Cloud"}
                   </p>
-                </div>
+              </div>
 
-                <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
+              <div className="rounded-[26px] border border-white/10 bg-black/20 p-4 xl:order-6">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
@@ -544,9 +543,9 @@ export function DashboardShell({
                   <p className="mt-2 text-sm text-zinc-400">
                     {driveConnected ? "ใน Cloud" : "ยังไม่ได้เชื่อมต่อกับ Cloud"}
                   </p>
-                </div>
+              </div>
 
-                <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
+              <div className="rounded-[26px] border border-white/10 bg-black/20 p-4 xl:order-7">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
@@ -590,75 +589,72 @@ export function DashboardShell({
                   <p className="mt-2 text-xs text-zinc-500">
                     Sync ล่าสุด: {formatSyncLabel(cloudHealth.checkedAt)}
                   </p>
+              </div>
+
+              <div className="rounded-[26px] border border-white/10 bg-black/20 p-4 md:col-span-3 xl:order-4 xl:col-span-2">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                      สถานะ Cloud Server
+                    </p>
+                    <p className="mt-3 text-lg font-semibold text-white">
+                      {driveConnected ? "เชื่อมต่อแล้ว" : "ยังไม่ได้เชื่อมต่อ"}
+                    </p>
+                    <p className="break-words text-sm leading-6 text-zinc-400">
+                      {driveConnected
+                        ? `บัญชี: ${driveAccountEmail ?? "Connected successfully"}`
+                        : canConnectDrive
+                          ? ""
+                          : "กำลังรอ Admin เชื่อมต่อ Cloud Server"}
+                    </p>
+                    {!driveConnected && canConnectDrive ? (
+                      <a
+                        href="/api/google-drive/oauth/start"
+                        className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/12 px-4 text-sm font-medium text-emerald-50 transition-all hover:border-emerald-300/35 hover:bg-emerald-400/18"
+                      >
+                        <Icon name="google-drive" className="h-4 w-4" />
+                        เชื่อมต่อ Google Drive
+                      </a>
+                    ) : null}
+                  </div>
+                  <span
+                    className={`mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border ${
+                      driveConnected
+                        ? "border-emerald-300/20 bg-emerald-400/10 text-emerald-200 shadow-[0_0_22px_rgba(74,222,128,0.18)]"
+                        : "border-amber-300/20 bg-amber-300/10 text-amber-200 shadow-[0_0_20px_rgba(252,211,77,0.14)]"
+                    }`}
+                  >
+                    <span
+                      className={`h-2.5 w-2.5 rounded-full ${
+                        driveConnected ? "bg-emerald-400" : "bg-amber-300"
+                      }`}
+                    />
+                  </span>
                 </div>
               </div>
 
-              <div className="grid min-w-0 gap-3 xl:h-full xl:grid-rows-[repeat(2,minmax(0,1fr))]">
-                <div className="flex h-full flex-col rounded-[26px] border border-white/10 bg-black/20 p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                        สถานะ Cloud Server
-                      </p>
-                      <p className="mt-3 text-lg font-semibold text-white">
-                        {driveConnected ? "เชื่อมต่อแล้ว" : "ยังไม่ได้เชื่อมต่อ"}
-                      </p>
-                      <p className="break-words text-sm leading-6 text-zinc-400">
-                        {driveConnected
-                          ? `บัญชี: ${driveAccountEmail ?? "Connected successfully"}`
-                          : canConnectDrive
-                            ? ""
-                            : "กำลังรอ Admin เชื่อมต่อ Cloud Server"}
-                      </p>
-                      {!driveConnected && canConnectDrive ? (
-                        <a
-                          href="/api/google-drive/oauth/start"
-                          className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/12 px-4 text-sm font-medium text-emerald-50 transition-all hover:border-emerald-300/35 hover:bg-emerald-400/18"
-                        >
-                          <Icon name="google-drive" className="h-4 w-4" />
-                          เชื่อมต่อ Google Drive
-                        </a>
-                      ) : null}
-                    </div>
-                    <span
-                      className={`mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border ${
-                        driveConnected
-                          ? "border-emerald-300/20 bg-emerald-400/10 text-emerald-200 shadow-[0_0_22px_rgba(74,222,128,0.18)]"
-                          : "border-amber-300/20 bg-amber-300/10 text-amber-200 shadow-[0_0_20px_rgba(252,211,77,0.14)]"
-                      }`}
-                    >
-                      <span
-                        className={`h-2.5 w-2.5 rounded-full ${
-                          driveConnected ? "bg-emerald-400" : "bg-amber-300"
-                        }`}
-                      />
-                    </span>
+              <div className="rounded-[26px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-cyan-400/[0.06] p-4 md:col-span-3 xl:order-8 xl:col-span-2">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                      อัปโหลดล่าสุด
+                    </p>
+                    <p className="mt-3 break-words text-base font-semibold text-white">
+                      {dashboard.latestItem
+                        ? dashboard.latestItem.fileName
+                        : "ยังไม่มีไฟล์ล่าสุด"}
+                    </p>
+                    <p className="mt-2 break-words text-sm text-zinc-400">
+                      {dashboard.latestItem
+                        ? `@${dashboard.latestItem.uploaderUsername} · ${formatDate(
+                            dashboard.latestItem.createdAt,
+                          )}`
+                        : "กดอัปโหลดเพื่อเริ่มอัปโหลดไฟล์ได้เลย"}
+                    </p>
                   </div>
-                </div>
-
-                <div className="flex h-full flex-col rounded-[26px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-cyan-400/[0.06] p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                        อัปโหลดล่าสุด
-                      </p>
-                      <p className="mt-3 break-words text-base font-semibold text-white">
-                        {dashboard.latestItem
-                          ? dashboard.latestItem.fileName
-                          : "ยังไม่มีไฟล์ล่าสุด"}
-                      </p>
-                      <p className="mt-2 break-words text-sm text-zinc-400">
-                        {dashboard.latestItem
-                          ? `@${dashboard.latestItem.uploaderUsername} · ${formatDate(
-                              dashboard.latestItem.createdAt,
-                            )}`
-                          : "กดอัปโหลดเพื่อเริ่มอัปโหลดไฟล์ได้เลย"}
-                      </p>
-                    </div>
-                    <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-pink-300/20 bg-pink-400/10 text-pink-200 shadow-[0_0_22px_rgba(244,114,182,0.18)]">
-                      <Icon name="upload" className="h-3 w-3" />
-                    </span>
-                  </div>
+                  <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-pink-300/20 bg-pink-400/10 text-pink-200 shadow-[0_0_22px_rgba(244,114,182,0.18)]">
+                    <Icon name="upload" className="h-3 w-3" />
+                  </span>
                 </div>
               </div>
             </div>
