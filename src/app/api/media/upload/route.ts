@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { uploadFileToDrive } from "@/lib/drive";
+import type { MediaItem } from "@/lib/media";
 import { createMediaItem, normalizeCategory } from "@/lib/media";
 import { getServerSession } from "@/lib/session";
 
@@ -50,8 +51,25 @@ export async function POST(request: Request) {
     uploaderId: session.userId,
   });
 
+  const mediaItem: MediaItem | null = mediaId
+    ? {
+        id: mediaId,
+        driveFileId: uploaded.id,
+        fileName: uploaded.name,
+        mimeType: uploaded.mimeType || file.type || "application/octet-stream",
+        fileSize: Number(uploaded.size || file.size || 0),
+        category,
+        description: description || null,
+        driveViewLink: uploaded.webViewLink || uploaded.webContentLink || null,
+        createdAt: new Date().toISOString(),
+        uploaderName: session.name,
+        uploaderUsername: session.sub,
+      }
+    : null;
+
   return NextResponse.json({
     ok: true,
     mediaId,
+    mediaItem,
   });
 }

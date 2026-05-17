@@ -285,6 +285,23 @@ export function DashboardShell({
   const isSystemReady = driveConnected && cloudHealth.online;
   const canUploadNow = isSystemReady;
 
+  function handleUploadedItem(item: MediaItem | null) {
+    if (!item) {
+      setUploadOpen(false);
+      return;
+    }
+
+    startTransition(() => {
+      setLibraryItems((current) => {
+        const withoutDuplicate = current.filter((entry) => entry.id !== item.id);
+        return [item, ...withoutDuplicate];
+      });
+      setUploadOpen(false);
+      setActiveCategory("all");
+      setSearch("");
+    });
+  }
+
   function toggleSelected(id: string) {
     if (!canManageDrive || busyIdSet.has(id)) return;
 
@@ -553,7 +570,13 @@ export function DashboardShell({
                       <Icon name="bolt" className="h-3 w-3" />
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-zinc-300">
+                  <p
+                    className={`mt-2 text-sm ${
+                      !cloudHealth.online && driveConnected
+                        ? "text-amber-200"
+                        : "text-zinc-300"
+                    }`}
+                  >
                     {cloudHealth.isPaused
                       ? "พัก polling ระหว่างแท็บไม่ active"
                       : cloudHealth.isPolling
@@ -567,16 +590,11 @@ export function DashboardShell({
                   <p className="mt-2 text-xs text-zinc-500">
                     Sync ล่าสุด: {formatSyncLabel(cloudHealth.checkedAt)}
                   </p>
-                  {cloudHealth.error ? (
-                    <p className="mt-2 text-xs text-amber-200/90">
-                      {cloudHealth.error}
-                    </p>
-                  ) : null}
                 </div>
               </div>
 
-              <div className="grid min-w-0 gap-4 xl:grid-rows-2">
-                <div className="rounded-[28px] border border-white/10 bg-black/20 p-5 xl:h-full">
+              <div className="grid min-w-0 gap-3 xl:h-full xl:grid-rows-[repeat(2,minmax(0,1fr))]">
+                <div className="flex h-full flex-col rounded-[26px] border border-white/10 bg-black/20 p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
@@ -618,7 +636,7 @@ export function DashboardShell({
                   </div>
                 </div>
 
-                <div className="rounded-[28px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-cyan-400/[0.06] p-5 xl:h-full">
+                <div className="flex h-full flex-col rounded-[26px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-cyan-400/[0.06] p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
@@ -1043,15 +1061,14 @@ export function DashboardShell({
             <div className="border-b border-white/8 px-6 py-5 sm:px-7">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    upload to vault
-                  </p>
+                  <Badge className="w-fit border-white/10 bg-white/6 text-zinc-300">
+                    อัปโหลดไฟล์
+                  </Badge>
                   <h3 className="mt-2 text-2xl font-semibold text-white">
-                    เพิ่มไฟล์ใหม่เข้าเอาน้อยนอนบ้าน
+                    เลือกไฟล์ที่ต้องการอัปโหลด
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-zinc-400">
-                    เลือกไฟล์ ใส่หมวดกับโน้ต แล้วระบบจะส่งขึ้น owner Google Drive
-                    พร้อมบันทึกว่าใครอัปโหลด
+                    แบ่งปันความน่ารักของสาวๆกันครัฟพี่
                   </p>
                 </div>
 
@@ -1068,7 +1085,7 @@ export function DashboardShell({
             <div className="px-6 py-6 sm:px-7">
               <UploadForm
                 onCancel={() => setUploadOpen(false)}
-                onUploaded={() => setUploadOpen(false)}
+                onUploaded={handleUploadedItem}
               />
             </div>
           </div>

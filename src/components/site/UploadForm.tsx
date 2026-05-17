@@ -1,8 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import {
-  startTransition,
   useEffect,
   useId,
   useRef,
@@ -11,16 +9,15 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
-import { CATEGORIES } from "@/lib/media";
+import { CATEGORIES, type MediaItem } from "@/lib/media";
 
 export function UploadForm({
   onUploaded,
   onCancel,
 }: {
-  onUploaded?: () => void;
+  onUploaded?: (item: MediaItem | null) => void;
   onCancel?: () => void;
 }) {
-  const router = useRouter();
   const [category, setCategory] = useState<string>(CATEGORIES[0]);
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -82,7 +79,8 @@ export function UploadForm({
       formData.set("category", category);
       formData.set("description", description);
 
-      await new Promise<void>((resolve, reject) => {
+      const uploadedItem = await new Promise<MediaItem | null>(
+        (resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open("POST", "/api/media/upload", true);
 
@@ -99,7 +97,7 @@ export function UploadForm({
         };
 
         xhr.onload = () => {
-          let payload: { error?: string } = {};
+          let payload: { error?: string; mediaItem?: MediaItem | null } = {};
           try {
             payload = JSON.parse(xhr.responseText);
           } catch {}
@@ -109,7 +107,7 @@ export function UploadForm({
             return;
           }
 
-          resolve();
+          resolve(payload.mediaItem ?? null);
         };
 
         xhr.send(formData);
@@ -124,10 +122,7 @@ export function UploadForm({
       setFile(null);
       const input = form.elements.namedItem("file") as HTMLInputElement | null;
       if (input) input.value = "";
-      startTransition(() => {
-        router.refresh();
-      });
-      onUploaded?.();
+      onUploaded?.(uploadedItem);
     } catch (uploadError) {
       setError(
         uploadError instanceof Error ? uploadError.message : "อัปโหลดไม่สำเร็จ",
@@ -152,7 +147,7 @@ export function UploadForm({
       <div className="rounded-[28px] border border-white/8 bg-black/18 p-4">
         <label htmlFor={fileId} className="block">
           <span className="mb-3 block text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
-            file
+            ไฟล์
           </span>
           <div className="rounded-[24px] border border-dashed border-white/12 bg-white/[0.03] p-4 transition-all hover:border-cyan-300/20 hover:bg-white/[0.045]">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -162,18 +157,17 @@ export function UploadForm({
                 </div>
                 <div>
                   <p className="text-sm font-medium text-white">
-                    {file ? file.name : "เลือกไฟล์ที่จะโยนขึ้น vault"}
+                    {file ? file.name : "เลือกไฟล์ที่ต้องการอัปโหลด"}
                   </p>
                   <p className="mt-1 text-sm text-zinc-500">
                     {file
                       ? `${(file.size / 1024 / 1024).toFixed(2)} MB`
-                      : "รูป วิดีโอ เอกสาร หรือไฟล์อื่นๆ จากในเครื่อง"}
+                      : "รูปภาพ วิดีโอ เอกสาร หรือไฟล์อื่นๆ จากในเครื่อง"}
                   </p>
                 </div>
               </div>
-
               <span className="inline-flex h-11 items-center justify-center rounded-full border border-white/12 bg-white/8 px-5 text-sm font-medium text-white transition-all hover:border-cyan-300/20 hover:bg-white/12">
-                Choose file
+                +
               </span>
             </div>
           </div>
@@ -194,7 +188,7 @@ export function UploadForm({
             htmlFor={categoryId}
             className="mb-3 block text-xs font-medium uppercase tracking-[0.18em] text-zinc-500"
           >
-            category
+            หมวดหมู่
           </label>
           <div ref={categoryMenuRef} className="relative">
             <button
@@ -212,7 +206,7 @@ export function UploadForm({
                 </div>
                 <div className="min-w-0">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-100/48">
-                    member slot
+                    เมมเบอร์
                   </p>
                   <p className="truncate text-sm font-medium tracking-[0.08em] text-white">
                     {category}
@@ -308,7 +302,7 @@ export function UploadForm({
             htmlFor={descriptionId}
             className="mb-3 block text-xs font-medium uppercase tracking-[0.18em] text-zinc-500"
           >
-            note
+            โน้ต
           </label>
           <Input
             id={descriptionId}
