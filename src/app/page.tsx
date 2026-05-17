@@ -37,7 +37,11 @@ export default async function HomePage() {
   ]);
 
   return (
-    <div className="pb-10">
+    <div className="relative overflow-hidden pb-10">
+      <div className="aurora pointer-events-none absolute inset-0 -z-20 opacity-90" />
+      <div className="grid-bg pointer-events-none absolute inset-0 -z-10 opacity-35 [mask-image:linear-gradient(180deg,black_0%,black_82%,transparent_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_left,rgba(34,211,238,0.12),transparent_34%),radial-gradient(circle_at_right,rgba(56,189,248,0.1),transparent_28%),linear-gradient(180deg,rgba(7,10,16,0.18),rgba(7,10,16,0.58)_34%,rgba(7,10,16,0.5)_70%,rgba(7,10,16,0.12)_92%,rgba(7,10,16,0)_100%)]" />
+
       <Hero />
       <DashboardShell
         canManageDrive={session.role === "admin"}
