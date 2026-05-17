@@ -4,6 +4,7 @@ import { cn } from "@/lib/cn";
 type IconName =
   | "arrow-right"
   | "lock"
+  | "mail"
   | "cloud"
   | "upload"
   | "video"
@@ -40,6 +41,28 @@ const iconMap: Record<IconName, ReactNode> = {
         d="M8 10V7a4 4 0 1 1 8 0v3"
         fill="none"
         stroke="currentColor"
+        strokeWidth="2"
+      />
+    </>
+  ),
+  mail: (
+    <>
+      <rect
+        x="3"
+        y="6"
+        width="18"
+        height="12"
+        rx="2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="m4.5 7.5 7.5 6 7.5-6"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
         strokeWidth="2"
       />
     </>

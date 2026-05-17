@@ -7,27 +7,27 @@ export async function Header() {
   const session = await getServerSession();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/8 bg-[#050816]/70 backdrop-blur-2xl">
-      <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-6">
+    <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#07080b]/70 backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <div className="flex items-center gap-8">
           <Logo />
           {session && (
-            <nav className="hidden items-center gap-2 md:flex">
+            <nav className="hidden items-center gap-1 md:flex">
               <a
                 href="#overview"
-                className="rounded-full px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-white/6 hover:text-white"
+                className="rounded-full px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-white/5 hover:text-zinc-100"
               >
                 Overview
               </a>
               <a
                 href="#library"
-                className="rounded-full px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-white/6 hover:text-white"
+                className="rounded-full px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-white/5 hover:text-zinc-100"
               >
                 Library
               </a>
               <a
                 href="#upload"
-                className="rounded-full px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-white/6 hover:text-white"
+                className="rounded-full px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-white/5 hover:text-zinc-100"
               >
                 Upload
               </a>
@@ -46,7 +46,12 @@ export async function Header() {
                 <div className="text-xs text-zinc-500">{session.sub}</div>
               </div>
               <form action="/api/auth/logout" method="post">
-                <Button variant="secondary" size="sm" type="submit">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  type="submit"
+                  className="h-9"
+                >
                   Logout
                 </Button>
               </form>
