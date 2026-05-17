@@ -280,7 +280,7 @@ export function DashboardShell({
       const matchesCategory =
         activeCategory === "all" || item.category === activeCategory;
       const haystack =
-        `${item.fileName} ${item.description ?? ""} ${item.uploaderName} ${item.uploaderUsername}`.toLowerCase();
+        `${item.fileName} ${item.description ?? ""} ${item.uploaderName} ${item.uploaderUsername} ${item.category}`.toLowerCase();
       const matchesSearch = !keyword || haystack.includes(keyword);
       return matchesCategory && matchesSearch;
     });
@@ -292,6 +292,7 @@ export function DashboardShell({
   const topMember = dashboard.topMembers[0] ?? null;
   const isSystemReady = driveConnected && cloudHealth.online;
   const canUploadNow = isSystemReady;
+  const isCloudServerOnline = driveConnected && cloudHealth.online;
   const isCloudFailure =
     driveConnected &&
     !cloudHealth.online &&
@@ -620,10 +621,10 @@ export function DashboardShell({
                     </p>
                     <p
                       className={`mt-3 text-3xl font-semibold leading-tight ${
-                        driveConnected ? "text-emerald-300" : "text-rose-300"
+                        isCloudServerOnline ? "text-emerald-300" : "text-rose-300"
                       }`}
                     >
-                      {driveConnected ? "Online" : "Offline"}
+                      {isCloudServerOnline ? "Online" : "Offline"}
                     </p>
                     <p className="mt-2 break-words text-sm text-zinc-400">
                       {driveConnected
@@ -644,14 +645,14 @@ export function DashboardShell({
                   </div>
                   <span
                     className={`mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border ${
-                      driveConnected
+                      isCloudServerOnline
                         ? "border-emerald-300/20 bg-emerald-400/10 text-emerald-200 shadow-[0_0_22px_rgba(74,222,128,0.18)]"
-                        : "border-amber-300/20 bg-amber-300/10 text-amber-200 shadow-[0_0_20px_rgba(252,211,77,0.14)]"
+                        : "border-rose-300/20 bg-rose-400/10 text-rose-200 shadow-[0_0_20px_rgba(251,113,133,0.14)]"
                     }`}
                   >
                     <span
                       className={`h-2.5 w-2.5 rounded-full ${
-                        driveConnected ? "bg-emerald-400" : "bg-amber-300"
+                        isCloudServerOnline ? "bg-emerald-400" : "bg-rose-300"
                       }`}
                     />
                   </span>
@@ -722,6 +723,9 @@ export function DashboardShell({
                         {" "}
                         ไฟล์ในระบบ
                       </span>
+                      <p className="mt-2 text-sm leading-6 text-zinc-400">
+                    แบ่งปันความน่ารักของสาวๆกันครัฟพี่
+                  </p>
                     </h2>
                   </div>
 
