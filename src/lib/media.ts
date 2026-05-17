@@ -105,6 +105,16 @@ export async function getMediaRecord(mediaId: string) {
   return rows[0] ?? null;
 }
 
+export async function deleteMediaItem(mediaId: string) {
+  const rows = (await sql()`
+    DELETE FROM media_items
+    WHERE id = ${mediaId}
+    RETURNING id
+  `) as Array<{ id: string }>;
+
+  return rows[0]?.id ?? null;
+}
+
 export async function createMediaItem(input: {
   driveFileId: string;
   fileName: string;

@@ -12,22 +12,22 @@ export async function Header() {
         <div className="flex items-center gap-8">
           <Logo />
           {session && (
-            <nav className="hidden items-center gap-1 md:flex">
+            <nav className="hidden items-center gap-1 rounded-full border border-white/8 bg-white/[0.03] p-1 md:flex">
               <a
                 href="#overview"
-                className="rounded-full px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-white/5 hover:text-zinc-100"
+                className="rounded-full px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-white/7 hover:text-zinc-100"
               >
                 Overview
               </a>
               <a
                 href="#library"
-                className="rounded-full px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-white/5 hover:text-zinc-100"
+                className="rounded-full px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-white/7 hover:text-zinc-100"
               >
                 Library
               </a>
               <a
                 href="#upload"
-                className="rounded-full px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-white/5 hover:text-zinc-100"
+                className="rounded-full px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-white/7 hover:text-zinc-100"
               >
                 Upload
               </a>
@@ -38,19 +38,24 @@ export async function Header() {
         <div className="flex items-center gap-3">
           {session ? (
             <>
-              <Badge>{session.role}</Badge>
-              <div className="hidden text-right sm:block">
+              <div className="hidden items-center gap-3 rounded-full border border-white/8 bg-white/[0.03] px-3 py-1.5 sm:flex">
+                <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 text-xs font-semibold text-slate-950">
+                  {session.name.slice(0, 1).toUpperCase()}
+                </div>
                 <div className="text-sm font-medium text-white">
                   {session.name}
+                  <div className="text-xs font-normal text-zinc-500">
+                    {session.sub}
+                  </div>
                 </div>
-                <div className="text-xs text-zinc-500">{session.sub}</div>
+                <Badge>{session.role}</Badge>
               </div>
               <form action="/api/auth/logout" method="post">
                 <Button
                   variant="secondary"
                   size="sm"
                   type="submit"
-                  className="h-9"
+                  className="h-9 border border-white/10 bg-white/[0.04] hover:bg-white/[0.08]"
                 >
                   Logout
                 </Button>

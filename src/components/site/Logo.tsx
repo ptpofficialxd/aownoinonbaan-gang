@@ -15,7 +15,7 @@ export function Logo() {
           เอาน้อยนอนบ้าน <span className="font-normal text-zinc-400">Gang</span>
         </span>
         <span className="text-[10px] uppercase tracking-[0.18em] text-zinc-500">
-          Private Cloud Storage
+          Private Cloud Space
         </span>
       </span>
     </Link>

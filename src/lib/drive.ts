@@ -1,7 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { sql } from "./db";
 
-const GOOGLE_OAUTH_SCOPE = "https://www.googleapis.com/auth/drive";
+const GOOGLE_OAUTH_SCOPE = [
+  "https://www.googleapis.com/auth/drive",
+  "https://www.googleapis.com/auth/userinfo.email",
+].join(" ");
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_DRIVE_UPLOAD_URL =
@@ -120,6 +123,7 @@ export async function exchangeCodeForRefreshToken(code: string) {
     refresh_token?: string;
     scope?: string;
     token_type: string;
+    id_token?: string;
   };
 }
 
@@ -284,4 +288,23 @@ export async function streamDriveFile(fileId: string) {
   }
 
   return res;
+}
+
+export async function deleteDriveFile(fileId: string) {
+  const token = await getAccessToken();
+  const url = new URL(`${GOOGLE_DRIVE_API_URL}/${fileId}`);
+  url.searchParams.set("supportsAllDrives", "true");
+
+  const res = await fetch(url, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok && res.status !== 404) {
+    const detail = await res.text();
+    throw new Error(`Drive delete failed: ${res.status} ${detail}`);
+  }
 }

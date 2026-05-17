@@ -12,7 +12,9 @@ type IconName =
   | "folder"
   | "spark"
   | "logout"
-  | "search";
+  | "search"
+  | "trash"
+  | "x";
 
 const iconMap: Record<IconName, ReactNode> = {
   "arrow-right": (
@@ -181,6 +183,54 @@ const iconMap: Record<IconName, ReactNode> = {
       />
       <path
         d="m20 20-4-4"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
+    </>
+  ),
+  trash: (
+    <>
+      <path
+        d="M4 7h16"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
+      <path
+        d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M7 7l1 12a1 1 0 0 0 1 .9h6a1 1 0 0 0 1-.9L17 7"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M10 11v5M14 11v5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
+    </>
+  ),
+  x: (
+    <>
+      <path
+        d="M6 6l12 12"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
+      <path
+        d="M18 6 6 18"
         fill="none"
         stroke="currentColor"
         strokeLinecap="round"
