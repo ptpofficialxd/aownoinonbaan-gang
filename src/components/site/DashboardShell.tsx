@@ -1132,7 +1132,15 @@ export function DashboardShell({
       ) : null}
 
       {previewItem ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/82 p-3 backdrop-blur-md sm:p-5">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/72 p-3 backdrop-blur-2xl sm:p-5">
+          <div
+            className="pointer-events-none absolute inset-0"
+            aria-hidden="true"
+            style={{
+              background:
+                "radial-gradient(circle at 20% 20%, rgba(56,189,248,0.16) 0, rgba(56,189,248,0.06) 18%, transparent 38%), radial-gradient(circle at 80% 14%, rgba(244,114,182,0.14) 0, rgba(244,114,182,0.05) 16%, transparent 36%), radial-gradient(circle at 50% 100%, rgba(34,211,238,0.12) 0, rgba(34,211,238,0.04) 20%, transparent 42%)",
+            }}
+          />
           <button
             type="button"
             aria-label="Close preview"
@@ -1140,13 +1148,23 @@ export function DashboardShell({
             className="absolute inset-0"
           />
 
-          <div className="relative z-10 flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[26px] border border-white/10 bg-[#0b0d12] shadow-[0_45px_140px_-40px_rgba(0,0,0,0.95)]">
-            <div className="flex items-start justify-between gap-4 border-b border-white/8 px-4 py-3 sm:px-5">
+          <div className="relative z-10 flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[32px] border border-white/14 bg-white/[0.075] shadow-[0_50px_160px_-44px_rgba(0,0,0,0.9)] ring-1 ring-white/8">
+            <div
+              className="pointer-events-none absolute inset-0"
+              aria-hidden="true"
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 18%, rgba(255,255,255,0.02) 40%, rgba(255,255,255,0.03) 100%)",
+              }}
+            />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+
+            <div className="relative flex items-start justify-between gap-4 border-b border-white/10 bg-black/12 px-4 py-4 backdrop-blur-xl sm:px-6">
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-white sm:text-base">
+                <p className="truncate text-sm font-semibold text-white sm:text-base">
                   {previewItem.fileName}
                 </p>
-                <p className="mt-1 text-xs text-zinc-400 sm:text-sm">
+                <p className="mt-1 text-xs text-zinc-300/80 sm:text-sm">
                   คลิกขวา / กดค้างบนรูป เพื่อบันทึกไฟล์ได้เลย
                 </p>
               </div>
@@ -1154,19 +1172,19 @@ export function DashboardShell({
               <button
                 type="button"
                 onClick={() => setPreviewItem(null)}
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-zinc-300 transition-all hover:bg-white/[0.08] hover:text-white"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/14 bg-white/[0.08] text-zinc-200 shadow-[0_12px_30px_-18px_rgba(255,255,255,0.45)_inset,0_10px_30px_-18px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-all hover:border-white/22 hover:bg-white/[0.14] hover:text-white"
               >
                 <Icon name="x" className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="overflow-auto p-3 sm:p-5">
-              <div className="flex min-h-[40vh] items-center justify-center">
+            <div className="relative overflow-auto bg-black/10 p-3 sm:p-5">
+              <div className="flex min-h-[40vh] items-center justify-center rounded-[28px] border border-white/10 bg-black/18 p-3 shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset] backdrop-blur-xl sm:p-4">
                 {/* biome-ignore lint/performance/noImgElement: authenticated media preview must remain directly savable from the lightbox */}
                 <img
                   src={`/api/media/${previewItem.id}/content`}
                   alt={previewItem.fileName}
-                  className="max-h-[78vh] w-auto max-w-full rounded-[20px] object-contain select-auto"
+                  className="max-h-[76vh] w-auto max-w-full rounded-[24px] border border-white/10 object-contain shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8)] select-auto"
                 />
               </div>
             </div>
