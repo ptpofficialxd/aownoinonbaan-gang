@@ -17,6 +17,9 @@ type IconName =
   | "check"
   | "x"
   | "bolt"
+  | "user"
+  | "tag"
+  | "file"
   | "google-drive";
 
 const iconMap: Record<IconName, ReactNode> = {
@@ -260,6 +263,52 @@ const iconMap: Record<IconName, ReactNode> = {
       strokeLinejoin="round"
       strokeWidth="2"
     />
+  ),
+  user: (
+    <>
+      <circle
+        cx="12"
+        cy="8"
+        r="3.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M5 19a7 7 0 0 1 14 0"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
+    </>
+  ),
+  tag: (
+    <path
+      d="M20 10.5 11.5 19a2 2 0 0 1-2.8 0L4 14.3a2 2 0 0 1 0-2.8L12.5 3H20v7.5Z"
+      fill="none"
+      stroke="currentColor"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
+  ),
+  file: (
+    <>
+      <path
+        d="M8 3h6l5 5v13H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+      <path
+        d="M14 3v5h5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    </>
   ),
   "google-drive": (
     <>

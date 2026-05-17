@@ -405,7 +405,13 @@ export function DashboardShell({
                 <Badge className="border-cyan-400/20 bg-cyan-400/10 text-cyan-100">
                   แผงควบคุม
                 </Badge>
-                <Badge className="border-white/10 bg-white/6 text-zinc-300">
+                <Badge
+                  className={
+                    driveConnected
+                      ? "!border-emerald-300/25 !bg-emerald-400/14 !text-emerald-100"
+                      : "!border-rose-300/25 !bg-rose-400/14 !text-rose-100"
+                  }
+                >
                   {driveConnected ? "ระบบ: พร้อมใช้งาน" : "ระบบ: ไม่พร้อมใช้งาน"}
                 </Badge>
               </div>
@@ -424,56 +430,91 @@ export function DashboardShell({
             <div className="grid min-w-0 gap-4 xl:grid-cols-[1.55fr_0.95fr] xl:items-stretch">
               <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    สมาชิก 👤
-                  </p>
-                  <p className="mt-3 text-3xl font-semibold text-white">
-                    {totalMembers}
-                  </p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                        สมาชิก
+                      </p>
+                      <p className="mt-3 text-3xl font-semibold text-white">
+                        {totalMembers}
+                      </p>
+                    </div>
+                    <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-violet-300/20 bg-violet-400/10 text-violet-200 shadow-[0_0_20px_rgba(167,139,250,0.16)]">
+                      <Icon name="user" className="h-3 w-3" />
+                    </span>
+                  </div>
                   <p className="mt-2 text-sm text-zinc-400">สมาชิกในระบบ</p>
                 </div>
 
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    คลัง 📁
-                  </p>
-                  <p className="mt-3 text-3xl font-semibold text-white">
-                    {dashboard.totalItems}
-                  </p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                        คลัง
+                      </p>
+                      <p className="mt-3 text-3xl font-semibold text-white">
+                        {dashboard.totalItems}
+                      </p>
+                    </div>
+                    <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-amber-300/20 bg-amber-300/10 text-amber-200 shadow-[0_0_20px_rgba(251,191,36,0.14)]">
+                      <Icon name="folder" className="h-3 w-3" />
+                    </span>
+                  </div>
                   <p className="mt-2 text-sm text-zinc-400">ไฟล์ในระบบ</p>
                 </div>
 
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    หมวดหมู่ 🏷️
-                  </p>
-                  <p className="mt-3 text-3xl font-semibold text-white">
-                    {dashboard.categories.length}
-                  </p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                        หมวดหมู่
+                      </p>
+                      <p className="mt-3 text-3xl font-semibold text-white">
+                        {dashboard.categories.length}
+                      </p>
+                    </div>
+                    <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-orange-300/20 bg-orange-300/10 text-orange-200 shadow-[0_0_20px_rgba(251,146,60,0.14)]">
+                      <Icon name="tag" className="h-3 w-3" />
+                    </span>
+                  </div>
                   <p className="mt-2 text-sm text-zinc-400">หมวดหมู่ในระบบ</p>
                 </div>
 
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    ขนาดไฟล์ 📄
-                  </p>
-                  <p className="mt-3 text-3xl font-semibold text-white">
-                    {formatBytes(dashboard.totalBytes)}
-                  </p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                        ขนาดไฟล์
+                      </p>
+                      <p className="mt-3 text-3xl font-semibold text-white">
+                        {formatBytes(dashboard.totalBytes)}
+                      </p>
+                    </div>
+                    <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-zinc-300/15 bg-white/5 text-zinc-300 shadow-[0_0_18px_rgba(255,255,255,0.08)]">
+                      <Icon name="file" className="h-3 w-3" />
+                    </span>
+                  </div>
                   <p className="mt-2 text-sm text-zinc-400">
                     {driveConnected ? "ใน Cloud" : "ยังไม่ได้เชื่อมต่อกับ Cloud"}
                   </p>
                 </div>
 
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    พื้นที่ว่าง ☁️
-                  </p>
-                  <p className="mt-3 text-3xl font-semibold text-white">
-                    {driveConnected && remainingDriveBytes !== null
-                      ? formatBytes(remainingDriveBytes)
-                      : "--"}
-                  </p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                        พื้นที่ว่าง
+                      </p>
+                      <p className="mt-3 text-3xl font-semibold text-white">
+                        {driveConnected && remainingDriveBytes !== null
+                          ? formatBytes(remainingDriveBytes)
+                          : "--"}
+                      </p>
+                    </div>
+                    <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-300/15 bg-sky-400/8 text-slate-200 shadow-[0_0_20px_rgba(125,211,252,0.12)]">
+                      <Icon name="cloud" className="h-3 w-3" />
+                    </span>
+                  </div>
                   <p className="mt-2 text-sm text-zinc-400">
                     {driveConnected ? "ใน Cloud" : "ยังไม่ได้เชื่อมต่อกับ Cloud"}
                   </p>
@@ -530,7 +571,7 @@ export function DashboardShell({
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                        สถานะ Cloud Server ⚙️
+                        สถานะ Cloud Server
                       </p>
                       <p className="mt-3 text-lg font-semibold text-white">
                         {driveConnected ? "เชื่อมต่อแล้ว" : "ยังไม่ได้เชื่อมต่อ"}
@@ -552,32 +593,45 @@ export function DashboardShell({
                         </a>
                       ) : null}
                     </div>
-                    <div
-                      className={`mt-1 h-3 w-3 rounded-full ${
+                    <span
+                      className={`mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border ${
                         driveConnected
-                          ? "bg-emerald-400 shadow-[0_0_18px_rgba(74,222,128,0.65)]"
-                          : "bg-amber-300 shadow-[0_0_18px_rgba(252,211,77,0.55)]"
+                          ? "border-emerald-300/20 bg-emerald-400/10 text-emerald-200 shadow-[0_0_22px_rgba(74,222,128,0.18)]"
+                          : "border-amber-300/20 bg-amber-300/10 text-amber-200 shadow-[0_0_20px_rgba(252,211,77,0.14)]"
                       }`}
-                    />
+                    >
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full ${
+                          driveConnected ? "bg-emerald-400" : "bg-amber-300"
+                        }`}
+                      />
+                    </span>
                   </div>
                 </div>
 
                 <div className="rounded-[28px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-cyan-400/[0.06] p-5 xl:h-full">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    อัปโหลดล่าสุด 🚀
-                  </p>
-                  <p className="mt-3 break-words text-base font-semibold text-white">
-                    {dashboard.latestItem
-                      ? dashboard.latestItem.fileName
-                      : "ยังไม่มีไฟล์ล่าสุด"}
-                  </p>
-                  <p className="mt-2 break-words text-sm text-zinc-400">
-                    {dashboard.latestItem
-                      ? `${dashboard.latestItem.uploaderName} · ${formatDate(
-                          dashboard.latestItem.createdAt,
-                        )}`
-                      : "กดอัปโหลดเพื่อเริ่มอัปโหลดไฟล์ได้เลย"}
-                  </p>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                        อัปโหลดล่าสุด
+                      </p>
+                      <p className="mt-3 break-words text-base font-semibold text-white">
+                        {dashboard.latestItem
+                          ? dashboard.latestItem.fileName
+                          : "ยังไม่มีไฟล์ล่าสุด"}
+                      </p>
+                      <p className="mt-2 break-words text-sm text-zinc-400">
+                        {dashboard.latestItem
+                          ? `${dashboard.latestItem.uploaderName} · ${formatDate(
+                              dashboard.latestItem.createdAt,
+                            )}`
+                          : "กดอัปโหลดเพื่อเริ่มอัปโหลดไฟล์ได้เลย"}
+                      </p>
+                    </div>
+                    <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-pink-300/20 bg-pink-400/10 text-pink-200 shadow-[0_0_22px_rgba(244,114,182,0.18)]">
+                      <Icon name="upload" className="h-3 w-3" />
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -594,15 +648,29 @@ export function DashboardShell({
               <div className="flex flex-col gap-5">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                   <div>
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                      คลังเก็บไฟล์
-                    </p>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Badge className="w-fit border-white/10 bg-white/6 text-zinc-300">
+                        คลังเก็บไฟล์
+                      </Badge>
+                      <Badge
+                        className={
+                          driveConnected
+                            ? "!border-emerald-300/25 !bg-emerald-400/14 !text-emerald-100"
+                            : "!border-rose-300/25 !bg-rose-400/14 !text-rose-100"
+                        }
+                      >
+                        {driveConnected
+                          ? "ระบบ: พร้อมอัปโหลด"
+                          : "ระบบ: ไม่พร้อมอัปโหลด"}
+                      </Badge>
+                    </div>
                     <h2 className="mt-2 text-3xl font-semibold tracking-tight text-white">
-                      คลังเก็บไฟล์
+                      Library
+                      <span className="bg-gradient-to-r from-cyan-200 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                        {" "}
+                        ไฟล์ในระบบ
+                      </span>
                     </h2>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-                      มุมมองแบบ grid ที่ดูไฟล์ได้เยอะขึ้น พร้อมโหมดเลือกหลายไฟล์เพื่อลบทีเดียว
-                    </p>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] lg:w-[29rem]">
@@ -628,11 +696,7 @@ export function DashboardShell({
                         <Icon name="upload" className="h-4 w-4" />
                         อัปโหลด
                       </button>
-                    ) : (
-                      <div className="inline-flex h-12 items-center justify-center rounded-full border border-amber-300/20 bg-amber-300/10 px-5 text-sm font-medium text-amber-100">
-                        ยังไม่ได้เชื่อมต่อ Google Drive
-                      </div>
-                    )}
+                    ) : null}
                   </div>
                 </div>
 
@@ -860,9 +924,9 @@ export function DashboardShell({
           <div className="grid gap-6 xl:grid-cols-2">
             <Card className="rounded-[30px]">
               <CardHeader>
-                <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                  ฮิตจังอะเรา 🔥
-                </p>
+                <Badge className="w-fit border-white/10 bg-white/6 text-zinc-300">
+                  ฮิตจังอะเรา
+                </Badge>
                 <div className="mt-5 space-y-4">
                   {dashboard.categories.length ? (
                     dashboard.categories.map((category) => (
@@ -890,7 +954,7 @@ export function DashboardShell({
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-zinc-500">No uploads yet.</p>
+                    <p className="text-sm text-zinc-500">ยังไม่มีการอัปโหลด ณ ขณะนี้</p>
                   )}
                 </div>
               </CardHeader>
@@ -898,9 +962,9 @@ export function DashboardShell({
 
             <Card className="rounded-[30px]">
               <CardHeader>
-                <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                  จำนวนอัปโหลด 📊
-                </p>
+                <Badge className="w-fit border-white/10 bg-white/6 text-zinc-300">
+                  จำนวนอัปโหลด
+                </Badge>
                 <div className="mt-5 space-y-3">
                   {dashboard.topMembers.length ? (
                     dashboard.topMembers.map((member: MemberSummary, index) => (
@@ -933,7 +997,7 @@ export function DashboardShell({
                   <p className="mt-1 text-sm text-zinc-400">
                     {topMember
                       ? `${topMember.uploads} ครั้ง`
-                      : "อัปโหลดไฟล์เพื่อเริ่ม Leaderboard"}
+                      : "อัปโหลดไฟล์เพื่อเริ่มกิจกรรม Leaderboard"}
                   </p>
                 </div>
               </CardHeader>
