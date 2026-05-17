@@ -16,6 +16,7 @@ type IconName =
   | "trash"
   | "check"
   | "x"
+  | "bolt"
   | "google-drive";
 
 const iconMap: Record<IconName, ReactNode> = {
@@ -249,6 +250,16 @@ const iconMap: Record<IconName, ReactNode> = {
         strokeWidth="2"
       />
     </>
+  ),
+  bolt: (
+    <path
+      d="M13 2 6 13h4l-1 9 7-11h-4l1-9Z"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
   ),
   "google-drive": (
     <>

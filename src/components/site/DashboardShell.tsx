@@ -422,7 +422,7 @@ export function DashboardShell({
             </div>
 
             <div className="grid min-w-0 gap-4 xl:grid-cols-[1.55fr_0.95fr] xl:items-stretch">
-              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
                     สมาชิก 👤
@@ -483,7 +483,7 @@ export function DashboardShell({
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                        Cloud latency
+                        เวลาตอบสนอง
                       </p>
                       <p className="mt-3 text-3xl font-semibold text-white">
                         {driveConnected && cloudHealth.online
@@ -492,28 +492,30 @@ export function DashboardShell({
                       </p>
                     </div>
                     <span
-                      className={`mt-1 inline-flex h-2.5 w-2.5 rounded-full ${
+                      className={`mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border ${
                         cloudHealth.online
-                          ? "bg-emerald-400 shadow-[0_0_18px_rgba(74,222,128,0.65)]"
+                          ? "border-cyan-300/20 bg-cyan-400/10 text-cyan-200 shadow-[0_0_24px_rgba(34,211,238,0.18)]"
                           : driveConnected
-                            ? "bg-amber-300 shadow-[0_0_18px_rgba(252,211,77,0.55)]"
-                            : "bg-zinc-600"
+                            ? "border-amber-300/20 bg-amber-300/10 text-amber-200"
+                            : "border-white/10 bg-white/5 text-zinc-500"
                       }`}
-                    />
+                    >
+                      <Icon name="bolt" className="h-3 w-3" />
+                    </span>
                   </div>
                   <p className="mt-2 text-sm text-zinc-300">
                     {cloudHealth.isPaused
                       ? "พัก polling ระหว่างแท็บไม่ active"
                       : cloudHealth.isPolling
-                        ? "กำลัง sync กับ Cloud..."
+                        ? "กำลัง Sync กับ Cloud..."
                         : cloudHealth.online
-                          ? "อัปเดทอัตโนมัติทุก 10 วินาที"
+                          ? "อัปเดททุก 10 วินาที"
                           : driveConnected
-                            ? "Cloud ตอบกลับชั่วคราวไม่สำเร็จ"
+                            ? "Cloud ตอบกลับไม่สำเร็จ"
                             : "ยังไม่ได้เชื่อมต่อกับ Cloud"}
                   </p>
                   <p className="mt-2 text-xs text-zinc-500">
-                    Last sync: {formatSyncLabel(cloudHealth.checkedAt)}
+                    Sync ล่าสุด: {formatSyncLabel(cloudHealth.checkedAt)}
                   </p>
                   {cloudHealth.error ? (
                     <p className="mt-2 text-xs text-amber-200/90">
