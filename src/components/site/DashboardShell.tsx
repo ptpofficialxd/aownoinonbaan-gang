@@ -717,16 +717,16 @@ export function DashboardShell({
                           : "ระบบ: ไม่พร้อมอัปโหลด"}
                       </Badge>
                     </div>
-                    <h2 className="mt-2 text-3xl font-semibold tracking-tight text-white">
+                    <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">
                       Library
                       <span className="bg-gradient-to-r from-cyan-200 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
                         {" "}
                         ไฟล์ในระบบ
                       </span>
-                      <p className="mt-2 text-sm leading-6 text-zinc-400">
-                    แบ่งปันความน่ารักของสาวๆกันครัฟพี่
-                  </p>
                     </h2>
+                    <p className="mt-2 text-sm leading-6 text-zinc-400">
+                      แบ่งปันความน่ารักของสาวๆกันครัฟพี่
+                    </p>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] lg:w-[29rem]">
