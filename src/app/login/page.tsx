@@ -125,7 +125,6 @@ function LoginView() {
                     disabled={busy}
                     value={username}
                     onChange={(event) => setUsername(event.target.value)}
-                    placeholder="yourusername"
                     className="rounded-xl bg-white/5 pl-10 pr-4 text-zinc-100 placeholder:text-zinc-500 ring-1 ring-inset ring-white/10 transition-all hover:ring-white/20 focus:bg-white/10 focus:ring-2 focus:ring-cyan-400/40 disabled:opacity-50"
                   />
                 </div>

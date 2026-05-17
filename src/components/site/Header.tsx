@@ -47,18 +47,18 @@ export async function Header() {
         <div className="flex shrink-0 items-center gap-2 md:gap-2 lg:gap-3">
           {session ? (
             <>
-              <div className="hidden min-w-0 items-center gap-2 rounded-full border border-white/8 bg-white/[0.03] px-2 py-1.5 sm:flex lg:gap-3 lg:px-3">
-                <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 text-[11px] font-semibold text-slate-950">
+              <div className="hidden h-10 min-w-0 items-center gap-2 rounded-full border border-white/8 bg-white/[0.03] px-2 sm:flex lg:px-2.5">
+                <div className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 text-[10px] font-semibold text-slate-950">
                   {session.name.slice(0, 1).toUpperCase()}
                 </div>
-                <div className="min-w-0 text-[11px] font-medium text-white lg:text-sm">
+                <div className="min-w-0 pr-0.5 text-[10px] font-medium leading-none text-white">
                   <div className="truncate">{session.name}</div>
-                  <div className="hidden text-xs font-normal text-zinc-500 xl:block">
+                  <div className="mt-1 hidden text-[10px] font-normal leading-none text-zinc-500 xl:block">
                     @{session.sub}
                   </div>
                 </div>
                 <Badge
-                  className={`relative overflow-hidden px-3.5 py-1.5 text-[10px] font-semibold tracking-[0.28em] ${getRoleBadgeClass(session.role)}`}
+                  className={`relative h-7 overflow-hidden px-3 py-0 text-[9px] font-semibold tracking-[0.24em] ${getRoleBadgeClass(session.role)}`}
                 >
                   <span
                     className={`absolute inset-y-0 left-0 w-12 rounded-full blur-xl ${
@@ -76,7 +76,7 @@ export async function Header() {
                     }`}
                     aria-hidden="true"
                   />
-                  <span className="relative">
+                  <span className="relative inline-flex h-full items-center">
                     {session.role === "admin" ? "ADMIN" : "MEMBER"}
                   </span>
                 </Badge>
