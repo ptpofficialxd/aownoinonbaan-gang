@@ -38,18 +38,24 @@ export function Hero() {
 
             <div className="mt-6 flex max-w-full flex-wrap items-center justify-center px-2 md:mt-5 lg:mt-7">
               <a href="#library">
-                <Button className="group relative h-12 max-w-full gap-2.5 overflow-hidden rounded-full border border-cyan-200/24 bg-[linear-gradient(135deg,rgba(11,20,34,0.82),rgba(36,77,107,0.74))] px-3.5 text-[0.9rem] font-semibold text-white shadow-[0_24px_60px_-24px_rgba(34,211,238,0.55)] backdrop-blur-xl transition-all duration-300 hover:border-cyan-200/40 hover:bg-[linear-gradient(135deg,rgba(17,30,49,0.9),rgba(44,97,138,0.82))] hover:shadow-[0_26px_70px_-22px_rgba(56,189,248,0.78)] sm:h-14 sm:gap-3 sm:px-5 sm:text-[0.98rem]">
-                  <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0.02)_38%,rgba(255,255,255,0.02))] opacity-90" />
-                  <span className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/75 to-transparent" />
-                  <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/18 bg-white/10 text-cyan-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]">
+                <Button className="group relative h-12 max-w-full gap-3 overflow-hidden rounded-full border border-cyan-300/18 bg-[linear-gradient(135deg,rgba(9,14,24,0.92),rgba(16,43,64,0.84))] px-3.5 text-[0.92rem] font-semibold text-white shadow-[0_22px_55px_-26px_rgba(34,211,238,0.52)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-cyan-200/34 hover:bg-[linear-gradient(135deg,rgba(11,18,31,0.96),rgba(20,59,88,0.9))] hover:shadow-[0_30px_80px_-28px_rgba(56,189,248,0.6)] sm:h-14 sm:px-5 sm:text-[0.98rem]">
+                  <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_22%,rgba(125,211,252,0.18),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0.03)_38%,rgba(255,255,255,0.02))]" />
+                  <span className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-cyan-100/75 to-transparent" />
+                  <span className="pointer-events-none absolute inset-y-1 right-1 w-16 rounded-full bg-cyan-300/8 blur-xl transition-opacity duration-300 group-hover:opacity-100" />
+                  <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-cyan-200/16 bg-cyan-100/8 text-cyan-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] sm:h-9 sm:w-9">
                     <Icon name="folder" className="h-4 w-4" />
                   </span>
-                  <span className="relative text-white [text-shadow:0_1px_10px_rgba(8,12,19,0.45)]">
-                    งื้อออออ
+                  <span className="relative flex flex-col items-start leading-none">
+                    <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-cyan-100/72">
+                      อิอิ
+                    </span>
+                    <span className="mt-1 text-white [text-shadow:0_1px_10px_rgba(8,12,19,0.45)]">
+                      งื้อออออ
+                    </span>
                   </span>
                   <Icon
                     name="arrow-right"
-                    className="relative h-4 w-4 text-cyan-100 transition-transform duration-200 group-hover:translate-x-0.5"
+                    className="relative ml-1 h-4 w-4 text-cyan-100/90 transition-transform duration-200 group-hover:translate-x-1"
                   />
                 </Button>
               </a>
