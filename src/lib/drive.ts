@@ -8,7 +8,7 @@ const GOOGLE_OAUTH_SCOPE = [
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_DRIVE_UPLOAD_URL =
-  "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true";
+  "https://www.googleapis.com/upload/drive/v3/files";
 const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3/files";
 const GOOGLE_DRIVE_PROVIDER = "google_drive";
 export const GOOGLE_DRIVE_STATE_COOKIE = "aownoinonbaan_drive_oauth_state";
@@ -273,6 +273,47 @@ export async function uploadFileToDrive(input: {
   category?: string | null;
   description?: string | null;
 }) {
+  const { sessionUrl } = await createDriveUploadSession({
+    fileName: input.fileName,
+    mimeType: input.mimeType,
+    fileSize: input.file.size,
+    category: input.category,
+    description: input.description,
+  });
+
+  const uploadRes = await fetch(sessionUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": input.mimeType,
+      "Content-Length": String(input.file.size),
+    },
+    body: input.file.stream() as BodyInit,
+    duplex: "half",
+    cache: "no-store",
+  } as RequestInit & { duplex: "half" });
+
+  if (!uploadRes.ok) {
+    const detail = await uploadRes.text();
+    throw new Error(`Drive upload failed: ${uploadRes.status} ${detail}`);
+  }
+
+  return (await uploadRes.json()) as {
+    id: string;
+    name: string;
+    mimeType: string;
+    size?: string;
+    webViewLink?: string;
+    webContentLink?: string;
+  };
+}
+
+export async function createDriveUploadSession(input: {
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  category?: string | null;
+  description?: string | null;
+}) {
   const token = await getAccessToken();
   const { rootFolderId } = getDriveFolderConfig();
   const targetFolderId = input.category
@@ -299,7 +340,7 @@ export async function uploadFileToDrive(input: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json; charset=UTF-8",
       "X-Upload-Content-Type": input.mimeType,
-      "X-Upload-Content-Length": String(input.file.size),
+      "X-Upload-Content-Length": String(input.fileSize),
     },
     body: JSON.stringify(metadata),
     cache: "no-store",
@@ -317,30 +358,7 @@ export async function uploadFileToDrive(input: {
     throw new Error("Drive resumable upload session URL was not returned.");
   }
 
-  const uploadRes = await fetch(sessionUrl, {
-    method: "PUT",
-    headers: {
-      "Content-Type": input.mimeType,
-      "Content-Length": String(input.file.size),
-    },
-    body: input.file.stream() as BodyInit,
-    duplex: "half",
-    cache: "no-store",
-  } as RequestInit & { duplex: "half" });
-
-  if (!uploadRes.ok) {
-    const detail = await uploadRes.text();
-    throw new Error(`Drive upload failed: ${uploadRes.status} ${detail}`);
-  }
-
-  return (await uploadRes.json()) as {
-    id: string;
-    name: string;
-    mimeType: string;
-    size?: string;
-    webViewLink?: string;
-    webContentLink?: string;
-  };
+  return { sessionUrl };
 }
 
 async function getCategoryFolderId(

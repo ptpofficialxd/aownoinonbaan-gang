@@ -19,6 +19,10 @@ export function UploadForm({
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [phase, setPhase] = useState<
+    "idle" | "preparing" | "uploading" | "finalizing"
+  >("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileId = useId();
@@ -35,26 +39,56 @@ export function UploadForm({
     }
 
     setBusy(true);
+    setProgress(0);
+    setPhase("preparing");
     setError(null);
     setMessage(null);
 
-    const formData = new FormData();
-    formData.set("file", file);
-    formData.set("category", category);
-    formData.set("description", description);
-
     try {
-      const res = await fetch("/api/media/upload", {
-        method: "POST",
-        body: formData,
+      setPhase("uploading");
+
+      const formData = new FormData();
+      formData.set("file", file);
+      formData.set("category", category);
+      formData.set("description", description);
+
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/media/upload", true);
+
+        xhr.upload.onprogress = (uploadEvent) => {
+          if (!uploadEvent.lengthComputable) return;
+          const ratio = uploadEvent.total
+            ? uploadEvent.loaded / uploadEvent.total
+            : 0;
+          setProgress(Math.max(5, Math.min(88, Math.round(ratio * 100))));
+        };
+
+        xhr.onerror = () => {
+          reject(new Error("Network Error: มีปัญหาขณะอัปโหลด"));
+        };
+
+        xhr.onload = () => {
+          let payload: { error?: string } = {};
+          try {
+            payload = JSON.parse(xhr.responseText);
+          } catch {}
+
+          if (xhr.status < 200 || xhr.status >= 300) {
+            reject(new Error(payload.error || "อัปโหลดไม่สำเร็จ"));
+            return;
+          }
+
+          resolve();
+        };
+
+        xhr.send(formData);
       });
 
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      setPhase("finalizing");
+      setProgress(97);
 
-      if (!res.ok) {
-        throw new Error(data.error || "Upload failed");
-      }
-
+      setProgress(100);
       setMessage("อัปโหลดสำเร็จแล้ว ไฟล์ถูกส่งขึ้นคลาวด์เรียบร้อย");
       setDescription("");
       setFile(null);
@@ -70,8 +104,18 @@ export function UploadForm({
       );
     } finally {
       setBusy(false);
+      setPhase("idle");
     }
   }
+
+  const progressLabel =
+    phase === "preparing"
+      ? "กำลังเตรียมการอัปโหลด"
+      : phase === "uploading"
+        ? `กำลังอัปโหลด ${progress}%`
+        : phase === "finalizing"
+          ? "กำลังบันทึกไฟล์เข้าระบบ"
+          : null;
 
   return (
     <form onSubmit={onSubmit} className="space-y-5">
@@ -165,9 +209,35 @@ export function UploadForm({
         </p>
       ) : null}
 
+      {busy ? (
+        <div className="rounded-[24px] border border-cyan-300/16 bg-gradient-to-br from-cyan-400/10 via-sky-400/8 to-blue-500/10 p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-white">
+                {progressLabel ?? "กำลังอัปโหลด"}
+              </p>
+              <p className="mt-1 text-xs uppercase tracking-[0.2em] text-cyan-100/70">
+                รอแปปนึงนะงื้อออออ
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-semibold text-cyan-100">
+                {progress}%
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/8 ring-1 ring-inset ring-white/8">
+            <div
+              className="h-full rounded-full bg-[linear-gradient(90deg,rgba(103,232,249,0.95),rgba(34,211,238,0.95),rgba(59,130,246,0.95))] shadow-[0_0_24px_rgba(34,211,238,0.35)] transition-[width] duration-300 ease-out"
+              style={{ width: `${Math.max(progress, 4)}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-zinc-500">
-          ระบบจะบันทึกว่าไฟล์นี้อัปโดย user ที่กำลังล็อกอินอยู่
+          ระบบจะบันทึกว่าไฟล์นี้ถูกอัปโหลดโดยคุณ
         </p>
         <div className="flex items-center gap-3">
           {onCancel ? (

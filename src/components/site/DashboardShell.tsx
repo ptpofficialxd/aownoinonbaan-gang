@@ -136,18 +136,7 @@ export function DashboardShell({
                 </h2>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    คลัง
-                  </p>
-                  <p className="mt-3 text-3xl font-semibold text-white">
-                    {totalItems}
-                  </p>
-                  <p className="mt-2 text-sm text-zinc-400">
-                    ไฟล์ทั้งหมดในระบบ
-                  </p>
-                </div>
+              <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
                     สมาชิก
@@ -156,9 +145,34 @@ export function DashboardShell({
                     {totalMembers}
                   </p>
                   <p className="mt-2 text-sm text-zinc-400">
-                    สมาชิกทั้งหมดในระบบ
+                    สมาชิกในระบบ
                   </p>
                 </div>
+
+                <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                    คลัง
+                  </p>
+                  <p className="mt-3 text-3xl font-semibold text-white">
+                    {totalItems}
+                  </p>
+                  <p className="mt-2 text-sm text-zinc-400">
+                    ไฟล์ในระบบ
+                  </p>
+                </div>
+
+                <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                    หมวดหมู่
+                  </p>
+                  <p className="mt-3 text-3xl font-semibold text-white">
+                    {categories.length}
+                  </p>
+                  <p className="mt-2 text-sm text-zinc-400">
+                    หมวดหมู่ในระบบ
+                  </p>
+                </div>
+
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
                     ขนาดไฟล์
@@ -167,9 +181,12 @@ export function DashboardShell({
                     {formatBytes(totalBytes)}
                   </p>
                   <p className="mt-2 text-sm text-zinc-400">
-                    ขนาดของไฟล์ทั้งหมดในระบบ
+                    {driveConnected
+                      ? "ใน Cloud"
+                      : "ยังไม่ได้เชื่อมต่อกับ Cloud"}
                   </p>
                 </div>
+
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
                     พื้นที่ว่าง
@@ -181,19 +198,8 @@ export function DashboardShell({
                   </p>
                   <p className="mt-2 text-sm text-zinc-400">
                     {driveConnected
-                      ? "พื้นที่ว่างเหลือใน Cloud"
+                      ? "ใน Cloud"
                       : "ยังไม่ได้เชื่อมต่อกับ Cloud"}
-                  </p>
-                </div>
-                <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    หมวดหมู่
-                  </p>
-                  <p className="mt-3 text-3xl font-semibold text-white">
-                    {categories.length}
-                  </p>
-                  <p className="mt-2 text-sm text-zinc-400">
-                    หมวดหมู่ที่ตอนนี้มีไฟล์อยู่
                   </p>
                 </div>
               </div>

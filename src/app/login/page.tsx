@@ -76,7 +76,7 @@ function LoginView() {
               </span>
             </h1>
             <p className="mt-2 text-sm leading-6 text-zinc-400">
-              เอาไว้ลงเหี้ยอะไรก็ได้แล้วแต่มึง{" "}
+              Developed by{" "}
               <a
                 href="https://www.instagram.com/ptpofficialxd/"
                 target="_blank"
@@ -85,6 +85,7 @@ function LoginView() {
               >
                 {contact}
               </a>
+              {" "}(กูว่าง)
             </p>
 
             {error ? (
@@ -176,7 +177,7 @@ function LoginView() {
             </form>
 
             <p className="mt-6 text-center text-xs text-zinc-500">
-              เอเอ้สะกะดุ้งกะดิ้ง ปะดุ่งดิ้งดุ่งปะดุ่งกิ้ง
+              สร้างมาแก้ไขปัญหาไอ้แก่บ้ากามชอบขอรูป 5TB จุกๆ
             </p>
           </div>
         </div>
