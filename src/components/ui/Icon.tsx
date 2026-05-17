@@ -22,6 +22,8 @@ type IconName =
   | "user"
   | "tag"
   | "file"
+  | "flame"
+  | "chart-up"
   | "google-drive";
 
 const iconMap: Record<IconName, ReactNode> = {
@@ -360,6 +362,45 @@ const iconMap: Record<IconName, ReactNode> = {
         d="M14 3v5h5"
         fill="none"
         stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    </>
+  ),
+  flame: (
+    <path
+      d="M13.5 2.8c.7 2.7-.9 4.5-2.3 5.9-1.4 1.4-2.7 2.7-2.7 4.9 0 2.4 1.8 4.4 4.3 4.4 2.7 0 4.7-2.1 4.7-5 0-3.7-2.3-6.1-4-10.2Zm-2.6 9.9c1-1 2-2 2.2-3.8 1.4 1.9 2 3.1 2 4.7 0 1.7-1 2.9-2.4 2.9-1.3 0-2.2-1-2.2-2.3 0-.7.1-1 .4-1.5Z"
+      fill="currentColor"
+    />
+  ),
+  "chart-up": (
+    <>
+      <path
+        d="M5 19V9"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
+      <path
+        d="M12 19V5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
+      <path
+        d="M19 19v-8"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
+      <path
+        d="m4 10 5-4 4 2 7-5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth="2"
       />

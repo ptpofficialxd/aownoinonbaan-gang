@@ -717,7 +717,7 @@ export function DashboardShell({
                           : "ระบบ: ไม่พร้อมอัปโหลด"}
                       </Badge>
                     </div>
-                    <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">
+                    <h2 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
                       Library
                       <span className="bg-gradient-to-r from-cyan-200 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
                         {" "}
@@ -990,9 +990,14 @@ export function DashboardShell({
           <div className="grid gap-6 xl:grid-cols-2">
             <Card className="rounded-[30px]">
               <CardHeader>
-                <Badge className="w-fit border-white/10 bg-white/6 text-zinc-300">
-                  ฮิตจังอะเรา
-                </Badge>
+                <div className="flex items-start justify-between gap-4">
+                  <Badge className="w-fit border-white/10 bg-white/6 text-zinc-300">
+                    ฮิตจังอะเรา
+                  </Badge>
+                  <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-rose-300/20 bg-rose-400/10 text-rose-200 shadow-[0_0_20px_rgba(251,113,133,0.18)]">
+                    <Icon name="flame" className="h-3 w-3" />
+                  </span>
+                </div>
                 <div className="mt-5 space-y-4">
                   {dashboard.categories.length ? (
                     dashboard.categories.map((category) => (
@@ -1030,9 +1035,14 @@ export function DashboardShell({
 
             <Card className="rounded-[30px]">
               <CardHeader>
-                <Badge className="w-fit border-white/10 bg-white/6 text-zinc-300">
-                  จำนวนอัปโหลด
-                </Badge>
+                <div className="flex items-start justify-between gap-4">
+                  <Badge className="w-fit border-white/10 bg-white/6 text-zinc-300">
+                    จำนวนอัปโหลด
+                  </Badge>
+                  <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-sky-300/20 bg-sky-400/10 text-sky-200 shadow-[0_0_20px_rgba(56,189,248,0.18)]">
+                    <Icon name="chart-up" className="h-3 w-3" />
+                  </span>
+                </div>
                 <div className="mt-5 space-y-3">
                   {dashboard.topMembers.length ? (
                     dashboard.topMembers.map((member: MemberSummary, index) => (
