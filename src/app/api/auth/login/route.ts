@@ -56,7 +56,7 @@ export async function POST(request: Request) {
 
   if (!body?.email || !body?.password) {
     return NextResponse.json(
-      { error: "Email and password are required." },
+      { error: "กรุณากรอกชื่อผู้ใช้งานและรหัสผ่าน" },
       { status: 400 },
     );
   }
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
       expiresAt: Date.now() + 60_000,
     });
     return NextResponse.json(
-      { error: "Invalid email or password." },
+      { error: "ชื่อผู้ใช้งานหรือรหัสผ่านผิด" },
       { status: 401 },
     );
   }

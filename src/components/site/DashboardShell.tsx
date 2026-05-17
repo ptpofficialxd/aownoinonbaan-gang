@@ -71,7 +71,6 @@ export function DashboardShell({
   }, [activeCategory, deferredSearch, items]);
 
   const latestItem = items[0] ?? null;
-  const categoryLeader = categories[0] ?? null;
   const topMember = topMembers[0] ?? null;
 
   async function handleDelete(item: MediaItem) {
@@ -115,8 +114,8 @@ export function DashboardShell({
           <div className="pointer-events-none absolute -right-14 top-0 h-52 w-52 rounded-full bg-cyan-400/12 blur-3xl" />
           <div className="pointer-events-none absolute -left-10 bottom-0 h-40 w-40 rounded-full bg-emerald-400/10 blur-3xl" />
 
-          <div className="relative grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-            <div className="space-y-6">
+          <div className="relative space-y-6">
+            <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
                 <Badge className="border-cyan-400/20 bg-cyan-400/10 text-cyan-100">
                   แผงควบคุม
@@ -135,7 +134,9 @@ export function DashboardShell({
                   </span>
                 </h2>
               </div>
+            </div>
 
+            <div className="grid gap-4 xl:grid-cols-[1.55fr_0.95fr] xl:items-stretch">
               <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
@@ -203,10 +204,9 @@ export function DashboardShell({
                   </p>
                 </div>
               </div>
-            </div>
 
-            <div className="grid gap-4">
-              <div className="rounded-[28px] border border-white/10 bg-black/20 p-5">
+              <div className="grid gap-4 xl:grid-rows-2">
+                <div className="rounded-[28px] border border-white/10 bg-black/20 p-5 xl:h-full">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
@@ -242,10 +242,9 @@ export function DashboardShell({
                     }`}
                   />
                 </div>
-              </div>
+                </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-                <div className="rounded-[28px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-cyan-400/[0.06] p-5">
+                <div className="rounded-[28px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-cyan-400/[0.06] p-5 xl:h-full">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
                     อัปโหลดล่าสุด 🚀
                   </p>
@@ -256,20 +255,6 @@ export function DashboardShell({
                     {latestItem
                       ? `${latestItem.uploaderName} · ${formatDate(latestItem.createdAt)}`
                       : "กดอัปโหลดเพื่อเริ่มอัปโหลดไฟล์ได้เลย"}
-                  </p>
-                </div>
-
-                <div className="rounded-[28px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-emerald-400/[0.05] p-5">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    หมวดหมู่ฮอต 🔥
-                  </p>
-                  <p className="mt-3 text-base font-semibold text-white">
-                    {categoryLeader ? categoryLeader.name : "ยังไม่มีการอัปโหลด"}
-                  </p>
-                  <p className="mt-2 text-sm text-zinc-400">
-                    {categoryLeader
-                      ? `${categoryLeader.count} ฮอตจังเลยอะเรา`
-                      : "เมื่อเริ่มอัปโหลดไฟล์ ระบบจะสรุปหมวดหมู่ที่มีการใช้งานเยอะที่สุดให้"}
                   </p>
                 </div>
               </div>

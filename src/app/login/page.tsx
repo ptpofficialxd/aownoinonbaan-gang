@@ -90,8 +90,8 @@ function LoginView() {
 
             {error ? (
               <div className="mt-5 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-xs leading-5 text-rose-200">
-                <div className="flex gap-2">
-                  <span className="mt-0.5 inline-block h-2 w-2 flex-shrink-0 rounded-full bg-rose-300" />
+                <div className="flex items-center gap-2">
+                  <span className="inline-block h-2 w-2 flex-shrink-0 rounded-full bg-rose-300" />
                   <span>{error}</span>
                 </div>
               </div>
