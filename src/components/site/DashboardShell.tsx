@@ -51,6 +51,7 @@ export function DashboardShell({
   const [busyIds, setBusyIds] = useState<string[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [previewItem, setPreviewItem] = useState<MediaItem | null>(null);
   const deferredSearch = useDeferredValue(search);
 
   useEffect(() => {
@@ -76,6 +77,17 @@ export function DashboardShell({
       `${window.location.pathname}${window.location.search}#library`,
     );
   }, [uploadOpen]);
+
+  useEffect(() => {
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setPreviewItem(null);
+      }
+    }
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, []);
 
   const busyIdSet = useMemo(() => new Set(busyIds), [busyIds]);
   const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
@@ -232,6 +244,11 @@ export function DashboardShell({
       ids,
       `ลบ ${ids.length} ไฟล์ที่เลือกออกจาก Google Drive และระบบเลยไหม?`,
     );
+  }
+
+  function openPreview(item: MediaItem) {
+    if (!isPreviewableImage(item.mimeType)) return;
+    setPreviewItem(item);
   }
 
   return (
@@ -515,7 +532,7 @@ export function DashboardShell({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+                  <div className="grid grid-cols-3 gap-2.5 md:grid-cols-4 md:gap-3 2xl:grid-cols-5">
                     {filteredItems.map((item) => {
                       const isSelected = selectedIdSet.has(item.id);
                       const isBusy = busyIdSet.has(item.id);
@@ -555,7 +572,16 @@ export function DashboardShell({
                             </button>
                           ) : null}
 
-                          <div className="relative aspect-square overflow-hidden border-b border-white/8 bg-gradient-to-br from-cyan-400/[0.14] via-sky-500/[0.08] to-transparent md:aspect-[4/3]">
+                          <button
+                            type="button"
+                            onClick={() => openPreview(item)}
+                            disabled={!isPreviewableImage(item.mimeType)}
+                            className={`relative block aspect-square w-full overflow-hidden border-b border-white/8 bg-gradient-to-br from-cyan-400/[0.14] via-sky-500/[0.08] to-transparent text-left md:aspect-[4/3] ${
+                              isPreviewableImage(item.mimeType)
+                                ? "cursor-zoom-in"
+                                : "cursor-default"
+                            }`}
+                          >
                             {isPreviewableImage(item.mimeType) ? (
                               <>
                                 {/* biome-ignore lint/performance/noImgElement: authenticated media preview is streamed from a protected route */}
@@ -590,7 +616,7 @@ export function DashboardShell({
                                 {formatBytes(item.fileSize)}
                               </span>
                             </div>
-                          </div>
+                          </button>
 
                           <div className="space-y-3 p-3 sm:space-y-4 sm:p-4">
                             <div className="space-y-1.5 sm:space-y-2">
@@ -612,17 +638,7 @@ export function DashboardShell({
                               {item.description || "ไม่มีโน้ตประกอบไฟล์นี้"}
                             </p>
 
-                            <div className="flex items-center gap-2 pt-0.5 sm:pt-1">
-                              <a
-                                href={`/api/media/${item.id}/content`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full border border-cyan-300/18 bg-cyan-400/8 px-3 text-xs font-medium text-cyan-100 transition-all hover:border-cyan-300/30 hover:bg-cyan-400/12 sm:h-10 sm:gap-2 sm:px-4 sm:text-sm"
-                              >
-                                เปิดไฟล์
-                                <Icon name="arrow-right" className="h-4 w-4" />
-                              </a>
-
+                            <div className="flex items-center justify-end gap-2 pt-0.5 sm:pt-1">
                               {canManageDrive ? (
                                 <button
                                   type="button"
@@ -782,6 +798,49 @@ export function DashboardShell({
                 onCancel={() => setUploadOpen(false)}
                 onUploaded={() => setUploadOpen(false)}
               />
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {previewItem ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/82 p-3 backdrop-blur-md sm:p-5">
+          <button
+            type="button"
+            aria-label="Close preview"
+            onClick={() => setPreviewItem(null)}
+            className="absolute inset-0"
+          />
+
+          <div className="relative z-10 flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[26px] border border-white/10 bg-[#0b0d12] shadow-[0_45px_140px_-40px_rgba(0,0,0,0.95)]">
+            <div className="flex items-start justify-between gap-4 border-b border-white/8 px-4 py-3 sm:px-5">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-white sm:text-base">
+                  {previewItem.fileName}
+                </p>
+                <p className="mt-1 text-xs text-zinc-400 sm:text-sm">
+                  คลิกขวา หรือกดค้างบนรูปเพื่อบันทึกไฟล์ได้เลย
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setPreviewItem(null)}
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-zinc-300 transition-all hover:bg-white/[0.08] hover:text-white"
+              >
+                <Icon name="x" className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="overflow-auto p-3 sm:p-5">
+              <div className="flex min-h-[40vh] items-center justify-center">
+                {/* biome-ignore lint/performance/noImgElement: authenticated media preview must remain directly savable from the lightbox */}
+                <img
+                  src={`/api/media/${previewItem.id}/content`}
+                  alt={previewItem.fileName}
+                  className="max-h-[78vh] w-auto max-w-full rounded-[20px] object-contain select-auto"
+                />
+              </div>
             </div>
           </div>
         </div>
