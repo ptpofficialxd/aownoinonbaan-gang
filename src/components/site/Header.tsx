@@ -4,6 +4,14 @@ import { Icon } from "@/components/ui/Icon";
 import { getServerSession } from "@/lib/session";
 import { Logo } from "./Logo";
 
+function getRoleBadgeClass(role: "admin" | "member") {
+  if (role === "admin") {
+    return "border-fuchsia-300/25 bg-[linear-gradient(135deg,rgba(244,114,182,0.22),rgba(192,38,211,0.18))] text-pink-50 shadow-[0_0_0_1px_rgba(244,114,182,0.1),0_0_24px_rgba(236,72,153,0.22),inset_0_1px_0_rgba(255,255,255,0.16)]";
+  }
+
+  return "border-cyan-300/25 bg-[linear-gradient(135deg,rgba(34,211,238,0.2),rgba(59,130,246,0.18))] text-cyan-50 shadow-[0_0_0_1px_rgba(56,189,248,0.08),0_0_24px_rgba(34,211,238,0.18),inset_0_1px_0_rgba(255,255,255,0.14)]";
+}
+
 export async function Header() {
   const session = await getServerSession();
 
@@ -46,10 +54,32 @@ export async function Header() {
                 <div className="min-w-0 text-[11px] font-medium text-white lg:text-sm">
                   <div className="truncate">{session.name}</div>
                   <div className="hidden text-xs font-normal text-zinc-500 xl:block">
-                    {session.sub}
+                    @{session.sub}
                   </div>
                 </div>
-                <Badge>{session.role}</Badge>
+                <Badge
+                  className={`relative overflow-hidden px-3.5 py-1.5 text-[10px] font-semibold tracking-[0.28em] ${getRoleBadgeClass(session.role)}`}
+                >
+                  <span
+                    className={`absolute inset-y-0 left-0 w-12 rounded-full blur-xl ${
+                      session.role === "admin"
+                        ? "bg-pink-300/18"
+                        : "bg-cyan-200/18"
+                    }`}
+                    aria-hidden="true"
+                  />
+                  <span
+                    className={`relative mr-2 inline-block h-1.5 w-1.5 rounded-full ${
+                      session.role === "admin"
+                        ? "bg-pink-100 shadow-[0_0_12px_rgba(251,207,232,0.9)]"
+                        : "bg-cyan-100 shadow-[0_0_12px_rgba(207,250,254,0.85)]"
+                    }`}
+                    aria-hidden="true"
+                  />
+                  <span className="relative">
+                    {session.role === "admin" ? "ADMIN" : "MEMBER"}
+                  </span>
+                </Badge>
               </div>
               <form action="/api/auth/logout" method="post">
                 <Button

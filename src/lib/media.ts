@@ -36,7 +36,7 @@ export type MediaItem = {
   driveViewLink: string | null;
   createdAt: string;
   uploaderName: string;
-  uploaderEmail: string;
+  uploaderUsername: string;
 };
 
 type MediaRow = {
@@ -50,7 +50,7 @@ type MediaRow = {
   drive_view_link: string | null;
   created_at: string;
   uploader_name: string;
-  uploader_email: string;
+  uploader_username: string;
 };
 
 type MediaRecordRow = {
@@ -83,7 +83,7 @@ function mapMediaRow(row: MediaRow): MediaItem {
     driveViewLink: row.drive_view_link,
     createdAt: row.created_at,
     uploaderName: row.uploader_name,
-    uploaderEmail: row.uploader_email,
+    uploaderUsername: row.uploader_username,
   };
 }
 
@@ -100,7 +100,7 @@ export async function listMediaItems() {
       media_items.drive_view_link,
       media_items.created_at,
       users.name AS uploader_name,
-      users.email AS uploader_email
+      users.username AS uploader_username
     FROM media_items
     INNER JOIN users ON users.id = media_items.uploader_id
     ORDER BY media_items.created_at DESC
@@ -195,21 +195,26 @@ export async function getDashboardData() {
   const items = await listMediaItems();
   const totalBytes = items.reduce((sum, item) => sum + item.fileSize, 0);
   const categoryCounts = new Map<string, number>();
-  const memberCounts = new Map<string, number>();
+  const memberCounts = new Map<string, { name: string; uploads: number }>();
 
   for (const item of items) {
     categoryCounts.set(
       item.category,
       (categoryCounts.get(item.category) ?? 0) + 1,
     );
-    memberCounts.set(
-      item.uploaderName,
-      (memberCounts.get(item.uploaderName) ?? 0) + 1,
-    );
+    const current = memberCounts.get(item.uploaderUsername);
+    memberCounts.set(item.uploaderUsername, {
+      name: item.uploaderName,
+      uploads: (current?.uploads ?? 0) + 1,
+    });
   }
 
   const topMembers = Array.from(memberCounts.entries())
-    .map(([name, uploads]) => ({ name, uploads }))
+    .map(([username, summary]) => ({
+      username,
+      name: summary.name,
+      uploads: summary.uploads,
+    }))
     .sort((a, b) => b.uploads - a.uploads)
     .slice(0, 4);
 

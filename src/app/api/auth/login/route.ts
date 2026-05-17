@@ -4,7 +4,11 @@ import {
   SESSION_TTL_SECONDS,
   signSession,
 } from "@/lib/auth-edge";
-import { updateLastLogin, verifyCredentials } from "@/lib/auth-server";
+import {
+  normalizeUsername,
+  updateLastLogin,
+  verifyCredentials,
+} from "@/lib/auth-server";
 
 const attempts = new Map<
   string,
@@ -50,34 +54,31 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json().catch(() => null)) as {
-    email?: string;
+    username?: string;
     password?: string;
   } | null;
 
-  if (!body?.email || !body?.password) {
+  if (!body?.username || !body?.password) {
     return NextResponse.json(
       { error: "กรุณากรอกชื่อผู้ใช้งานและรหัสผ่าน" },
       { status: 400 },
     );
   }
 
-  const user = await verifyCredentials(body.email, body.password);
+  const user = await verifyCredentials(body.username, body.password);
   if (!user) {
     attempts.set(ip, {
       count: record.count + 1,
       expiresAt: Date.now() + 60_000,
     });
-    return NextResponse.json(
-      { error: "ชื่อผู้ใช้งานหรือรหัสผ่านผิด" },
-      { status: 401 },
-    );
+    return NextResponse.json({ error: "ชื่อผู้ใช้งานหรือรหัสผ่านผิด" }, { status: 401 });
   }
 
   attempts.delete(ip);
   await updateLastLogin(user.id).catch(() => null);
 
   const token = await signSession({
-    sub: user.email,
+    sub: normalizeUsername(user.username),
     userId: user.id,
     name: user.name,
     role: user.role,

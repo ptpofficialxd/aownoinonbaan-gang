@@ -45,7 +45,8 @@ export default async function HomePage() {
 
       <Hero />
       <DashboardShell
-        canManageDrive={session.role === "admin"}
+        canConnectDrive={session.role === "admin"}
+        canManageDrive={true}
         driveAccountEmail={drive.accountEmail}
         driveConnected={drive.connected}
         items={dashboard.items}

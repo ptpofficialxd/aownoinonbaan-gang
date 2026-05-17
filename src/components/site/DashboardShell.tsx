@@ -17,6 +17,7 @@ import type { MediaItem } from "@/lib/media";
 import { UploadForm } from "./UploadForm";
 
 type MemberSummary = {
+  username: string;
   name: string;
   uploads: number;
 };
@@ -51,6 +52,7 @@ function formatSyncLabel(value: string | null) {
 }
 
 export function DashboardShell({
+  canConnectDrive,
   canManageDrive,
   driveAccountEmail,
   driveConnected,
@@ -58,6 +60,7 @@ export function DashboardShell({
   remainingDriveBytes,
   totalMembers,
 }: {
+  canConnectDrive: boolean;
   canManageDrive: boolean;
   driveAccountEmail: string | null;
   driveConnected: boolean;
@@ -228,17 +231,17 @@ export function DashboardShell({
       0,
     );
     const categoryCounts = new Map<string, number>();
-    const memberCounts = new Map<string, number>();
+    const memberCounts = new Map<string, { name: string; uploads: number }>();
 
     for (const item of libraryItems) {
       categoryCounts.set(
         item.category,
         (categoryCounts.get(item.category) ?? 0) + 1,
       );
-      memberCounts.set(
-        item.uploaderName,
-        (memberCounts.get(item.uploaderName) ?? 0) + 1,
-      );
+      memberCounts.set(item.uploaderUsername, {
+        name: item.uploaderName,
+        uploads: (memberCounts.get(item.uploaderUsername)?.uploads ?? 0) + 1,
+      });
     }
 
     const categories = Array.from(categoryCounts.entries())
@@ -246,7 +249,11 @@ export function DashboardShell({
       .sort((a, b) => b.count - a.count);
 
     const topMembers = Array.from(memberCounts.entries())
-      .map(([name, uploads]) => ({ name, uploads }))
+      .map(([username, summary]) => ({
+        username,
+        name: summary.name,
+        uploads: summary.uploads,
+      }))
       .sort((a, b) => b.uploads - a.uploads)
       .slice(0, 4);
 
@@ -265,7 +272,7 @@ export function DashboardShell({
       const matchesCategory =
         activeCategory === "all" || item.category === activeCategory;
       const haystack =
-        `${item.fileName} ${item.description ?? ""} ${item.uploaderName}`.toLowerCase();
+        `${item.fileName} ${item.description ?? ""} ${item.uploaderName} ${item.uploaderUsername}`.toLowerCase();
       const matchesSearch = !keyword || haystack.includes(keyword);
       return matchesCategory && matchesSearch;
     });
@@ -579,11 +586,11 @@ export function DashboardShell({
                       <p className="break-words text-sm leading-6 text-zinc-400">
                         {driveConnected
                           ? `บัญชี: ${driveAccountEmail ?? "Connected successfully"}`
-                          : canManageDrive
+                          : canConnectDrive
                             ? ""
-                            : "กำลังรอ Admin เชื่อมต่อ Google Drive ของระบบ"}
+                            : "กำลังรอ Admin เชื่อมต่อ Cloud Server"}
                       </p>
-                      {!driveConnected && canManageDrive ? (
+                      {!driveConnected && canConnectDrive ? (
                         <a
                           href="/api/google-drive/oauth/start"
                           className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/12 px-4 text-sm font-medium text-emerald-50 transition-all hover:border-emerald-300/35 hover:bg-emerald-400/18"
@@ -622,7 +629,7 @@ export function DashboardShell({
                       </p>
                       <p className="mt-2 break-words text-sm text-zinc-400">
                         {dashboard.latestItem
-                          ? `${dashboard.latestItem.uploaderName} · ${formatDate(
+                          ? `@${dashboard.latestItem.uploaderUsername} · ${formatDate(
                               dashboard.latestItem.createdAt,
                             )}`
                           : "กดอัปโหลดเพื่อเริ่มอัปโหลดไฟล์ได้เลย"}
@@ -875,7 +882,7 @@ export function DashboardShell({
                                 {item.fileName}
                               </h3>
                               <p className="truncate text-xs text-zinc-400 sm:text-sm">
-                                {item.uploaderName}
+                                @{item.uploaderUsername}
                               </p>
                               <p className="text-[11px] text-zinc-500 sm:text-xs">
                                 {formatDate(item.createdAt)}
@@ -954,7 +961,9 @@ export function DashboardShell({
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-zinc-500">ยังไม่มีการอัปโหลด ณ ขณะนี้</p>
+                    <p className="text-sm text-zinc-500">
+                      ยังไม่มีการอัปโหลด ณ ขณะนี้
+                    </p>
                   )}
                 </div>
               </CardHeader>
@@ -969,12 +978,15 @@ export function DashboardShell({
                   {dashboard.topMembers.length ? (
                     dashboard.topMembers.map((member: MemberSummary, index) => (
                       <div
-                        key={member.name}
+                        key={member.username}
                         className="flex items-center justify-between rounded-[22px] border border-white/8 bg-black/18 px-4 py-3"
                       >
                         <div>
                           <p className="text-sm font-medium text-white">
-                            {index + 1}. {member.name}
+                            {index + 1}. @{member.username}
+                          </p>
+                          <p className="mt-1 text-xs text-zinc-500">
+                            {member.name}
                           </p>
                         </div>
                         <span className="text-sm text-cyan-200">
@@ -992,11 +1004,11 @@ export function DashboardShell({
                     ขยันมากมั้ง (เยอะสุด)
                   </p>
                   <p className="mt-2 text-base font-semibold text-white">
-                    {topMember ? topMember.name : ""}
+                    {topMember ? `@${topMember.username}` : ""}
                   </p>
                   <p className="mt-1 text-sm text-zinc-400">
                     {topMember
-                      ? `${topMember.uploads} ครั้ง`
+                      ? `${topMember.name} · ${topMember.uploads} ครั้ง`
                       : "อัปโหลดไฟล์เพื่อเริ่มกิจกรรม Leaderboard"}
                   </p>
                 </div>

@@ -15,6 +15,8 @@ Private cloud space for the gang. This Next.js app uses:
 4. Create your first user with `bun run user:add`
 5. Start the app with `bun run dev`
 
+Users sign in with `username` plus password.
+
 ## Google Drive setup
 
 1. Create a Google Cloud service account

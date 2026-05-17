@@ -9,7 +9,7 @@ if (!process.env.DATABASE_URL) {
 
 const sql = neon(process.env.DATABASE_URL);
 const rows = await sql`
-  SELECT email, name, role, is_active, last_login_at, created_at
+  SELECT username, name, role, is_active, last_login_at, created_at
   FROM users
   ORDER BY created_at ASC
 `;

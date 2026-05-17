@@ -15,10 +15,6 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (session.role !== "admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
   const params = await context.params;
   const record = await getMediaRecord(params.id);
   if (!record) {

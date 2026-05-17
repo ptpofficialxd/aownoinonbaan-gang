@@ -14,7 +14,7 @@ const ARGON2_OPTIONS = {
 
 type UserRow = {
   id: string;
-  email: string;
+  username: string;
   name: string;
   role: Role;
   password_hash: string;
@@ -23,7 +23,7 @@ type UserRow = {
 
 export type User = {
   id: string;
-  email: string;
+  username: string;
   name: string;
   role: Role;
   passwordHash: string;
@@ -57,12 +57,16 @@ export async function verifyPassword(password: string, stored: string) {
   }
 }
 
-export async function verifyCredentials(email: string, password: string) {
-  const normalizedEmail = email.trim().toLowerCase();
+export function normalizeUsername(username: string) {
+  return username.trim().toLowerCase();
+}
+
+export async function verifyCredentials(username: string, password: string) {
+  const normalizedUsername = normalizeUsername(username);
   const rows = (await sql()`
-    SELECT id, email, name, role, password_hash, is_active
+    SELECT id, username, name, role, password_hash, is_active
     FROM users
-    WHERE lower(email) = ${normalizedEmail}
+    WHERE lower(username) = ${normalizedUsername}
     LIMIT 1
   `) as UserRow[];
 
@@ -76,7 +80,7 @@ export async function verifyCredentials(email: string, password: string) {
 
   return {
     id: row.id,
-    email: row.email,
+    username: row.username,
     name: row.name,
     role: row.role,
     passwordHash: row.password_hash,

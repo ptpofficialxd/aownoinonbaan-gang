@@ -11,10 +11,10 @@ function LoginView() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/";
   const contact = process.env.NEXT_PUBLIC_CONTACT_HANDLE || "@ptpofficialxd";
-  const emailId = useId();
+  const usernameId = useId();
   const passwordId = useId();
 
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -31,7 +31,7 @@ function LoginView() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
 
       const data = (await res.json().catch(() => ({}))) as {
@@ -108,24 +108,24 @@ function LoginView() {
             <form onSubmit={onSubmit} className="mt-6 space-y-4">
               <div>
                 <label
-                  htmlFor={emailId}
+                  htmlFor={usernameId}
                   className="mb-1.5 block text-xs font-medium text-zinc-400"
                 >
-                  Email
+                  Username
                 </label>
                 <div className="relative">
                   <Icon
-                    name="mail"
+                    name="user"
                     className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500"
                   />
                   <Input
-                    id={emailId}
-                    type="email"
+                    id={usernameId}
+                    type="text"
                     required
                     disabled={busy}
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="you@email.com"
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
+                    placeholder="yourusername"
                     className="rounded-xl bg-white/5 pl-10 pr-4 text-zinc-100 placeholder:text-zinc-500 ring-1 ring-inset ring-white/10 transition-all hover:ring-white/20 focus:bg-white/10 focus:ring-2 focus:ring-cyan-400/40 disabled:opacity-50"
                   />
                 </div>
