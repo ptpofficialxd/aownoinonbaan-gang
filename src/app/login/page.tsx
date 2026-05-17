@@ -63,7 +63,14 @@ function LoginView() {
 
       <div className="w-full max-w-md min-w-0">
         <div className="relative w-full min-w-0 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 backdrop-blur-xl sm:p-8">
-          <div className="pointer-events-none absolute -top-24 -right-24 h-48 w-48 rounded-full bg-cyan-400/20 blur-3xl" />
+          <div
+            className="pointer-events-none absolute inset-0 opacity-90"
+            aria-hidden="true"
+            style={{
+              background:
+                "radial-gradient(circle at top right, rgba(34, 211, 238, 0.18) 0, rgba(34, 211, 238, 0.12) 18%, rgba(34, 211, 238, 0.06) 28%, transparent 42%)",
+            }}
+          />
           <div className="relative">
             <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400/20 to-violet-500/20 ring-1 ring-inset ring-white/10">
               <Icon name="lock" className="h-5 w-5 text-cyan-300" />

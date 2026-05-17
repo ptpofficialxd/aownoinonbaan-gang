@@ -260,8 +260,14 @@ export function DashboardShell({
           className="scroll-mt-200 relative w-full min-w-0 overflow-hidden rounded-[34px] border border-white/10 bg-white/[0.035] p-4 shadow-[0_35px_120px_-65px_rgba(34,211,238,0.45)] sm:p-7"
         >
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent" />
-          <div className="pointer-events-none absolute -right-14 top-0 h-52 w-52 rounded-full bg-cyan-400/12 blur-3xl" />
-          <div className="pointer-events-none absolute -left-10 bottom-0 h-40 w-40 rounded-full bg-emerald-400/10 blur-3xl" />
+          <div
+            className="pointer-events-none absolute inset-0"
+            aria-hidden="true"
+            style={{
+              background:
+                "radial-gradient(circle at 100% 0%, rgba(34, 211, 238, 0.12) 0, rgba(34, 211, 238, 0.06) 14%, transparent 28%), radial-gradient(circle at 0% 100%, rgba(52, 211, 153, 0.1) 0, rgba(52, 211, 153, 0.05) 12%, transparent 24%)",
+            }}
+          />
 
           <div className="relative space-y-6">
             <div className="space-y-4">

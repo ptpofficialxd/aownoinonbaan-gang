@@ -16,7 +16,7 @@ export function Hero() {
               className="w-[82%] max-w-[640px] -translate-y-1 object-contain opacity-14 blur-[0.8px] saturate-125 sm:w-[76%] sm:max-w-[760px] md:max-w-[720px] lg:w-[70%] lg:max-w-[900px] lg:translate-y-3 xl:w-[62%] xl:max-w-[920px] xl:translate-y-1 2xl:w-[58%] 2xl:max-w-[900px]"
             />
           </div>
-          <div className="pointer-events-none absolute -left-10 top-1/2 h-44 w-44 -translate-y-1/2 rounded-full bg-cyan-400/20 blur-3xl" />
+          <div className="pointer-events-none absolute left-0 top-1/2 h-44 w-44 -translate-y-1/2 rounded-full bg-cyan-400/18 blur-3xl" />
           <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-sky-400/12 blur-3xl" />
 
           <div className="relative flex w-full min-w-0 max-w-5xl flex-col items-center justify-center overflow-hidden text-center">
