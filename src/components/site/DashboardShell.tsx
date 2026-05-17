@@ -666,7 +666,7 @@ export function DashboardShell({
                       อัปโหลดล่าสุด
                     </p>
                     <p
-                      className={`mt-3 block max-w-[14ch] overflow-hidden text-ellipsis whitespace-nowrap text-3xl font-semibold leading-tight ${
+                      className={`mt-3 block max-w-[10ch] overflow-hidden text-ellipsis whitespace-nowrap text-3xl font-semibold leading-tight ${
                         dashboard.latestItem ? "text-pink-300" : "text-white"
                       }`}
                     >
@@ -926,7 +926,7 @@ export function DashboardShell({
                                   {item.mimeType.split("/")[0]}
                                 </Badge>
                               </div>
-                              <span className="rounded-full border border-white/12 bg-black/40 px-2 py-0.5 text-[10px] font-medium text-zinc-200 sm:px-2.5 sm:py-1 sm:text-[11px]">
+                              <span className="whitespace-nowrap rounded-full border border-white/12 bg-black/40 px-2 py-0.5 text-[10px] font-medium tabular-nums text-zinc-200 sm:px-2.5 sm:py-1 sm:text-[11px]">
                                 {formatBytes(item.fileSize)}
                               </span>
                             </div>
@@ -1147,7 +1147,7 @@ export function DashboardShell({
                   {previewItem.fileName}
                 </p>
                 <p className="mt-1 text-xs text-zinc-400 sm:text-sm">
-                  คลิกขวา หรือกดค้างบนรูปเพื่อบันทึกไฟล์ได้เลย
+                  คลิกขวา / กดค้างบนรูป เพื่อบันทึกไฟล์ได้เลย
                 </p>
               </div>
 
