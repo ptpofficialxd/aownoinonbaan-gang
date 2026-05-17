@@ -30,7 +30,7 @@ export function Hero() {
                   Private Cloud Space
                 </Badge>
                 <Badge className="border-white/10 bg-white/6 text-zinc-300">
-                  Real-Time Callback
+                  Real-Time Sync
                 </Badge>
               </div>
 
