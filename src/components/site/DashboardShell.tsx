@@ -923,7 +923,15 @@ export function DashboardShell({
                                   {item.category}
                                 </Badge>
                                 <Badge className="border-white/12 bg-black/35 px-2 py-0.5 text-[9px] tracking-[0.14em] text-white sm:px-3 sm:py-1 sm:text-[11px]">
-                                  {item.mimeType.split("/")[0]}
+                                  {item.mimeType.startsWith("image/")
+                                    ? item.mimeType === "image/jpeg"
+                                      ? "JPG"
+                                      : item.mimeType.split("/")[1]?.toUpperCase() ?? "IMG"
+                                    : item.mimeType.startsWith("video/")
+                                      ? "VDO"
+                                    : item.mimeType.startsWith("application/")
+                                      ? "FILE"
+                                    : item.mimeType.split("/")[0]}
                                 </Badge>
                               </div>
                               <span className="whitespace-nowrap rounded-full border border-white/12 bg-black/40 px-2 py-0.5 text-[10px] font-medium tabular-nums text-zinc-200 sm:px-2.5 sm:py-1 sm:text-[11px]">
