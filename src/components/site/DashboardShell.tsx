@@ -34,6 +34,7 @@ export function DashboardShell({
   driveAccountEmail,
   driveConnected,
   items,
+  remainingDriveBytes,
   totalMembers,
   totalBytes,
   totalItems,
@@ -44,6 +45,7 @@ export function DashboardShell({
   driveAccountEmail: string | null;
   driveConnected: boolean;
   items: MediaItem[];
+  remainingDriveBytes: number | null;
   totalMembers: number;
   totalBytes: number;
   totalItems: number;
@@ -117,10 +119,10 @@ export function DashboardShell({
             <div className="space-y-6">
               <div className="flex flex-wrap items-center gap-3">
                 <Badge className="border-cyan-400/20 bg-cyan-400/10 text-cyan-100">
-                  Control Center
+                  แผงควบคุม
                 </Badge>
                 <Badge className="border-white/10 bg-white/6 text-zinc-300">
-                  {driveConnected ? "Drive Connected" : "Waiting for drive connection"}
+                  {driveConnected ? "ระบบ: พร้อมใช้งาน" : "ระบบ: ไม่พร้อมใช้งาน"}
                 </Badge>
               </div>
 
@@ -129,15 +131,15 @@ export function DashboardShell({
                   Dashboard
                   <span className="bg-gradient-to-r from-cyan-200 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
                     {" "}
-                    สรุปภาพรวมของระบบ
+                    ภาพรวม
                   </span>
                 </h2>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    Library
+                    คลัง
                   </p>
                   <p className="mt-3 text-3xl font-semibold text-white">
                     {totalItems}
@@ -148,7 +150,7 @@ export function DashboardShell({
                 </div>
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    Active Users
+                    สมาชิก
                   </p>
                   <p className="mt-3 text-3xl font-semibold text-white">
                     {totalMembers}
@@ -159,7 +161,7 @@ export function DashboardShell({
                 </div>
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    Total Vault
+                    ขนาดไฟล์
                   </p>
                   <p className="mt-3 text-3xl font-semibold text-white">
                     {formatBytes(totalBytes)}
@@ -170,7 +172,22 @@ export function DashboardShell({
                 </div>
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    Categories
+                    พื้นที่ว่าง
+                  </p>
+                  <p className="mt-3 text-3xl font-semibold text-white">
+                    {driveConnected && remainingDriveBytes !== null
+                      ? formatBytes(remainingDriveBytes)
+                      : "--"}
+                  </p>
+                  <p className="mt-2 text-sm text-zinc-400">
+                    {driveConnected
+                      ? "พื้นที่ว่างเหลือใน Cloud"
+                      : "ยังไม่ได้เชื่อมต่อกับ Cloud"}
+                  </p>
+                </div>
+                <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                    หมวดหมู่
                   </p>
                   <p className="mt-3 text-3xl font-semibold text-white">
                     {categories.length}
@@ -187,19 +204,19 @@ export function DashboardShell({
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                      Drive Status
+                      สถานะ Cloud ⚙️
                     </p>
                     <p className="mt-3 text-lg font-semibold text-white">
                       {driveConnected
-                        ? "พร้อมอัปโหลดขึ้น Google Drive"
-                        : "ยังไม่ได้เชื่อมต่อ Google Drive"}
+                        ? "เชื่อมต่อแล้ว"
+                        : "ยังไม่ได้เชื่อมต่อ"}
                     </p>
                     <p className="text-sm leading-6 text-zinc-400">
                       {driveConnected
                         ? `บัญชี: ${driveAccountEmail ?? "Connected successfully"}`
                         : canManageDrive
                           ? ""
-                          : "กำลังรอ Admin เชื่อมบัญชี Google Drive ของระบบ"}
+                          : "กำลังรอ Admin เชื่อมต่อ Google Drive ของระบบ"}
                     </p>
                     {!driveConnected && canManageDrive ? (
                       <a
@@ -224,7 +241,7 @@ export function DashboardShell({
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
                 <div className="rounded-[28px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-cyan-400/[0.06] p-5">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    Latest Drop
+                    อัปโหลดล่าสุด 🚀
                   </p>
                   <p className="mt-3 text-base font-semibold text-white">
                     {latestItem ? latestItem.fileName : "ยังไม่มีไฟล์ล่าสุด"}
@@ -238,15 +255,15 @@ export function DashboardShell({
 
                 <div className="rounded-[28px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-emerald-400/[0.05] p-5">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    Hottest Category
+                    หมวดหมู่ฮอต 🔥
                   </p>
                   <p className="mt-3 text-base font-semibold text-white">
                     {categoryLeader ? categoryLeader.name : "ยังไม่มีการอัปโหลด"}
                   </p>
                   <p className="mt-2 text-sm text-zinc-400">
                     {categoryLeader
-                      ? `${categoryLeader.count} files in this bucket`
-                      : "เมื่อเริ่มมีไฟล์ที่อัปโหลด ระบบจะสรุปหมวดหมู่ที่มีการใช้งานเยอะที่สุดให้"}
+                      ? `${categoryLeader.count} ฮอตจังเลยอะเรา`
+                      : "เมื่อเริ่มอัปโหลดไฟล์ ระบบจะสรุปหมวดหมู่ที่มีการใช้งานเยอะที่สุดให้"}
                   </p>
                 </div>
               </div>
@@ -262,13 +279,13 @@ export function DashboardShell({
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                      media library
+                      คลังเก็บไฟล์
                     </p>
                     <h2 className="mt-2 text-3xl font-semibold tracking-tight text-white">
-                      โชว์ไฟล์ให้เด่น เพราะนี่คือหัวใจของเว็บ
+                      คลังเก็บไฟล์
                     </h2>
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-                      เน้นพรีวิวไฟล์ให้เห็นชัด อ่านง่าย และกดเปิดได้ไว ส่วนการอัปโหลดค่อยเรียกผ่าน popup ตอนต้องใช้จริง
+                      เลือกดูได้ตามหมวดหมู่หรือประเภทของไฟล์
                     </p>
                   </div>
 
@@ -281,7 +298,7 @@ export function DashboardShell({
                       <Input
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Search files, notes, members"
+                        placeholder="ค้นหา"
                         className="h-12 rounded-full border-white/12 bg-white/[0.04] pl-11"
                       />
                     </div>
@@ -440,57 +457,17 @@ export function DashboardShell({
                     <Icon name="search" className="h-5 w-5" />
                   </div>
                   <h3 className="mt-5 text-lg font-semibold text-white">
-                    ยังไม่เจอไฟล์ที่ตรงกับสิ่งที่หา
+                    ไม่พบเนื้อหา
                   </h3>
                   <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-zinc-500">
-                    ลองเปลี่ยน category หรือคำค้นอีกนิด เดี๋ยวไฟล์ที่ตรงจะโผล่ขึ้นมาใน list นี้
+                    ลองเปลี่ยนประเภทหรือคำค้นหา หากพบไฟล์ที่ตรงกัน ไฟล์จะปรากฏในรายการนี้
                   </p>
                 </div>
               )}
             </CardBody>
           </Card>
 
-          <div className="grid gap-6 xl:grid-cols-3">
-            <Card className="rounded-[30px]">
-              <CardHeader>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                      upload access
-                    </p>
-                    <h3 className="mt-2 text-xl font-semibold text-white">
-                      อัปโหลดผ่าน popup เท่านั้น
-                    </h3>
-                    <p className="mt-3 text-sm leading-6 text-zinc-400">
-                      หน้า main จะโฟกัส library เต็มๆ ส่วนการเพิ่มไฟล์ใหม่ค่อยกดจากปุ่มด้านบนเมื่อต้องใช้จริง
-                    </p>
-                  </div>
-                  <div
-                    className={`mt-1 h-3 w-3 rounded-full ${
-                      driveConnected
-                        ? "bg-emerald-400 shadow-[0_0_18px_rgba(74,222,128,0.65)]"
-                        : "bg-amber-300 shadow-[0_0_18px_rgba(252,211,77,0.55)]"
-                    }`}
-                  />
-                </div>
-
-                <div className="mt-5 rounded-[24px] border border-white/8 bg-black/16 p-4">
-                  <p className="text-sm font-medium text-white">
-                    {driveConnected
-                      ? "Drive พร้อมใช้งานแล้ว"
-                      : "Drive ยังไม่พร้อมอัปโหลด"}
-                  </p>
-                  <p className="mt-2 text-sm text-zinc-400">
-                    {driveConnected
-                      ? `Connected as ${driveAccountEmail ?? "owner account"}`
-                      : canManageDrive
-                        ? "ต้องเชื่อม owner Drive ก่อนจึงจะเรียก popup อัปโหลดได้"
-                        : "รอ admin เชื่อม owner Drive ให้เสร็จก่อน"}
-                  </p>
-                </div>
-              </CardHeader>
-            </Card>
-
+          <div className="grid gap-6 xl:grid-cols-2">
             <Card className="rounded-[30px]">
               <CardHeader>
                 <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
@@ -529,7 +506,7 @@ export function DashboardShell({
             <Card className="rounded-[30px]">
               <CardHeader>
                 <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                  contributors
+                  Leaderboard
                 </p>
                 <div className="mt-5 space-y-3">
                   {topMembers.length ? (
@@ -542,32 +519,29 @@ export function DashboardShell({
                           <p className="text-sm font-medium text-white">
                             {index + 1}. {member.name}
                           </p>
-                          <p className="text-xs text-zinc-500">
-                            member activity
-                          </p>
                         </div>
                         <span className="text-sm text-cyan-200">
-                          {member.uploads} uploads
+                          {member.uploads} อัปโหลด
                         </span>
                       </div>
                     ))
                   ) : (
                     <p className="text-sm text-zinc-500">
-                      No member activity yet.
+                      ยังไม่มีกิจกรรม ณ ขณะนี้
                     </p>
                   )}
                 </div>
 
                 <div className="mt-5 rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
                   <p className="text-[11px] uppercase tracking-[0.22em] text-zinc-500">
-                    current lead
+                    ขยันมากมั้ง
                   </p>
                   <p className="mt-2 text-base font-semibold text-white">
-                    {topMember ? topMember.name : "nobody yet"}
+                    {topMember ? topMember.name : ""}
                   </p>
                   <p className="mt-1 text-sm text-zinc-400">
                     {topMember
-                      ? `${topMember.uploads} uploads right now`
+                      ? `${topMember.uploads} อัปโหลด`
                       : "เริ่มอัปโหลดแล้ว leaderboard จะเริ่มทำงาน"}
                   </p>
                 </div>

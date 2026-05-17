@@ -1,13 +1,26 @@
 import { sql } from "./db";
 
 export const CATEGORIES = [
-  "photos",
-  "videos",
-  "memes",
-  "documents",
-  "archives",
-  "voice",
-  "other",
+  "CHIFA",
+  "ELSE",
+  "EMMA",
+  "GINNA",
+  "HONGYOK",
+  "JINGJING",
+  "KWAN",
+  "LEWLEW",
+  "LINGLING",
+  "LOOKKED",
+  "NAMPHET",
+  "NANA",
+  "NISHA",
+  "PLOEN",
+  "PRAE",
+  "PRAIFA",
+  "PUNPON",
+  "SATANGPOUND",
+  "SHENAE",
+  "VALENTINES",
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];
@@ -48,12 +61,14 @@ type MediaRecordRow = {
 };
 
 export function normalizeCategory(value: string) {
-  const normalized = value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, "");
-  if (!normalized) return "other";
-  return normalized.slice(0, 32);
+  const normalized = value.trim();
+  if (!normalized) return "ELSE";
+
+  const matched = CATEGORIES.find(
+    (category) => category.toLowerCase() === normalized.toLowerCase(),
+  );
+
+  return matched ?? "ELSE";
 }
 
 function mapMediaRow(row: MediaRow): MediaItem {

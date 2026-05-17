@@ -25,6 +25,7 @@ type IntegrationTokenRow = {
 };
 
 let cachedToken: CachedToken | null = null;
+const categoryFolderCache = new Map<string, string>();
 
 function getDriveFolderConfig() {
   const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
@@ -74,6 +75,56 @@ export async function getGoogleDriveConnectionInfo() {
     connected: Boolean(stored?.refresh_token),
     accountEmail: stored?.account_email ?? null,
     scope: stored?.scope ?? null,
+  };
+}
+
+export async function getGoogleDriveQuotaInfo() {
+  const stored = await getStoredRefreshToken();
+  if (!stored?.refresh_token) {
+    return {
+      limitBytes: null,
+      usageBytes: null,
+      remainingBytes: null,
+    };
+  }
+
+  const token = await getAccessToken();
+  const url = new URL("https://www.googleapis.com/drive/v3/about");
+  url.searchParams.set("fields", "storageQuota(limit,usage)");
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`Drive quota lookup failed: ${res.status} ${detail}`);
+  }
+
+  const data = (await res.json()) as {
+    storageQuota?: {
+      limit?: string;
+      usage?: string;
+    };
+  };
+
+  const limitBytes = data.storageQuota?.limit
+    ? Number(data.storageQuota.limit)
+    : null;
+  const usageBytes = data.storageQuota?.usage
+    ? Number(data.storageQuota.usage)
+    : null;
+
+  return {
+    limitBytes,
+    usageBytes,
+    remainingBytes:
+      limitBytes !== null && usageBytes !== null
+        ? Math.max(limitBytes - usageBytes, 0)
+        : null,
   };
 }
 
@@ -218,50 +269,71 @@ async function getAccessToken() {
 export async function uploadFileToDrive(input: {
   fileName: string;
   mimeType: string;
-  bytes: Buffer;
+  file: File;
+  category?: string | null;
   description?: string | null;
 }) {
   const token = await getAccessToken();
   const { rootFolderId } = getDriveFolderConfig();
-  const boundary = `aownoinonbaan-${Date.now()}`;
+  const targetFolderId = input.category
+    ? await getCategoryFolderId(token, rootFolderId, input.category)
+    : rootFolderId;
 
   const metadata = {
     name: input.fileName,
     description: input.description || undefined,
-    parents: [rootFolderId],
+    parents: [targetFolderId],
   };
 
-  const multipartBody = Buffer.concat([
-    Buffer.from(
-      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n`,
-    ),
-    Buffer.from(`--${boundary}\r\nContent-Type: ${input.mimeType}\r\n\r\n`),
-    input.bytes,
-    Buffer.from(`\r\n--${boundary}--`),
-  ]);
-
   const query = new URL(GOOGLE_DRIVE_UPLOAD_URL);
+  query.searchParams.set("uploadType", "resumable");
+  query.searchParams.set("supportsAllDrives", "true");
   query.searchParams.set(
     "fields",
     "id,name,mimeType,size,webViewLink,webContentLink",
   );
 
-  const res = await fetch(query, {
+  const initRes = await fetch(query, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": `multipart/related; boundary=${boundary}`,
+      "Content-Type": "application/json; charset=UTF-8",
+      "X-Upload-Content-Type": input.mimeType,
+      "X-Upload-Content-Length": String(input.file.size),
     },
-    body: multipartBody,
+    body: JSON.stringify(metadata),
     cache: "no-store",
   });
 
-  if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(`Drive upload failed: ${res.status} ${detail}`);
+  if (!initRes.ok) {
+    const detail = await initRes.text();
+    throw new Error(
+      `Drive resumable init failed: ${initRes.status} ${detail}`,
+    );
   }
 
-  return (await res.json()) as {
+  const sessionUrl = initRes.headers.get("Location");
+  if (!sessionUrl) {
+    throw new Error("Drive resumable upload session URL was not returned.");
+  }
+
+  const uploadRes = await fetch(sessionUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": input.mimeType,
+      "Content-Length": String(input.file.size),
+    },
+    body: input.file.stream() as BodyInit,
+    duplex: "half",
+    cache: "no-store",
+  } as RequestInit & { duplex: "half" });
+
+  if (!uploadRes.ok) {
+    const detail = await uploadRes.text();
+    throw new Error(`Drive upload failed: ${uploadRes.status} ${detail}`);
+  }
+
+  return (await uploadRes.json()) as {
     id: string;
     name: string;
     mimeType: string;
@@ -269,6 +341,60 @@ export async function uploadFileToDrive(input: {
     webViewLink?: string;
     webContentLink?: string;
   };
+}
+
+async function getCategoryFolderId(
+  token: string,
+  rootFolderId: string,
+  category: string,
+) {
+  const normalizedCategory = category.trim();
+  const cacheKey = `${rootFolderId}:${normalizedCategory.toLowerCase()}`;
+  const cachedFolderId = categoryFolderCache.get(cacheKey);
+  if (cachedFolderId) {
+    return cachedFolderId;
+  }
+
+  const url = new URL(GOOGLE_DRIVE_API_URL);
+  url.searchParams.set("supportsAllDrives", "true");
+  url.searchParams.set("includeItemsFromAllDrives", "true");
+  url.searchParams.set("fields", "files(id,name)");
+  url.searchParams.set("pageSize", "10");
+  url.searchParams.set(
+    "q",
+    [
+      "mimeType = 'application/vnd.google-apps.folder'",
+      `name = '${normalizedCategory.replace(/'/g, "\\'")}'`,
+      `'${rootFolderId}' in parents`,
+      "trashed = false",
+    ].join(" and "),
+  );
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`Drive folder lookup failed: ${res.status} ${detail}`);
+  }
+
+  const data = (await res.json()) as {
+    files?: Array<{ id: string; name: string }>;
+  };
+
+  const folderId = data.files?.[0]?.id;
+  if (!folderId) {
+    throw new Error(
+      `Folder "${normalizedCategory}" was not found inside the configured Google Drive root folder.`,
+    );
+  }
+
+  categoryFolderCache.set(cacheKey, folderId);
+  return folderId;
 }
 
 export async function streamDriveFile(fileId: string) {

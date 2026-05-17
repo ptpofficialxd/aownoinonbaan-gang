@@ -17,19 +17,19 @@ export async function Header() {
                 href="#overview"
                 className="rounded-full px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-white/7 hover:text-zinc-100"
               >
-                Overview
+                หน้าหลัก
               </a>
               <a
                 href="#library"
                 className="rounded-full px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-white/7 hover:text-zinc-100"
               >
-                Library
+                คลัง
               </a>
               <a
                 href="#upload"
                 className="rounded-full px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:bg-white/7 hover:text-zinc-100"
               >
-                Upload
+                อัปโหลด
               </a>
             </nav>
           )}
@@ -57,7 +57,7 @@ export async function Header() {
                   type="submit"
                   className="h-9 border border-white/10 bg-white/[0.04] hover:bg-white/[0.08]"
                 >
-                  Logout
+                  ออกจากระบบ
                 </Button>
               </form>
             </>

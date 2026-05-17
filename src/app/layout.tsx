@@ -15,8 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "aownoinonbaan",
-  description: "Private gang cloud space powered by Neon and Google Drive",
+  title: "เอาน้อยนอนบ้าน"
 };
 
 export default function RootLayout({

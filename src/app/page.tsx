@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/site/DashboardShell";
 import { Hero } from "@/components/site/Hero";
 import { sql } from "@/lib/db";
-import { getGoogleDriveConnectionInfo } from "@/lib/drive";
+import { getGoogleDriveConnectionInfo, getGoogleDriveQuotaInfo } from "@/lib/drive";
 import { getDashboardData } from "@/lib/media";
 import { getServerSession } from "@/lib/session";
 
@@ -28,7 +28,10 @@ export default async function HomePage() {
     getDashboardData(),
     getMemberCount(),
   ]);
-  const drive = await getGoogleDriveConnectionInfo();
+  const [drive, driveQuota] = await Promise.all([
+    getGoogleDriveConnectionInfo(),
+    getGoogleDriveQuotaInfo(),
+  ]);
 
   return (
     <div className="pb-10">
@@ -38,6 +41,7 @@ export default async function HomePage() {
         driveAccountEmail={drive.accountEmail}
         driveConnected={drive.connected}
         items={dashboard.items}
+        remainingDriveBytes={driveQuota.remainingBytes}
         totalMembers={memberCount}
         totalBytes={dashboard.totalBytes}
         totalItems={dashboard.totalItems}

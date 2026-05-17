@@ -12,11 +12,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const maxUploadSizeMb = Number(process.env.MAX_UPLOAD_SIZE_MB || "250");
   const formData = await request.formData();
   const file = formData.get("file");
   const category = normalizeCategory(
-    String(formData.get("category") || "other"),
+    String(formData.get("category") || "ELSE"),
   );
   const description = String(formData.get("description") || "").trim();
 
@@ -24,20 +23,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "File is required." }, { status: 400 });
   }
 
-  if (file.size > maxUploadSizeMb * 1024 * 1024) {
-    return NextResponse.json(
-      { error: `File exceeds ${maxUploadSizeMb} MB limit.` },
-      { status: 400 },
-    );
-  }
-
-  const bytes = Buffer.from(await file.arrayBuffer());
   let uploaded: Awaited<ReturnType<typeof uploadFileToDrive>>;
   try {
     uploaded = await uploadFileToDrive({
       fileName: file.name,
       mimeType: file.type || "application/octet-stream",
-      bytes,
+      file,
+      category,
       description,
     });
   } catch (error) {
@@ -51,7 +43,7 @@ export async function POST(request: Request) {
     driveFileId: uploaded.id,
     fileName: uploaded.name,
     mimeType: uploaded.mimeType || file.type || "application/octet-stream",
-    fileSize: Number(uploaded.size || file.size || bytes.length),
+    fileSize: Number(uploaded.size || file.size || 0),
     category,
     description,
     driveViewLink: uploaded.webViewLink || uploaded.webContentLink || null,
