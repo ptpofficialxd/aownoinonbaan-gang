@@ -564,7 +564,13 @@ export function DashboardShell({
                       <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
                         เวลาตอบสนอง
                       </p>
-                      <p className="mt-3 text-3xl font-semibold text-white">
+                      <p
+                        className={`mt-3 text-3xl font-semibold ${
+                          driveConnected && cloudHealth.online
+                            ? "text-emerald-300"
+                            : "text-white"
+                        }`}
+                      >
                         {driveConnected && cloudHealth.online
                           ? formatLatency(cloudHealth.latencyMs)
                           : "--"}
