@@ -57,12 +57,12 @@ function LoginView() {
   }
 
   return (
-    <div className="relative flex flex-1 items-center justify-center px-6 py-6">
+    <div className="relative flex w-full min-w-0 flex-1 items-center justify-center overflow-x-hidden px-4 py-6 sm:px-6">
       <div className="aurora pointer-events-none absolute inset-0 -z-10 opacity-60" />
       <div className="grid-bg pointer-events-none absolute inset-0 -z-10 opacity-30 [mask-image:radial-gradient(ellipse_at_center,rgba(0,0,0,0.8),transparent_70%)]" />
 
-      <div className="w-full max-w-md">
-        <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8 backdrop-blur-xl">
+      <div className="w-full max-w-md min-w-0">
+        <div className="relative w-full min-w-0 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 backdrop-blur-xl sm:p-8">
           <div className="pointer-events-none absolute -top-24 -right-24 h-48 w-48 rounded-full bg-cyan-400/20 blur-3xl" />
           <div className="relative">
             <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400/20 to-violet-500/20 ring-1 ring-inset ring-white/10">
@@ -71,11 +71,11 @@ function LoginView() {
 
             <h1 className="text-2xl font-semibold tracking-tight text-white">
               Login{" — "}
-              <span className="bg-gradient-to-br from-cyan-300 via-cyan-400 to-violet-400 bg-clip-text text-transparent">
+              <span className="break-words bg-gradient-to-br from-cyan-300 via-cyan-400 to-violet-400 bg-clip-text text-transparent">
                 เอาน้อยนอนบ้าน
               </span>
             </h1>
-            <p className="mt-2 text-sm leading-6 text-zinc-400">
+            <p className="mt-2 break-words text-sm leading-6 text-zinc-400">
               Developed by{" "}
               <a
                 href="https://www.instagram.com/ptpofficialxd/"
@@ -84,8 +84,8 @@ function LoginView() {
                 className="font-medium !text-cyan-300 visited:!text-cyan-300 transition-colors hover:!text-cyan-200 hover:underline underline-offset-4"
               >
                 {contact}
-              </a>
-              {" "}(กูว่าง)
+              </a>{" "}
+              (กูว่าง)
             </p>
 
             {error ? (

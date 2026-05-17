@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/app/globals.css";
 import { Footer } from "@/components/site/Footer";
@@ -15,7 +15,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "เอาน้อยนอนบ้าน"
+  title: "เอาน้อยนอนบ้าน",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -24,12 +30,14 @@ export default function RootLayout({
   return (
     <html
       lang="th"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full w-full max-w-full overflow-x-hidden antialiased`}
     >
-      <body className="min-h-full">
-        <div className="flex min-h-screen flex-col">
+      <body className="min-h-full w-full max-w-full overflow-x-hidden">
+        <div className="flex min-h-screen w-full min-w-0 max-w-full flex-col overflow-x-hidden">
           <Header />
-          <main className="flex flex-1 flex-col">{children}</main>
+          <main className="flex w-full min-w-0 flex-1 flex-col overflow-x-hidden">
+            {children}
+          </main>
           <Footer />
         </div>
       </body>

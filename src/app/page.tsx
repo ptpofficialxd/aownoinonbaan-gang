@@ -37,10 +37,11 @@ export default async function HomePage() {
   ]);
 
   return (
-    <div className="relative overflow-hidden pb-10">
+    <div className="relative w-full max-w-full overflow-x-hidden overflow-y-visible pb-10">
       <div className="aurora pointer-events-none absolute inset-0 -z-20 opacity-90" />
-      <div className="grid-bg pointer-events-none absolute inset-0 -z-10 opacity-35 [mask-image:linear-gradient(180deg,black_0%,black_82%,transparent_100%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_left,rgba(34,211,238,0.12),transparent_34%),radial-gradient(circle_at_right,rgba(56,189,248,0.1),transparent_28%),linear-gradient(180deg,rgba(7,10,16,0.18),rgba(7,10,16,0.58)_34%,rgba(7,10,16,0.5)_70%,rgba(7,10,16,0.12)_92%,rgba(7,10,16,0)_100%)]" />
+      <div className="grid-bg pointer-events-none absolute inset-0 -z-10 opacity-28 [mask-image:linear-gradient(180deg,black_0%,black_72%,rgba(0,0,0,0.82)_86%,transparent_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_left,rgba(34,211,238,0.13),transparent_32%),radial-gradient(circle_at_right,rgba(56,189,248,0.11),transparent_27%),radial-gradient(circle_at_bottom,rgba(16,185,129,0.06),transparent_26%),linear-gradient(180deg,rgba(7,10,16,0.16),rgba(7,10,16,0.56)_28%,rgba(7,10,16,0.48)_58%,rgba(7,10,16,0.2)_82%,rgba(7,10,16,0.05)_94%,rgba(7,10,16,0)_100%)]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-[linear-gradient(180deg,rgba(7,10,16,0),rgba(7,10,16,0.36)_48%,rgba(7,10,16,0.72)_100%)]" />
 
       <Hero />
       <DashboardShell

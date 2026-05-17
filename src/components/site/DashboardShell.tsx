@@ -253,11 +253,11 @@ export function DashboardShell({
 
   return (
     <>
-      <div className="mx-auto max-w-7xl space-y-6 px-6 pb-16 xl:space-y-5">
+      <div className="mx-auto w-full max-w-7xl overflow-x-hidden space-y-6 px-4 pb-16 sm:px-6 xl:space-y-5">
         {/* biome-ignore lint/correctness/useUniqueElementIds: top-level page anchor */}
         <section
           id="home"
-          className="scroll-mt-200 relative overflow-hidden rounded-[34px] border border-white/10 bg-white/[0.035] p-6 shadow-[0_35px_120px_-65px_rgba(34,211,238,0.45)] sm:p-7"
+          className="scroll-mt-200 relative w-full min-w-0 overflow-hidden rounded-[34px] border border-white/10 bg-white/[0.035] p-4 shadow-[0_35px_120px_-65px_rgba(34,211,238,0.45)] sm:p-7"
         >
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent" />
           <div className="pointer-events-none absolute -right-14 top-0 h-52 w-52 rounded-full bg-cyan-400/12 blur-3xl" />
@@ -285,8 +285,8 @@ export function DashboardShell({
               </div>
             </div>
 
-            <div className="grid gap-4 xl:grid-cols-[1.55fr_0.95fr] xl:items-stretch">
-              <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
+            <div className="grid min-w-0 gap-4 xl:grid-cols-[1.55fr_0.95fr] xl:items-stretch">
+              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
                     สมาชิก 👤
@@ -344,7 +344,7 @@ export function DashboardShell({
                 </div>
               </div>
 
-              <div className="grid gap-4 xl:grid-rows-2">
+              <div className="grid min-w-0 gap-4 xl:grid-rows-2">
                 <div className="rounded-[28px] border border-white/10 bg-black/20 p-5 xl:h-full">
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -354,7 +354,7 @@ export function DashboardShell({
                       <p className="mt-3 text-lg font-semibold text-white">
                         {driveConnected ? "เชื่อมต่อแล้ว" : "ยังไม่ได้เชื่อมต่อ"}
                       </p>
-                      <p className="text-sm leading-6 text-zinc-400">
+                      <p className="break-words text-sm leading-6 text-zinc-400">
                         {driveConnected
                           ? `บัญชี: ${driveAccountEmail ?? "Connected successfully"}`
                           : canManageDrive
@@ -385,12 +385,12 @@ export function DashboardShell({
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
                     อัปโหลดล่าสุด 🚀
                   </p>
-                  <p className="mt-3 text-base font-semibold text-white">
+                  <p className="mt-3 break-words text-base font-semibold text-white">
                     {dashboard.latestItem
                       ? dashboard.latestItem.fileName
                       : "ยังไม่มีไฟล์ล่าสุด"}
                   </p>
-                  <p className="mt-2 text-sm text-zinc-400">
+                  <p className="mt-2 break-words text-sm text-zinc-400">
                     {dashboard.latestItem
                       ? `${dashboard.latestItem.uploaderName} · ${formatDate(
                           dashboard.latestItem.createdAt,
@@ -405,7 +405,10 @@ export function DashboardShell({
 
         <section className="space-y-6">
           {/* biome-ignore lint/correctness/useUniqueElementIds: top-level page anchor */}
-          <Card id="library" className="scroll-mt-22.5 rounded-[32px]">
+          <Card
+            id="library"
+            className="scroll-mt-34 w-full min-w-0 rounded-[32px]"
+          >
             <CardHeader className="border-b border-white/8 pb-5">
               <div className="flex flex-col gap-5">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">

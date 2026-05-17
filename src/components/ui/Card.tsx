@@ -5,7 +5,7 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-xl",
+        "relative w-full min-w-0 overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-xl",
         "shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset]",
         className,
       )}
