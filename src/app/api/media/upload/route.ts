@@ -32,12 +32,20 @@ export async function POST(request: Request) {
   }
 
   const bytes = Buffer.from(await file.arrayBuffer());
-  const uploaded = await uploadFileToDrive({
-    fileName: file.name,
-    mimeType: file.type || "application/octet-stream",
-    bytes,
-    description,
-  });
+  let uploaded: Awaited<ReturnType<typeof uploadFileToDrive>>;
+  try {
+    uploaded = await uploadFileToDrive({
+      fileName: file.name,
+      mimeType: file.type || "application/octet-stream",
+      bytes,
+      description,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Upload to Google Drive failed.";
+    const status = message.includes("not connected yet") ? 503 : 500;
+    return NextResponse.json({ error: message }, { status });
+  }
 
   const mediaId = await createMediaItem({
     driveFileId: uploaded.id,

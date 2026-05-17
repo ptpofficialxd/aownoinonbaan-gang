@@ -1,72 +1,106 @@
-import { createSign } from "node:crypto";
+import { randomUUID } from "node:crypto";
+import { sql } from "./db";
 
+const GOOGLE_OAUTH_SCOPE = "https://www.googleapis.com/auth/drive";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_DRIVE_UPLOAD_URL =
   "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true";
 const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3/files";
-const GOOGLE_SCOPE = "https://www.googleapis.com/auth/drive";
+const GOOGLE_DRIVE_PROVIDER = "google_drive";
+export const GOOGLE_DRIVE_STATE_COOKIE = "aownoinonbaan_drive_oauth_state";
 
 type CachedToken = {
   accessToken: string;
   expiresAt: number;
 };
 
+type IntegrationTokenRow = {
+  refresh_token: string;
+  account_email: string | null;
+  scope: string | null;
+};
+
 let cachedToken: CachedToken | null = null;
 
-function getServiceAccountConfig() {
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(
-    /\\n/g,
-    "\n",
-  );
+function getDriveFolderConfig() {
   const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  if (!rootFolderId) {
+    throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is required.");
+  }
+  return { rootFolderId };
+}
 
-  if (!email || !privateKey || !rootFolderId) {
+function getOAuthConfig() {
+  const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+  const redirectUri = process.env.GOOGLE_OAUTH_REDIRECT_URI;
+
+  if (!clientId || !clientSecret || !redirectUri) {
     throw new Error(
-      "Missing Google Drive env. Set GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY, and GOOGLE_DRIVE_ROOT_FOLDER_ID.",
+      "Missing Google OAuth env. Set GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, and GOOGLE_OAUTH_REDIRECT_URI.",
     );
   }
 
   return {
-    email,
-    privateKey,
-    rootFolderId,
-    sharedDriveId: process.env.GOOGLE_DRIVE_SHARED_DRIVE_ID || null,
+    clientId,
+    clientSecret,
+    redirectUri,
   };
 }
 
-function base64Url(value: string | Buffer) {
-  return Buffer.from(value)
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/g, "");
+async function getStoredRefreshToken() {
+  const rows = (await sql()`
+    SELECT refresh_token, account_email, scope
+    FROM integration_tokens
+    WHERE provider = ${GOOGLE_DRIVE_PROVIDER}
+    LIMIT 1
+  `) as IntegrationTokenRow[];
+
+  return rows[0] ?? null;
 }
 
-async function getAccessToken() {
-  if (cachedToken && cachedToken.expiresAt > Date.now() + 60_000) {
-    return cachedToken.accessToken;
-  }
+export async function isGoogleDriveConnected() {
+  const stored = await getStoredRefreshToken();
+  return Boolean(stored?.refresh_token);
+}
 
-  const { email, privateKey } = getServiceAccountConfig();
-  const now = Math.floor(Date.now() / 1000);
-  const header = { alg: "RS256", typ: "JWT" };
-  const claims = {
-    iss: email,
-    scope: GOOGLE_SCOPE,
-    aud: GOOGLE_TOKEN_URL,
-    exp: now + 3600,
-    iat: now,
+export async function getGoogleDriveConnectionInfo() {
+  const stored = await getStoredRefreshToken();
+  return {
+    connected: Boolean(stored?.refresh_token),
+    accountEmail: stored?.account_email ?? null,
+    scope: stored?.scope ?? null,
   };
-  const unsigned = `${base64Url(JSON.stringify(header))}.${base64Url(JSON.stringify(claims))}`;
-  const signer = createSign("RSA-SHA256");
-  signer.update(unsigned);
-  signer.end();
-  const assertion = `${unsigned}.${base64Url(signer.sign(privateKey))}`;
+}
+
+export function createGoogleDriveOAuthState() {
+  return randomUUID();
+}
+
+export function buildGoogleDriveAuthUrl(state: string) {
+  const { clientId, redirectUri } = getOAuthConfig();
+  const url = new URL(GOOGLE_AUTH_URL);
+  url.searchParams.set("client_id", clientId);
+  url.searchParams.set("redirect_uri", redirectUri);
+  url.searchParams.set("response_type", "code");
+  url.searchParams.set("scope", GOOGLE_OAUTH_SCOPE);
+  url.searchParams.set("access_type", "offline");
+  url.searchParams.set("prompt", "consent");
+  url.searchParams.set("include_granted_scopes", "true");
+  url.searchParams.set("state", state);
+  return url.toString();
+}
+
+export async function exchangeCodeForRefreshToken(code: string) {
+  const { clientId, clientSecret, redirectUri } = getOAuthConfig();
 
   const body = new URLSearchParams({
-    grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-    assertion,
+    code,
+    client_id: clientId,
+    client_secret: clientSecret,
+    redirect_uri: redirectUri,
+    grant_type: "authorization_code",
   });
 
   const res = await fetch(GOOGLE_TOKEN_URL, {
@@ -77,7 +111,91 @@ async function getAccessToken() {
   });
 
   if (!res.ok) {
-    throw new Error(`Google token request failed: ${res.status}`);
+    throw new Error(`Google code exchange failed: ${res.status}`);
+  }
+
+  return (await res.json()) as {
+    access_token: string;
+    expires_in: number;
+    refresh_token?: string;
+    scope?: string;
+    token_type: string;
+  };
+}
+
+async function fetchGoogleAccountEmail(accessToken: string) {
+  const res = await fetch(
+    "https://www.googleapis.com/oauth2/v2/userinfo?fields=email",
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      cache: "no-store",
+    },
+  );
+
+  if (!res.ok) {
+    return null;
+  }
+
+  const data = (await res.json()) as { email?: string };
+  return data.email ?? null;
+}
+
+export async function saveGoogleDriveRefreshToken(input: {
+  refreshToken: string;
+  accessToken: string;
+  scope?: string;
+}) {
+  const accountEmail = await fetchGoogleAccountEmail(input.accessToken);
+
+  await sql()`
+    INSERT INTO integration_tokens (provider, refresh_token, scope, account_email)
+    VALUES (
+      ${GOOGLE_DRIVE_PROVIDER},
+      ${input.refreshToken},
+      ${input.scope ?? null},
+      ${accountEmail}
+    )
+    ON CONFLICT (provider)
+    DO UPDATE SET
+      refresh_token = EXCLUDED.refresh_token,
+      scope = EXCLUDED.scope,
+      account_email = EXCLUDED.account_email
+  `;
+
+  cachedToken = null;
+}
+
+async function getAccessToken() {
+  if (cachedToken && cachedToken.expiresAt > Date.now() + 60_000) {
+    return cachedToken.accessToken;
+  }
+
+  const stored = await getStoredRefreshToken();
+  if (!stored?.refresh_token) {
+    throw new Error("Google Drive is not connected yet.");
+  }
+
+  const { clientId, clientSecret, redirectUri } = getOAuthConfig();
+  const body = new URLSearchParams({
+    client_id: clientId,
+    client_secret: clientSecret,
+    refresh_token: stored.refresh_token,
+    grant_type: "refresh_token",
+    redirect_uri: redirectUri,
+  });
+
+  const res = await fetch(GOOGLE_TOKEN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`Google token refresh failed: ${res.status} ${detail}`);
   }
 
   const data = (await res.json()) as {
@@ -100,7 +218,7 @@ export async function uploadFileToDrive(input: {
   description?: string | null;
 }) {
   const token = await getAccessToken();
-  const { rootFolderId, sharedDriveId } = getServiceAccountConfig();
+  const { rootFolderId } = getDriveFolderConfig();
   const boundary = `aownoinonbaan-${Date.now()}`;
 
   const metadata = {
@@ -123,9 +241,6 @@ export async function uploadFileToDrive(input: {
     "fields",
     "id,name,mimeType,size,webViewLink,webContentLink",
   );
-  if (sharedDriveId) {
-    query.searchParams.set("driveId", sharedDriveId);
-  }
 
   const res = await fetch(query, {
     method: "POST",
@@ -156,7 +271,6 @@ export async function streamDriveFile(fileId: string) {
   const token = await getAccessToken();
   const url = new URL(`${GOOGLE_DRIVE_API_URL}/${fileId}`);
   url.searchParams.set("alt", "media");
-  url.searchParams.set("supportsAllDrives", "true");
 
   const res = await fetch(url, {
     headers: {

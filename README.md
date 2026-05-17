@@ -19,13 +19,15 @@ Private cloud space for the gang. This Next.js app uses:
 
 1. Create a Google Cloud service account
 2. Enable the Google Drive API
-3. Generate a JSON key for the service account
-4. Put the client email into `GOOGLE_SERVICE_ACCOUNT_EMAIL`
-5. Put the private key into `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`
-6. Share your target Drive folder or Shared Drive with the service account email
-7. Put that folder id into `GOOGLE_DRIVE_ROOT_FOLDER_ID`
+3. Create an OAuth client credential for a web application
+4. Add your callback URL to the OAuth client
+5. Put `client_id` into `GOOGLE_OAUTH_CLIENT_ID`
+6. Put `client_secret` into `GOOGLE_OAUTH_CLIENT_SECRET`
+7. Put the callback URL into `GOOGLE_OAUTH_REDIRECT_URI`
+8. Put your target folder id into `GOOGLE_DRIVE_ROOT_FOLDER_ID`
+9. Start the app, log in as an admin, then connect Google Drive once from the dashboard
 
-The app uploads files into that folder and stores metadata in Neon. Files stay private to your app because media is streamed through authenticated route handlers.
+The app uploads files into that folder and stores metadata in Neon. Files stay private to your app because media is streamed through authenticated route handlers. The owner only needs to authorize Google Drive once; everyone else keeps using only the web app.
 
 ## Notes
 

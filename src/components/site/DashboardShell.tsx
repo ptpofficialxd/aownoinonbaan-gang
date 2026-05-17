@@ -26,12 +26,18 @@ function mediaIconForMime(mimeType: string) {
 }
 
 export function DashboardShell({
+  canManageDrive,
+  driveAccountEmail,
+  driveConnected,
   items,
   totalBytes,
   totalItems,
   categories,
   topMembers,
 }: {
+  canManageDrive: boolean;
+  driveAccountEmail: string | null;
+  driveConnected: boolean;
   items: MediaItem[];
   totalBytes: number;
   totalItems: number;
@@ -224,6 +230,27 @@ export function DashboardShell({
               </p>
             </CardHeader>
             <CardBody>
+              {driveConnected ? (
+                <div className="mb-5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
+                  Connected to Google Drive
+                  {driveAccountEmail ? ` as ${driveAccountEmail}` : ""}.
+                </div>
+              ) : canManageDrive ? (
+                <div className="mb-5 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+                  Google Drive owner account is not connected yet.
+                  <a
+                    href="/api/google-drive/oauth/start"
+                    className="ml-2 font-medium text-cyan-200 underline underline-offset-4"
+                  >
+                    Connect now
+                  </a>
+                </div>
+              ) : (
+                <div className="mb-5 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+                  Waiting for an admin to connect the owner Google Drive
+                  account.
+                </div>
+              )}
               <UploadForm />
             </CardBody>
           </Card>
