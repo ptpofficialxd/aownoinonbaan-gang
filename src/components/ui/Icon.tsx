@@ -5,6 +5,8 @@ type IconName =
   | "arrow-right"
   | "lock"
   | "mail"
+  | "eye"
+  | "eye-off"
   | "cloud"
   | "upload"
   | "video"
@@ -71,6 +73,59 @@ const iconMap: Record<IconName, ReactNode> = {
         stroke="currentColor"
         strokeLinecap="round"
         strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    </>
+  ),
+  eye: (
+    <>
+      <path
+        d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+      <circle
+        cx="12"
+        cy="12"
+        r="2.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+    </>
+  ),
+  "eye-off": (
+    <>
+      <path
+        d="M3 3l18 18"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
+      <path
+        d="M10.6 5.3A11 11 0 0 1 12 5.2c6 0 9.5 6 9.5 6a16.8 16.8 0 0 1-3 3.7"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+      <path
+        d="M6.4 6.5A17.3 17.3 0 0 0 2.5 12s3.5 6 9.5 6c1.4 0 2.7-.3 3.8-.8"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+      <path
+        d="M9.9 9.9A3 3 0 0 0 14 14"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
         strokeWidth="2"
       />
     </>

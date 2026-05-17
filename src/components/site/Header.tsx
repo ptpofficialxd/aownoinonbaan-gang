@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
 import { getServerSession } from "@/lib/session";
 import { Logo } from "./Logo";
 
@@ -57,6 +58,9 @@ export async function Header() {
                   type="submit"
                   className="h-9 border border-white/10 bg-white/[0.04] px-2.5 text-[11px] hover:bg-white/[0.08] lg:px-4 lg:text-sm"
                 >
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/[0.06] text-zinc-300 ring-1 ring-inset ring-white/8">
+                    <Icon name="logout" className="h-3.5 w-3.5" />
+                  </span>
                   ออกจากระบบ
                 </Button>
               </form>

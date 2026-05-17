@@ -16,6 +16,7 @@ function LoginView() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -143,14 +144,27 @@ function LoginView() {
                   />
                   <Input
                     id={passwordId}
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     disabled={busy}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder="••••••••••••"
-                    className="rounded-xl bg-white/5 pl-10 pr-4 text-zinc-100 placeholder:text-zinc-500 ring-1 ring-inset ring-white/10 transition-all hover:ring-white/20 focus:bg-white/10 focus:ring-2 focus:ring-cyan-400/40 disabled:opacity-50"
+                    className="rounded-xl bg-white/5 pl-10 pr-12 text-zinc-100 placeholder:text-zinc-500 ring-1 ring-inset ring-white/10 transition-all hover:ring-white/20 focus:bg-white/10 focus:ring-2 focus:ring-cyan-400/40 disabled:opacity-50"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((current) => !current)}
+                    aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+                    aria-pressed={showPassword}
+                    className="absolute right-3 top-1/2 inline-flex h-5 w-5 -translate-y-1/2 items-center justify-center text-zinc-500 transition-colors hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 disabled:pointer-events-none disabled:opacity-50"
+                    disabled={busy}
+                  >
+                    <Icon
+                      name={showPassword ? "eye-off" : "eye"}
+                      className="h-4.5 w-4.5"
+                    />
+                  </button>
                 </div>
               </div>
 
