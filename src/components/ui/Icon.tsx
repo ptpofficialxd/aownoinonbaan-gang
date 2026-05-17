@@ -14,7 +14,8 @@ type IconName =
   | "logout"
   | "search"
   | "trash"
-  | "x";
+  | "x"
+  | "google-drive";
 
 const iconMap: Record<IconName, ReactNode> = {
   "arrow-right": (
@@ -235,6 +236,22 @@ const iconMap: Record<IconName, ReactNode> = {
         stroke="currentColor"
         strokeLinecap="round"
         strokeWidth="2"
+      />
+    </>
+  ),
+  "google-drive": (
+    <>
+      <path
+        d="M9.8 3.4h4.3l5.7 9.9h-4.2Z"
+        fill="#F4C542"
+      />
+      <path
+        d="M9.8 3.4 2.8 15.4l2.1 3.7 7.1-12.1Z"
+        fill="#17A05D"
+      />
+      <path
+        d="M4.9 19.1h13.8l2.3-3.9H7.1Z"
+        fill="#4285F4"
       />
     </>
   ),

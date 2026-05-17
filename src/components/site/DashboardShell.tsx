@@ -34,6 +34,7 @@ export function DashboardShell({
   driveAccountEmail,
   driveConnected,
   items,
+  totalMembers,
   totalBytes,
   totalItems,
   categories,
@@ -43,6 +44,7 @@ export function DashboardShell({
   driveAccountEmail: string | null;
   driveConnected: boolean;
   items: MediaItem[];
+  totalMembers: number;
   totalBytes: number;
   totalItems: number;
   categories: CategorySummary[];
@@ -124,19 +126,37 @@ export function DashboardShell({
 
               <div>
                 <h2 className="max-w-3xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                  พื้นที่รวมไฟล์ของแก๊งที่
+                  Dashboard
                   <span className="bg-gradient-to-r from-cyan-200 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
                     {" "}
-                    ดูง่าย อัปโหลดง่าย และไม่งง
+                    สรุปภาพรวมของระบบ
                   </span>
                 </h2>
-                <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-400 sm:text-base">
-                  จุดขายของที่นี่คือการเก็บรูป เก็บคลิป และเก็บไฟล์ทุกอย่างให้อยู่รวมกันแบบสวยๆ
-                  เลยย้ายหน้าให้ library เด่นขึ้น และซ่อนฟอร์มอัปโหลดไว้ใน popup เพื่อให้หน้า main ดูสะอาดกว่าเดิม
-                </p>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                    Library
+                  </p>
+                  <p className="mt-3 text-3xl font-semibold text-white">
+                    {totalItems}
+                  </p>
+                  <p className="mt-2 text-sm text-zinc-400">
+                    ไฟล์ทั้งหมดในระบบ
+                  </p>
+                </div>
+                <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                    Active Users
+                  </p>
+                  <p className="mt-3 text-3xl font-semibold text-white">
+                    {totalMembers}
+                  </p>
+                  <p className="mt-2 text-sm text-zinc-400">
+                    สมาชิกทั้งหมดในระบบ
+                  </p>
+                </div>
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
                     Total Vault
@@ -150,18 +170,7 @@ export function DashboardShell({
                 </div>
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    Live Uploads
-                  </p>
-                  <p className="mt-3 text-3xl font-semibold text-white">
-                    {totalItems}
-                  </p>
-                  <p className="mt-2 text-sm text-zinc-400">
-                    รายการอัปโหลดที่เปิดดูได้
-                  </p>
-                </div>
-                <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                    Active Categories
+                    Categories
                   </p>
                   <p className="mt-3 text-3xl font-semibold text-white">
                     {categories.length}
@@ -197,8 +206,8 @@ export function DashboardShell({
                         href="/api/google-drive/oauth/start"
                         className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/12 px-4 text-sm font-medium text-emerald-50 transition-all hover:border-emerald-300/35 hover:bg-emerald-400/18"
                       >
+                        <Icon name="google-drive" className="h-4 w-4" />
                         เชื่อมต่อ Google Drive
-                        <Icon name="arrow-right" className="h-4 w-4" />
                       </a>
                     ) : null}
                   </div>
@@ -284,7 +293,7 @@ export function DashboardShell({
                         className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-400/10 px-5 text-sm font-medium text-cyan-100 transition-all hover:border-cyan-300/35 hover:bg-cyan-400/16"
                       >
                         <Icon name="upload" className="h-4 w-4" />
-                        Upload new
+                        อัปโหลด
                       </button>
                     ) : (
                       <div className="inline-flex h-12 items-center justify-center rounded-full border border-amber-300/20 bg-amber-300/10 px-5 text-sm font-medium text-amber-100">

@@ -32,12 +32,13 @@ export default async function HomePage() {
 
   return (
     <div className="pb-10">
-      <Hero totalItems={dashboard.totalItems} totalMembers={memberCount} />
+      <Hero />
       <DashboardShell
         canManageDrive={session.role === "admin"}
         driveAccountEmail={drive.accountEmail}
         driveConnected={drive.connected}
         items={dashboard.items}
+        totalMembers={memberCount}
         totalBytes={dashboard.totalBytes}
         totalItems={dashboard.totalItems}
         categories={dashboard.categories}
