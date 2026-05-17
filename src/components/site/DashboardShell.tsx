@@ -253,7 +253,7 @@ export function DashboardShell({
 
   return (
     <>
-      <div className="mx-auto max-w-7xl space-y-7 px-6 pb-16">
+      <div className="mx-auto max-w-7xl space-y-6 px-6 pb-16 xl:space-y-5">
         {/* biome-ignore lint/correctness/useUniqueElementIds: top-level page anchor */}
         <section
           id="home"
