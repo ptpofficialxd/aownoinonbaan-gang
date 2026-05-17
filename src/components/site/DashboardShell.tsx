@@ -1285,7 +1285,7 @@ export function DashboardShell({
                   <div className="w-full max-w-4xl overflow-hidden rounded-[24px] border border-white/10 bg-[#0b0f15]/90 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8)]">
                     <div className="border-b border-white/8 px-5 py-3">
                       <p className="text-sm font-medium text-white">
-                        Text Preview
+                        พรีวิวข้อความ
                       </p>
                     </div>
                     <div className="max-h-[72vh] overflow-auto px-5 py-4">
