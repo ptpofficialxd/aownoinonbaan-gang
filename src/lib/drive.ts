@@ -128,6 +128,42 @@ export async function getGoogleDriveQuotaInfo() {
   };
 }
 
+export async function getGoogleDriveHealthInfo() {
+  const stored = await getStoredRefreshToken();
+  if (!stored?.refresh_token) {
+    return {
+      connected: false,
+      latencyMs: null,
+      checkedAt: new Date().toISOString(),
+    };
+  }
+
+  const startedAt = Date.now();
+  const token = await getAccessToken();
+  const url = new URL("https://www.googleapis.com/drive/v3/about");
+  url.searchParams.set("fields", "user(emailAddress)");
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`Drive health lookup failed: ${res.status} ${detail}`);
+  }
+
+  await res.arrayBuffer();
+
+  return {
+    connected: true,
+    latencyMs: Date.now() - startedAt,
+    checkedAt: new Date().toISOString(),
+  };
+}
+
 export function createGoogleDriveOAuthState() {
   return randomUUID();
 }
@@ -348,9 +384,7 @@ export async function createDriveUploadSession(input: {
 
   if (!initRes.ok) {
     const detail = await initRes.text();
-    throw new Error(
-      `Drive resumable init failed: ${initRes.status} ${detail}`,
-    );
+    throw new Error(`Drive resumable init failed: ${initRes.status} ${detail}`);
   }
 
   const sessionUrl = initRes.headers.get("Location");

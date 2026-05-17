@@ -5,6 +5,7 @@ import {
   useDeferredValue,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { Badge } from "@/components/ui/Badge";
@@ -20,6 +21,15 @@ type MemberSummary = {
   uploads: number;
 };
 
+type CloudHealthState = {
+  checkedAt: string | null;
+  error: string | null;
+  isPaused: boolean;
+  isPolling: boolean;
+  latencyMs: number | null;
+  online: boolean;
+};
+
 function mediaIconForMime(mimeType: string) {
   if (mimeType.startsWith("image/")) return "image";
   if (mimeType.startsWith("video/")) return "video";
@@ -28,6 +38,16 @@ function mediaIconForMime(mimeType: string) {
 
 function isPreviewableImage(mimeType: string) {
   return mimeType.startsWith("image/");
+}
+
+function formatLatency(latencyMs: number | null) {
+  if (latencyMs === null) return "--";
+  return `${Math.max(Math.round(latencyMs), 0)} ms`;
+}
+
+function formatSyncLabel(value: string | null) {
+  if (!value) return "ยังไม่เคย sync";
+  return formatDate(value);
 }
 
 export function DashboardShell({
@@ -52,7 +72,16 @@ export function DashboardShell({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [previewItem, setPreviewItem] = useState<MediaItem | null>(null);
+  const [cloudHealth, setCloudHealth] = useState<CloudHealthState>({
+    checkedAt: null,
+    error: null,
+    isPaused: false,
+    isPolling: false,
+    latencyMs: null,
+    online: driveConnected,
+  });
   const deferredSearch = useDeferredValue(search);
+  const pollingTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     function syncUiFromHash() {
@@ -88,6 +117,107 @@ export function DashboardShell({
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
   }, []);
+
+  useEffect(() => {
+    function clearCloudHealthTimer() {
+      if (pollingTimeoutRef.current !== null) {
+        window.clearTimeout(pollingTimeoutRef.current);
+        pollingTimeoutRef.current = null;
+      }
+    }
+
+    if (!driveConnected) {
+      setCloudHealth({
+        checkedAt: null,
+        error: null,
+        isPaused: false,
+        isPolling: false,
+        latencyMs: null,
+        online: false,
+      });
+      return;
+    }
+
+    async function pollCloudHealth() {
+      if (document.hidden) {
+        return;
+      }
+
+      setCloudHealth((current) => ({
+        ...current,
+        error: null,
+        isPaused: false,
+        isPolling: true,
+      }));
+
+      try {
+        const res = await fetch("/api/cloud/health", {
+          cache: "no-store",
+        });
+
+        const data = (await res.json().catch(() => ({}))) as {
+          checkedAt?: string;
+          connected?: boolean;
+          error?: string;
+          latencyMs?: number | null;
+        };
+
+        setCloudHealth({
+          checkedAt: data.checkedAt ?? new Date().toISOString(),
+          error: res.ok ? null : (data.error ?? "Cloud health check failed."),
+          isPaused: false,
+          isPolling: false,
+          latencyMs: typeof data.latencyMs === "number" ? data.latencyMs : null,
+          online: Boolean(data.connected && res.ok),
+        });
+      } catch (error) {
+        setCloudHealth((current) => ({
+          ...current,
+          error:
+            error instanceof Error
+              ? error.message
+              : "Cloud health check failed.",
+          isPaused: false,
+          isPolling: false,
+          online: false,
+        }));
+      } finally {
+        clearCloudHealthTimer();
+
+        if (!document.hidden) {
+          pollingTimeoutRef.current = window.setTimeout(() => {
+            void pollCloudHealth();
+          }, 10_000);
+        }
+      }
+    }
+
+    function handleVisibilityChange() {
+      if (document.hidden) {
+        clearCloudHealthTimer();
+        setCloudHealth((current) => ({
+          ...current,
+          isPaused: true,
+          isPolling: false,
+        }));
+        return;
+      }
+
+      setCloudHealth((current) => ({
+        ...current,
+        isPaused: false,
+      }));
+      void pollCloudHealth();
+    }
+
+    void pollCloudHealth();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearCloudHealthTimer();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [driveConnected]);
 
   const busyIdSet = useMemo(() => new Set(busyIds), [busyIds]);
   const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
@@ -347,6 +477,49 @@ export function DashboardShell({
                   <p className="mt-2 text-sm text-zinc-400">
                     {driveConnected ? "ใน Cloud" : "ยังไม่ได้เชื่อมต่อกับ Cloud"}
                   </p>
+                </div>
+
+                <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                        Cloud latency
+                      </p>
+                      <p className="mt-3 text-3xl font-semibold text-white">
+                        {driveConnected && cloudHealth.online
+                          ? formatLatency(cloudHealth.latencyMs)
+                          : "--"}
+                      </p>
+                    </div>
+                    <span
+                      className={`mt-1 inline-flex h-2.5 w-2.5 rounded-full ${
+                        cloudHealth.online
+                          ? "bg-emerald-400 shadow-[0_0_18px_rgba(74,222,128,0.65)]"
+                          : driveConnected
+                            ? "bg-amber-300 shadow-[0_0_18px_rgba(252,211,77,0.55)]"
+                            : "bg-zinc-600"
+                      }`}
+                    />
+                  </div>
+                  <p className="mt-2 text-sm text-zinc-300">
+                    {cloudHealth.isPaused
+                      ? "พัก polling ระหว่างแท็บไม่ active"
+                      : cloudHealth.isPolling
+                        ? "กำลัง sync กับ Cloud..."
+                        : cloudHealth.online
+                          ? "อัปเดทอัตโนมัติทุก 10 วินาที"
+                          : driveConnected
+                            ? "Cloud ตอบกลับชั่วคราวไม่สำเร็จ"
+                            : "ยังไม่ได้เชื่อมต่อกับ Cloud"}
+                  </p>
+                  <p className="mt-2 text-xs text-zinc-500">
+                    Last sync: {formatSyncLabel(cloudHealth.checkedAt)}
+                  </p>
+                  {cloudHealth.error ? (
+                    <p className="mt-2 text-xs text-amber-200/90">
+                      {cloudHealth.error}
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
