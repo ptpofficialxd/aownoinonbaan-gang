@@ -120,6 +120,18 @@ export async function getMediaRecord(mediaId: string) {
   return rows[0] ?? null;
 }
 
+export async function getMediaRecords(mediaIds: string[]) {
+  if (!mediaIds.length) return [];
+
+  const rows = (await sql()`
+    SELECT id, drive_file_id, file_name, mime_type
+    FROM media_items
+    WHERE id = ANY(${mediaIds}::uuid[])
+  `) as MediaRecordRow[];
+
+  return rows;
+}
+
 export async function deleteMediaItem(mediaId: string) {
   const rows = (await sql()`
     DELETE FROM media_items
@@ -128,6 +140,18 @@ export async function deleteMediaItem(mediaId: string) {
   `) as Array<{ id: string }>;
 
   return rows[0]?.id ?? null;
+}
+
+export async function deleteMediaItems(mediaIds: string[]) {
+  if (!mediaIds.length) return [];
+
+  const rows = (await sql()`
+    DELETE FROM media_items
+    WHERE id = ANY(${mediaIds}::uuid[])
+    RETURNING id
+  `) as Array<{ id: string }>;
+
+  return rows.map((row) => row.id);
 }
 
 export async function createMediaItem(input: {

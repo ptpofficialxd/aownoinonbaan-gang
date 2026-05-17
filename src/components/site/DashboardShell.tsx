@@ -1,6 +1,12 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import {
+  startTransition,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
@@ -8,11 +14,6 @@ import { Input } from "@/components/ui/Input";
 import { formatBytes, formatDate } from "@/lib/format";
 import type { MediaItem } from "@/lib/media";
 import { UploadForm } from "./UploadForm";
-
-type CategorySummary = {
-  name: string;
-  count: number;
-};
 
 type MemberSummary = {
   name: string;
@@ -36,10 +37,6 @@ export function DashboardShell({
   items,
   remainingDriveBytes,
   totalMembers,
-  totalBytes,
-  totalItems,
-  categories,
-  topMembers,
 }: {
   canManageDrive: boolean;
   driveAccountEmail: string | null;
@@ -47,14 +44,12 @@ export function DashboardShell({
   items: MediaItem[];
   remainingDriveBytes: number | null;
   totalMembers: number;
-  totalBytes: number;
-  totalItems: number;
-  categories: CategorySummary[];
-  topMembers: MemberSummary[];
 }) {
+  const [libraryItems, setLibraryItems] = useState(items);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [busyIds, setBusyIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [uploadOpen, setUploadOpen] = useState(false);
   const deferredSearch = useDeferredValue(search);
 
@@ -82,9 +77,49 @@ export function DashboardShell({
     );
   }, [uploadOpen]);
 
+  const busyIdSet = useMemo(() => new Set(busyIds), [busyIds]);
+  const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+
+  const dashboard = useMemo(() => {
+    const totalBytes = libraryItems.reduce(
+      (sum, item) => sum + item.fileSize,
+      0,
+    );
+    const categoryCounts = new Map<string, number>();
+    const memberCounts = new Map<string, number>();
+
+    for (const item of libraryItems) {
+      categoryCounts.set(
+        item.category,
+        (categoryCounts.get(item.category) ?? 0) + 1,
+      );
+      memberCounts.set(
+        item.uploaderName,
+        (memberCounts.get(item.uploaderName) ?? 0) + 1,
+      );
+    }
+
+    const categories = Array.from(categoryCounts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+
+    const topMembers = Array.from(memberCounts.entries())
+      .map(([name, uploads]) => ({ name, uploads }))
+      .sort((a, b) => b.uploads - a.uploads)
+      .slice(0, 4);
+
+    return {
+      totalBytes,
+      totalItems: libraryItems.length,
+      categories,
+      topMembers,
+      latestItem: libraryItems[0] ?? null,
+    };
+  }, [libraryItems]);
+
   const filteredItems = useMemo(() => {
     const keyword = deferredSearch.trim().toLowerCase();
-    return items.filter((item) => {
+    return libraryItems.filter((item) => {
       const matchesCategory =
         activeCategory === "all" || item.category === activeCategory;
       const haystack =
@@ -92,38 +127,111 @@ export function DashboardShell({
       const matchesSearch = !keyword || haystack.includes(keyword);
       return matchesCategory && matchesSearch;
     });
-  }, [activeCategory, deferredSearch, items]);
+  }, [activeCategory, deferredSearch, libraryItems]);
 
-  const latestItem = items[0] ?? null;
-  const topMember = topMembers[0] ?? null;
+  const visibleSelectedCount = filteredItems.filter((item) =>
+    selectedIdSet.has(item.id),
+  ).length;
+  const topMember = dashboard.topMembers[0] ?? null;
 
-  async function handleDelete(item: MediaItem) {
-    if (!canManageDrive || deletingId) return;
+  function toggleSelected(id: string) {
+    if (!canManageDrive || busyIdSet.has(id)) return;
 
-    const ok = window.confirm(
-      `ลบไฟล์ "${item.fileName}" ออกจาก Google Drive และระบบเลยไหม?`,
+    setSelectedIds((current) =>
+      current.includes(id)
+        ? current.filter((value) => value !== id)
+        : [...current, id],
     );
+  }
+
+  function selectAllVisible() {
+    if (!canManageDrive) return;
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      for (const item of filteredItems) {
+        if (!busyIdSet.has(item.id)) {
+          next.add(item.id);
+        }
+      }
+      return Array.from(next);
+    });
+  }
+
+  function clearSelection() {
+    setSelectedIds([]);
+  }
+
+  async function performDelete(ids: string[], fileLabel: string) {
+    if (!canManageDrive || !ids.length) return;
+
+    const ok = window.confirm(fileLabel);
     if (!ok) return;
 
-    setDeletingId(item.id);
+    setBusyIds((current) => Array.from(new Set([...current, ...ids])));
+
     try {
-      const res = await fetch(`/api/media/${item.id}`, {
-        method: "DELETE",
+      const res = await fetch("/api/media/bulk-delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ids }),
       });
 
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) {
+      const data = (await res.json().catch(() => ({}))) as {
+        deletedIds?: string[];
+        failedIds?: string[];
+        error?: string;
+      };
+
+      if (!res.ok && !data.deletedIds?.length) {
         throw new Error(data.error || "Delete failed");
       }
 
-      window.location.reload();
+      const deletedIds = data.deletedIds ?? [];
+      const failedIds = new Set(data.failedIds ?? []);
+
+      if (deletedIds.length) {
+        startTransition(() => {
+          setLibraryItems((current) =>
+            current.filter((item) => !deletedIds.includes(item.id)),
+          );
+          setSelectedIds((current) =>
+            current.filter((id) => !deletedIds.includes(id)),
+          );
+        });
+      }
+
+      if (failedIds.size > 0) {
+        window.alert(
+          `ลบสำเร็จ ${deletedIds.length} ไฟล์ และมี ${failedIds.size} ไฟล์ที่ลบไม่สำเร็จ`,
+        );
+      }
     } catch (error) {
-      window.alert(
-        error instanceof Error ? error.message : "ลบไฟล์ไม่สำเร็จ",
-      );
+      window.alert(error instanceof Error ? error.message : "ลบไฟล์ไม่สำเร็จ");
     } finally {
-      setDeletingId(null);
+      setBusyIds((current) => current.filter((id) => !ids.includes(id)));
     }
+  }
+
+  async function handleDelete(item: MediaItem) {
+    await performDelete(
+      [item.id],
+      `ลบไฟล์ "${item.fileName}" ออกจาก Google Drive และระบบเลยไหม?`,
+    );
+  }
+
+  async function handleDeleteSelected() {
+    const ids = filteredItems
+      .map((item) => item.id)
+      .filter((id) => selectedIdSet.has(id) && !busyIdSet.has(id));
+
+    if (!ids.length) return;
+
+    await performDelete(
+      ids,
+      `ลบ ${ids.length} ไฟล์ที่เลือกออกจาก Google Drive และระบบเลยไหม?`,
+    );
   }
 
   return (
@@ -169,9 +277,7 @@ export function DashboardShell({
                   <p className="mt-3 text-3xl font-semibold text-white">
                     {totalMembers}
                   </p>
-                  <p className="mt-2 text-sm text-zinc-400">
-                    สมาชิกในระบบ
-                  </p>
+                  <p className="mt-2 text-sm text-zinc-400">สมาชิกในระบบ</p>
                 </div>
 
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
@@ -179,11 +285,9 @@ export function DashboardShell({
                     คลัง 📁
                   </p>
                   <p className="mt-3 text-3xl font-semibold text-white">
-                    {totalItems}
+                    {dashboard.totalItems}
                   </p>
-                  <p className="mt-2 text-sm text-zinc-400">
-                    ไฟล์ในระบบ
-                  </p>
+                  <p className="mt-2 text-sm text-zinc-400">ไฟล์ในระบบ</p>
                 </div>
 
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
@@ -191,11 +295,9 @@ export function DashboardShell({
                     หมวดหมู่ 🏷️
                   </p>
                   <p className="mt-3 text-3xl font-semibold text-white">
-                    {categories.length}
+                    {dashboard.categories.length}
                   </p>
-                  <p className="mt-2 text-sm text-zinc-400">
-                    หมวดหมู่ในระบบ
-                  </p>
+                  <p className="mt-2 text-sm text-zinc-400">หมวดหมู่ในระบบ</p>
                 </div>
 
                 <div className="rounded-[26px] border border-white/10 bg-black/20 p-4">
@@ -203,12 +305,10 @@ export function DashboardShell({
                     ขนาดไฟล์ 📄
                   </p>
                   <p className="mt-3 text-3xl font-semibold text-white">
-                    {formatBytes(totalBytes)}
+                    {formatBytes(dashboard.totalBytes)}
                   </p>
                   <p className="mt-2 text-sm text-zinc-400">
-                    {driveConnected
-                      ? "ใน Cloud"
-                      : "ยังไม่ได้เชื่อมต่อกับ Cloud"}
+                    {driveConnected ? "ใน Cloud" : "ยังไม่ได้เชื่อมต่อกับ Cloud"}
                   </p>
                 </div>
 
@@ -222,50 +322,46 @@ export function DashboardShell({
                       : "--"}
                   </p>
                   <p className="mt-2 text-sm text-zinc-400">
-                    {driveConnected
-                      ? "ใน Cloud"
-                      : "ยังไม่ได้เชื่อมต่อกับ Cloud"}
+                    {driveConnected ? "ใน Cloud" : "ยังไม่ได้เชื่อมต่อกับ Cloud"}
                   </p>
                 </div>
               </div>
 
               <div className="grid gap-4 xl:grid-rows-2">
                 <div className="rounded-[28px] border border-white/10 bg-black/20 p-5 xl:h-full">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                      สถานะ Cloud Server ⚙️
-                    </p>
-                    <p className="mt-3 text-lg font-semibold text-white">
-                      {driveConnected
-                        ? "เชื่อมต่อแล้ว"
-                        : "ยังไม่ได้เชื่อมต่อ"}
-                    </p>
-                    <p className="text-sm leading-6 text-zinc-400">
-                      {driveConnected
-                        ? `บัญชี: ${driveAccountEmail ?? "Connected successfully"}`
-                        : canManageDrive
-                          ? ""
-                          : "กำลังรอ Admin เชื่อมต่อ Google Drive ของระบบ"}
-                    </p>
-                    {!driveConnected && canManageDrive ? (
-                      <a
-                        href="/api/google-drive/oauth/start"
-                        className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/12 px-4 text-sm font-medium text-emerald-50 transition-all hover:border-emerald-300/35 hover:bg-emerald-400/18"
-                      >
-                        <Icon name="google-drive" className="h-4 w-4" />
-                        เชื่อมต่อ Google Drive
-                      </a>
-                    ) : null}
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                        สถานะ Cloud Server ⚙️
+                      </p>
+                      <p className="mt-3 text-lg font-semibold text-white">
+                        {driveConnected ? "เชื่อมต่อแล้ว" : "ยังไม่ได้เชื่อมต่อ"}
+                      </p>
+                      <p className="text-sm leading-6 text-zinc-400">
+                        {driveConnected
+                          ? `บัญชี: ${driveAccountEmail ?? "Connected successfully"}`
+                          : canManageDrive
+                            ? ""
+                            : "กำลังรอ Admin เชื่อมต่อ Google Drive ของระบบ"}
+                      </p>
+                      {!driveConnected && canManageDrive ? (
+                        <a
+                          href="/api/google-drive/oauth/start"
+                          className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/12 px-4 text-sm font-medium text-emerald-50 transition-all hover:border-emerald-300/35 hover:bg-emerald-400/18"
+                        >
+                          <Icon name="google-drive" className="h-4 w-4" />
+                          เชื่อมต่อ Google Drive
+                        </a>
+                      ) : null}
+                    </div>
+                    <div
+                      className={`mt-1 h-3 w-3 rounded-full ${
+                        driveConnected
+                          ? "bg-emerald-400 shadow-[0_0_18px_rgba(74,222,128,0.65)]"
+                          : "bg-amber-300 shadow-[0_0_18px_rgba(252,211,77,0.55)]"
+                      }`}
+                    />
                   </div>
-                  <div
-                    className={`mt-1 h-3 w-3 rounded-full ${
-                      driveConnected
-                        ? "bg-emerald-400 shadow-[0_0_18px_rgba(74,222,128,0.65)]"
-                        : "bg-amber-300 shadow-[0_0_18px_rgba(252,211,77,0.55)]"
-                    }`}
-                  />
-                </div>
                 </div>
 
                 <div className="rounded-[28px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-cyan-400/[0.06] p-5 xl:h-full">
@@ -273,11 +369,15 @@ export function DashboardShell({
                     อัปโหลดล่าสุด 🚀
                   </p>
                   <p className="mt-3 text-base font-semibold text-white">
-                    {latestItem ? latestItem.fileName : "ยังไม่มีไฟล์ล่าสุด"}
+                    {dashboard.latestItem
+                      ? dashboard.latestItem.fileName
+                      : "ยังไม่มีไฟล์ล่าสุด"}
                   </p>
                   <p className="mt-2 text-sm text-zinc-400">
-                    {latestItem
-                      ? `${latestItem.uploaderName} · ${formatDate(latestItem.createdAt)}`
+                    {dashboard.latestItem
+                      ? `${dashboard.latestItem.uploaderName} · ${formatDate(
+                          dashboard.latestItem.createdAt,
+                        )}`
                       : "กดอัปโหลดเพื่อเริ่มอัปโหลดไฟล์ได้เลย"}
                   </p>
                 </div>
@@ -300,7 +400,7 @@ export function DashboardShell({
                       คลังเก็บไฟล์
                     </h2>
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-                      เลือกดูได้ตามหมวดหมู่หรือประเภทของไฟล์
+                      มุมมองแบบ grid ที่ดูไฟล์ได้เยอะขึ้น พร้อมโหมดเลือกหลายไฟล์เพื่อลบทีเดียว
                     </p>
                   </div>
 
@@ -313,7 +413,7 @@ export function DashboardShell({
                       <Input
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
-                        placeholder="ค้นหา"
+                        placeholder="ค้นหาชื่อไฟล์ คนอัปโหลด หรือโน้ต"
                         className="h-12 rounded-full border-white/12 bg-white/[0.04] pl-11"
                       />
                     </div>
@@ -345,9 +445,10 @@ export function DashboardShell({
                         : "border-white/10 bg-white/5 text-zinc-300 hover:border-white/15 hover:bg-white/8 hover:text-white"
                     }`}
                   >
-                    ทั้งหมด
+                    ทั้งหมด{" "}
+                    <span className="opacity-70">({dashboard.totalItems})</span>
                   </button>
-                  {categories.map((category) => (
+                  {dashboard.categories.map((category) => (
                     <button
                       key={category.name}
                       type="button"
@@ -369,102 +470,176 @@ export function DashboardShell({
             <CardBody className="pt-6">
               {filteredItems.length ? (
                 <div className="space-y-5">
-                    {filteredItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="overflow-hidden rounded-[30px] border border-white/8 bg-black/18 transition-all duration-200 hover:border-cyan-300/20 hover:bg-white/[0.03]"
-                    >
-                      <div className="flex flex-col lg:flex-row">
-                        <div className="relative h-56 overflow-hidden border-b border-white/8 bg-gradient-to-br from-cyan-400/[0.14] via-sky-500/[0.08] to-transparent lg:h-auto lg:w-[21rem] lg:border-b-0 lg:border-r">
-                          {isPreviewableImage(item.mimeType) ? (
-                            <img
-                              src={`/api/media/${item.id}/content`}
-                              alt={item.fileName}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-full min-h-56 items-center justify-center">
-                              <div className="inline-flex h-16 w-16 items-center justify-center rounded-[22px] border border-white/10 bg-white/8 text-cyan-100">
-                                <Icon
-                                  name={mediaIconForMime(item.mimeType)}
-                                  className="h-7 w-7"
-                                />
-                              </div>
-                            </div>
-                          )}
+                  <div className="sticky top-4 z-10 overflow-hidden rounded-[22px] border border-white/10 bg-[#0d1016]/85 p-3 sm:rounded-[26px] sm:p-4 backdrop-blur-xl">
+                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/45 to-transparent" />
+                    <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-white sm:text-sm">
+                          {filteredItems.length} ไฟล์ในมุมมองนี้
+                        </p>
+                        <p className="mt-1 text-xs text-zinc-400 sm:text-sm">
+                          {canManageDrive
+                            ? `${selectedIds.length} ไฟล์ถูกเลือกอยู่ ตอนนี้เห็นในหน้าจอ ${visibleSelectedCount} ไฟล์`
+                            : "เปิดดูไฟล์ได้ทันทีจากการ์ดแต่ละใบ"}
+                        </p>
+                      </div>
 
-                          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent" />
-                          <div className="absolute left-4 top-4 flex flex-wrap gap-2">
-                            <Badge className="border-white/12 bg-black/35 text-white">
-                              {item.category}
-                            </Badge>
-                            <Badge className="border-white/12 bg-black/35 text-white">
-                              {item.mimeType.split("/")[0]}
-                            </Badge>
-                          </div>
+                      {canManageDrive ? (
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={selectAllVisible}
+                            className="inline-flex h-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-3 text-xs font-medium text-zinc-200 transition-all hover:border-white/15 hover:bg-white/[0.08] sm:h-10 sm:px-4 sm:text-sm"
+                          >
+                            เลือกทั้งหมดที่เห็น
+                          </button>
+                          <button
+                            type="button"
+                            onClick={clearSelection}
+                            disabled={selectedIds.length === 0}
+                            className="inline-flex h-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-3 text-xs font-medium text-zinc-200 transition-all hover:border-white/15 hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:px-4 sm:text-sm"
+                          >
+                            ล้างการเลือก
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void handleDeleteSelected()}
+                            disabled={visibleSelectedCount === 0}
+                            className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-rose-400/18 bg-rose-400/10 px-3 text-xs font-medium text-rose-100 transition-all hover:border-rose-400/30 hover:bg-rose-400/16 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:px-4 sm:text-sm"
+                          >
+                            <Icon name="trash" className="h-4 w-4" />
+                            ลบไฟล์ที่เลือก
+                          </button>
                         </div>
+                      ) : null}
+                    </div>
+                  </div>
 
-                        <div className="flex flex-1 flex-col justify-between p-6">
-                          <div>
-                            <div className="flex flex-wrap items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <h3 className="truncate text-2xl font-semibold text-white">
-                                  {item.fileName}
-                                </h3>
-                                <p className="mt-2 text-sm text-zinc-400">
-                                  {item.uploaderName} · {formatDate(item.createdAt)}
-                                </p>
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+                    {filteredItems.map((item) => {
+                      const isSelected = selectedIdSet.has(item.id);
+                      const isBusy = busyIdSet.has(item.id);
+
+                      return (
+                        <div
+                          key={item.id}
+                          className={`group relative overflow-hidden rounded-[22px] border transition-all duration-200 sm:rounded-[24px] xl:rounded-[28px] ${
+                            isSelected
+                              ? "border-cyan-300/35 bg-cyan-400/[0.08] shadow-[0_22px_50px_-28px_rgba(34,211,238,0.55)]"
+                              : "border-white/8 bg-black/18 hover:border-cyan-300/20 hover:bg-white/[0.03]"
+                          }`}
+                        >
+                          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+
+                          {canManageDrive ? (
+                            <button
+                              type="button"
+                              onClick={() => toggleSelected(item.id)}
+                              disabled={isBusy}
+                              className={`absolute left-2 top-2 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full border backdrop-blur-md transition-all sm:left-3 sm:top-3 sm:h-9 sm:w-9 ${
+                                isSelected
+                                  ? "border-cyan-300/45 bg-cyan-300 text-slate-950"
+                                  : "border-white/12 bg-black/40 text-white hover:border-white/30 hover:bg-black/55"
+                              }`}
+                              aria-label={
+                                isSelected
+                                  ? `ยกเลิกการเลือก ${item.fileName}`
+                                  : `เลือก ${item.fileName}`
+                              }
+                            >
+                              {isSelected ? (
+                                <Icon name="check" className="h-4 w-4" />
+                              ) : (
+                                <div className="h-3 w-3 rounded-full border border-current" />
+                              )}
+                            </button>
+                          ) : null}
+
+                          <div className="relative aspect-square overflow-hidden border-b border-white/8 bg-gradient-to-br from-cyan-400/[0.14] via-sky-500/[0.08] to-transparent md:aspect-[4/3]">
+                            {isPreviewableImage(item.mimeType) ? (
+                              <>
+                                {/* biome-ignore lint/performance/noImgElement: authenticated media preview is streamed from a protected route */}
+                                <img
+                                  src={`/api/media/${item.id}/content`}
+                                  alt={item.fileName}
+                                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                                />
+                              </>
+                            ) : (
+                              <div className="flex h-full items-center justify-center">
+                                <div className="inline-flex h-18 w-18 items-center justify-center rounded-[24px] border border-white/10 bg-white/8 text-cyan-100">
+                                  <Icon
+                                    name={mediaIconForMime(item.mimeType)}
+                                    className="h-8 w-8"
+                                  />
+                                </div>
                               </div>
-                              <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.22em] text-zinc-400">
+                            )}
+
+                            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/75 to-transparent sm:h-24" />
+                            <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between gap-1.5 sm:bottom-3 sm:left-3 sm:right-3 sm:gap-2">
+                              <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                                <Badge className="border-white/12 bg-black/35 px-2 py-0.5 text-[9px] tracking-[0.14em] text-white sm:px-3 sm:py-1 sm:text-[11px]">
+                                  {item.category}
+                                </Badge>
+                                <Badge className="border-white/12 bg-black/35 px-2 py-0.5 text-[9px] tracking-[0.14em] text-white sm:px-3 sm:py-1 sm:text-[11px]">
+                                  {item.mimeType.split("/")[0]}
+                                </Badge>
+                              </div>
+                              <span className="rounded-full border border-white/12 bg-black/40 px-2 py-0.5 text-[10px] font-medium text-zinc-200 sm:px-2.5 sm:py-1 sm:text-[11px]">
                                 {formatBytes(item.fileSize)}
                               </span>
                             </div>
-
-                            <p className="mt-5 max-w-2xl text-sm leading-7 text-zinc-400">
-                              {item.description || "ไม่มีโน้ตประกอบไฟล์นี้"}
-                            </p>
                           </div>
 
-                          <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-white/6 pt-5">
-                            <div className="flex flex-wrap gap-2">
-                              <span className="rounded-full border border-white/8 bg-white/4 px-3 py-1.5 text-xs text-zinc-400">
-                                owner vault
-                              </span>
-                              <span className="rounded-full border border-white/8 bg-white/4 px-3 py-1.5 text-xs text-zinc-400">
-                                uploaded by {item.uploaderName}
-                              </span>
+                          <div className="space-y-3 p-3 sm:space-y-4 sm:p-4">
+                            <div className="space-y-1.5 sm:space-y-2">
+                              <h3
+                                className="truncate text-sm font-semibold text-white sm:text-base"
+                                title={item.fileName}
+                              >
+                                {item.fileName}
+                              </h3>
+                              <p className="truncate text-xs text-zinc-400 sm:text-sm">
+                                {item.uploaderName}
+                              </p>
+                              <p className="text-[11px] text-zinc-500 sm:text-xs">
+                                {formatDate(item.createdAt)}
+                              </p>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                              {canManageDrive ? (
-                                <button
-                                  type="button"
-                                  onClick={() => void handleDelete(item)}
-                                  disabled={deletingId === item.id}
-                                  className="inline-flex items-center gap-2 rounded-full border border-rose-400/18 bg-rose-400/8 px-4 py-2.5 text-sm font-medium text-rose-100 transition-all hover:border-rose-400/30 hover:bg-rose-400/12 disabled:cursor-not-allowed disabled:opacity-60"
-                                >
-                                  <Icon name="trash" className="h-4 w-4" />
-                                  {deletingId === item.id
-                                    ? "Deleting..."
-                                    : "Delete"}
-                                </button>
-                              ) : null}
+                            <p className="hidden min-h-10 text-sm leading-5 text-zinc-400 lg:block">
+                              {item.description || "ไม่มีโน้ตประกอบไฟล์นี้"}
+                            </p>
 
+                            <div className="flex items-center gap-2 pt-0.5 sm:pt-1">
                               <a
                                 href={`/api/media/${item.id}/content`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center gap-2 rounded-full border border-cyan-300/18 bg-cyan-400/8 px-4 py-2.5 text-sm font-medium text-cyan-100 transition-all hover:border-cyan-300/30 hover:bg-cyan-400/12"
+                                className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full border border-cyan-300/18 bg-cyan-400/8 px-3 text-xs font-medium text-cyan-100 transition-all hover:border-cyan-300/30 hover:bg-cyan-400/12 sm:h-10 sm:gap-2 sm:px-4 sm:text-sm"
                               >
                                 เปิดไฟล์
                                 <Icon name="arrow-right" className="h-4 w-4" />
                               </a>
+
+                              {canManageDrive ? (
+                                <button
+                                  type="button"
+                                  onClick={() => void handleDelete(item)}
+                                  disabled={isBusy}
+                                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-rose-400/18 bg-rose-400/8 text-rose-100 transition-all hover:border-rose-400/30 hover:bg-rose-400/12 disabled:cursor-not-allowed disabled:opacity-60 sm:h-10 sm:w-10"
+                                  aria-label={`ลบ ${item.fileName}`}
+                                >
+                                  <Icon name="trash" className="h-4 w-4" />
+                                </button>
+                              ) : null}
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      );
+                    })}
+                  </div>
                 </div>
               ) : (
                 <div className="rounded-[28px] border border-dashed border-white/12 bg-black/12 px-6 py-16 text-center">
@@ -489,8 +664,8 @@ export function DashboardShell({
                   ฮิตจังอะเรา 🔥
                 </p>
                 <div className="mt-5 space-y-4">
-                  {categories.length ? (
-                    categories.map((category) => (
+                  {dashboard.categories.length ? (
+                    dashboard.categories.map((category) => (
                       <div key={category.name}>
                         <div className="mb-2 flex items-center justify-between text-sm text-zinc-300">
                           <span>{category.name}</span>
@@ -503,7 +678,10 @@ export function DashboardShell({
                               width: `${Math.max(
                                 12,
                                 (category.count /
-                                  Math.max(categories[0]?.count ?? 1, 1)) *
+                                  Math.max(
+                                    dashboard.categories[0]?.count ?? 1,
+                                    1,
+                                  )) *
                                   100,
                               )}%`,
                             }}
@@ -524,8 +702,8 @@ export function DashboardShell({
                   จำนวนอัปโหลด 📊
                 </p>
                 <div className="mt-5 space-y-3">
-                  {topMembers.length ? (
-                    topMembers.map((member, index) => (
+                  {dashboard.topMembers.length ? (
+                    dashboard.topMembers.map((member: MemberSummary, index) => (
                       <div
                         key={member.name}
                         className="flex items-center justify-between rounded-[22px] border border-white/8 bg-black/18 px-4 py-3"
@@ -541,9 +719,7 @@ export function DashboardShell({
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-zinc-500">
-                      ยังไม่มีกิจกรรม ณ ขณะนี้
-                    </p>
+                    <p className="text-sm text-zinc-500">ยังไม่มีกิจกรรม ณ ขณะนี้</p>
                   )}
                 </div>
 
@@ -586,7 +762,8 @@ export function DashboardShell({
                     เพิ่มไฟล์ใหม่เข้าเอาน้อยนอนบ้าน
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-zinc-400">
-                    เลือกไฟล์ ใส่หมวดกับโน้ต แล้วระบบจะส่งขึ้น owner Google Drive พร้อมบันทึกว่าใครอัปโหลด
+                    เลือกไฟล์ ใส่หมวดกับโน้ต แล้วระบบจะส่งขึ้น owner Google Drive
+                    พร้อมบันทึกว่าใครอัปโหลด
                   </p>
                 </div>
 
