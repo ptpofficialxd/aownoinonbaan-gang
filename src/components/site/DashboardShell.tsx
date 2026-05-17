@@ -282,6 +282,8 @@ export function DashboardShell({
     selectedIdSet.has(item.id),
   ).length;
   const topMember = dashboard.topMembers[0] ?? null;
+  const isSystemReady = driveConnected && cloudHealth.online;
+  const canUploadNow = isSystemReady;
 
   function toggleSelected(id: string) {
     if (!canManageDrive || busyIdSet.has(id)) return;
@@ -414,12 +416,12 @@ export function DashboardShell({
                 </Badge>
                 <Badge
                   className={
-                    driveConnected
+                    isSystemReady
                       ? "!border-emerald-300/25 !bg-emerald-400/14 !text-emerald-100"
                       : "!border-rose-300/25 !bg-rose-400/14 !text-rose-100"
                   }
                 >
-                  {driveConnected ? "ระบบ: พร้อมใช้งาน" : "ระบบ: ไม่พร้อมใช้งาน"}
+                  {isSystemReady ? "ระบบ: พร้อมใช้งาน" : "ระบบ: ไม่พร้อมใช้งาน"}
                 </Badge>
               </div>
 
@@ -661,12 +663,12 @@ export function DashboardShell({
                       </Badge>
                       <Badge
                         className={
-                          driveConnected
+                          isSystemReady
                             ? "!border-emerald-300/25 !bg-emerald-400/14 !text-emerald-100"
                             : "!border-rose-300/25 !bg-rose-400/14 !text-rose-100"
                         }
                       >
-                        {driveConnected
+                        {isSystemReady
                           ? "ระบบ: พร้อมอัปโหลด"
                           : "ระบบ: ไม่พร้อมอัปโหลด"}
                       </Badge>
@@ -694,7 +696,7 @@ export function DashboardShell({
                       />
                     </div>
 
-                    {driveConnected ? (
+                    {canUploadNow ? (
                       <button
                         type="button"
                         onClick={() => setUploadOpen(true)}
@@ -702,6 +704,16 @@ export function DashboardShell({
                       >
                         <Icon name="upload" className="h-4 w-4" />
                         อัปโหลด
+                      </button>
+                    ) : driveConnected ? (
+                      <button
+                        type="button"
+                        disabled
+                        className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-rose-300/18 bg-rose-400/8 px-5 text-sm font-medium text-rose-100/70 opacity-80"
+                        title="Cloud health check ไม่ผ่าน จึงยังไม่พร้อมอัปโหลด"
+                      >
+                        <Icon name="upload" className="h-4 w-4" />
+                        ไม่พร้อมอัปโหลด
                       </button>
                     ) : null}
                   </div>
@@ -1027,7 +1039,7 @@ export function DashboardShell({
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
           />
 
-          <div className="relative z-10 w-full max-w-3xl overflow-hidden rounded-[32px] border border-white/10 bg-[#101116] shadow-[0_40px_120px_-50px_rgba(0,0,0,0.85)]">
+          <div className="relative z-10 w-full max-w-3xl overflow-visible rounded-[32px] border border-white/10 bg-[#101116] shadow-[0_40px_120px_-50px_rgba(0,0,0,0.85)]">
             <div className="border-b border-white/8 px-6 py-5 sm:px-7">
               <div className="flex items-start justify-between gap-4">
                 <div>

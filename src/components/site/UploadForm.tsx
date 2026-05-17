@@ -1,7 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { startTransition, useId, useState } from "react";
+import {
+  startTransition,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
@@ -23,11 +29,35 @@ export function UploadForm({
   const [phase, setPhase] = useState<
     "idle" | "preparing" | "uploading" | "finalizing"
   >("idle");
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileId = useId();
   const categoryId = useId();
   const descriptionId = useId();
+  const categoryMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent) {
+      if (!categoryMenuRef.current?.contains(event.target as Node)) {
+        setCategoryMenuOpen(false);
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setCategoryMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -166,18 +196,111 @@ export function UploadForm({
           >
             category
           </label>
-          <select
-            id={categoryId}
-            value={category}
-            onChange={(event) => setCategory(event.target.value)}
-            className="h-12 w-full rounded-2xl border border-white/10 bg-white/5 px-4 text-sm text-white outline-none transition-all focus:border-cyan-300/50 focus:bg-white/8"
-          >
-            {CATEGORIES.map((item) => (
-              <option key={item} value={item} className="bg-slate-950">
-                {item}
-              </option>
-            ))}
-          </select>
+          <div ref={categoryMenuRef} className="relative">
+            <button
+              id={categoryId}
+              type="button"
+              aria-haspopup="listbox"
+              aria-expanded={categoryMenuOpen}
+              aria-label="เลือกหมวดหมู่"
+              onClick={() => setCategoryMenuOpen((open) => !open)}
+              className="group flex h-14 w-full items-center justify-between rounded-[22px] border border-cyan-300/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] px-4 text-left text-white shadow-[0_18px_40px_-28px_rgba(34,211,238,0.7)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/26 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/40"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-100 ring-1 ring-inset ring-cyan-200/10">
+                  <Icon name="tag" className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-100/48">
+                    member slot
+                  </p>
+                  <p className="truncate text-sm font-medium tracking-[0.08em] text-white">
+                    {category}
+                  </p>
+                </div>
+              </div>
+              <div
+                className={`inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-zinc-300 transition-all duration-200 ${
+                  categoryMenuOpen
+                    ? "rotate-180 border-cyan-300/20 bg-cyan-300/10 text-cyan-100"
+                    : "group-hover:border-cyan-300/18 group-hover:text-white"
+                }`}
+              >
+                <svg
+                  viewBox="0 0 20 20"
+                  className="h-4 w-4"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="m5.5 7.5 4.5 4.5 4.5-4.5"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.8"
+                  />
+                </svg>
+              </div>
+            </button>
+
+            <div
+              className={`absolute bottom-[calc(100%+0.75rem)] left-0 right-0 z-30 overflow-hidden rounded-[24px] border border-cyan-300/16 bg-[linear-gradient(180deg,rgba(7,12,18,0.98),rgba(5,8,15,0.98))] p-2 shadow-[0_30px_80px_-28px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.08)] backdrop-blur-xl transition-all duration-200 ${
+                categoryMenuOpen
+                  ? "pointer-events-auto translate-y-0 opacity-100"
+                  : "pointer-events-none translate-y-2 opacity-0"
+              }`}
+            >
+              <div className="mb-2 flex items-center justify-between px-2 pt-1">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                  เลือกหมวดหมู่
+                </p>
+                <p className="text-[11px] text-cyan-100/60">
+                  {CATEGORIES.length} ตัวเลือก
+                </p>
+              </div>
+
+              <div
+                role="listbox"
+                aria-labelledby={categoryId}
+                className="max-h-80 space-y-1 overflow-y-auto pr-1"
+              >
+                {CATEGORIES.map((item) => {
+                  const selected = item === category;
+
+                  return (
+                    <button
+                      key={item}
+                      type="button"
+                      role="option"
+                      aria-selected={selected}
+                      onClick={() => {
+                        setCategory(item);
+                        setCategoryMenuOpen(false);
+                      }}
+                      className={`flex w-full items-center justify-between rounded-[18px] px-3 py-3 text-left text-sm transition-all duration-150 ${
+                        selected
+                          ? "bg-[linear-gradient(90deg,rgba(34,211,238,0.2),rgba(59,130,246,0.08))] text-white ring-1 ring-inset ring-cyan-300/26"
+                          : "text-zinc-300 hover:bg-white/[0.05] hover:text-white"
+                      }`}
+                    >
+                      <span className="font-medium tracking-[0.08em]">
+                        {item}
+                      </span>
+                      <span
+                        className={`inline-flex h-7 w-7 items-center justify-center rounded-full transition-all ${
+                          selected
+                            ? "bg-cyan-300/16 text-cyan-100"
+                            : "text-transparent"
+                        }`}
+                      >
+                        <Icon name="check" className="h-4 w-4" />
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="rounded-[24px] border border-white/8 bg-black/18 p-4">
@@ -251,7 +374,7 @@ export function UploadForm({
             </Button>
           ) : null}
           <Button type="submit" disabled={busy} className="h-12 min-w-44 px-6">
-            {busy ? "Uploading..." : "Upload to Drive"}
+            {busy ? "Uploading..." : "อัปโหลด"}
             {!busy ? <Icon name="arrow-right" className="h-4 w-4" /> : null}
           </Button>
         </div>
