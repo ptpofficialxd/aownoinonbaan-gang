@@ -48,7 +48,15 @@ function formatLatency(latencyMs: number | null) {
 
 function formatSyncLabel(value: string | null) {
   if (!value) return "ยังไม่เคย sync";
-  return formatDate(value);
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(new Date(value));
 }
 
 export function DashboardShell({
@@ -577,18 +585,20 @@ export function DashboardShell({
                     }`}
                   >
                     {cloudHealth.isPaused
-                      ? "พัก polling ระหว่างแท็บไม่ active"
+                      ? "พักการ Sync"
                       : cloudHealth.isPolling
                         ? "กำลัง Sync กับ Cloud..."
                         : cloudHealth.online
-                          ? "อัปเดททุก 10 วินาที"
+                          ? `Synced: ${formatSyncLabel(cloudHealth.checkedAt)}`
                           : driveConnected
                             ? "Cloud ตอบกลับไม่สำเร็จ"
                             : "ยังไม่ได้เชื่อมต่อกับ Cloud"}
                   </p>
-                  <p className="mt-2 text-xs text-zinc-500">
-                    Sync ล่าสุด: {formatSyncLabel(cloudHealth.checkedAt)}
-                  </p>
+                  {cloudHealth.online ? null : (
+                    <p className="mt-2 text-xs text-zinc-500">
+                      Synced: {formatSyncLabel(cloudHealth.checkedAt)}
+                    </p>
+                  )}
               </div>
 
               <div className="rounded-[26px] border border-white/10 bg-black/20 p-4 md:col-span-3 xl:order-4 xl:col-span-2">
