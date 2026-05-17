@@ -1,0 +1,42 @@
+{
+  "name": "aownoinonbaan-gang",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
+    "start": "next start",
+    "lint": "biome check",
+    "format": "biome format --write",
+    "db:setup": "bun scripts/db-setup.mjs",
+    "user:add": "bun scripts/add-user.mjs",
+    "user:list": "bun scripts/list-users.mjs",
+    "user:password": "bun scripts/hash-password.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "@node-rs/argon2": "^2.0.2",
+    "next": "15.5.18",
+    "react": "19.1.1",
+    "react-dom": "19.1.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.2.0",
+    "@tailwindcss/postcss": "^4.1.11",
+    "@types/node": "^24.3.0",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "babel-plugin-react-compiler": "1.0.0",
+    "tailwindcss": "^4.1.11",
+    "typescript": "^5.9.2"
+  },
+  "ignoreScripts": [
+    "sharp",
+    "unrs-resolver"
+  ],
+  "trustedDependencies": [
+    "@node-rs/argon2",
+    "sharp",
+    "unrs-resolver"
+  ]
+}

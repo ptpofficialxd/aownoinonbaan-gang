@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+:root {
+  --background: #050816;
+  --foreground: #edf3ff;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* biome-ignore lint/suspicious/noUnknownAtRules: Tailwind CSS v4 theme directive */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+html,
+body {
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top, rgba(36, 121, 255, 0.18), transparent 28%),
+    radial-gradient(circle at 0% 20%, rgba(34, 211, 238, 0.16), transparent 22%),
+    linear-gradient(180deg, #050816 0%, #060913 50%, #04060d 100%);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.aurora {
+  background:
+    radial-gradient(
+      50% 50% at 15% 20%,
+      rgba(34, 211, 238, 0.18),
+      transparent 75%
+    ),
+    radial-gradient(
+      40% 40% at 80% 10%,
+      rgba(59, 130, 246, 0.18),
+      transparent 70%
+    ),
+    radial-gradient(
+      35% 35% at 70% 75%,
+      rgba(125, 211, 252, 0.12),
+      transparent 70%
+    );
+}
+
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+button:not(:disabled):not([aria-disabled="true"]),
+[role="button"]:not([aria-disabled="true"]),
+a[href],
+label[for],
+summary {
+  cursor: pointer;
+}
+
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::selection {
+  background: rgba(103, 232, 249, 0.28);
+  color: white;
+}
