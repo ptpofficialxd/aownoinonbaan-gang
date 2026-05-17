@@ -292,6 +292,11 @@ export function DashboardShell({
   const topMember = dashboard.topMembers[0] ?? null;
   const isSystemReady = driveConnected && cloudHealth.online;
   const canUploadNow = isSystemReady;
+  const isCloudFailure =
+    driveConnected &&
+    !cloudHealth.online &&
+    !cloudHealth.isPolling &&
+    !cloudHealth.isPaused;
 
   function handleUploadedItem(item: MediaItem | null) {
     if (!item) {
@@ -569,7 +574,7 @@ export function DashboardShell({
                       className={`mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border ${
                         cloudHealth.online
                           ? "border-cyan-300/20 bg-cyan-400/10 text-cyan-200 shadow-[0_0_24px_rgba(34,211,238,0.18)]"
-                          : driveConnected
+                          : isCloudFailure
                             ? "border-amber-300/20 bg-amber-300/10 text-amber-200"
                             : "border-white/10 bg-white/5 text-zinc-500"
                       }`}
@@ -579,7 +584,7 @@ export function DashboardShell({
                   </div>
                   <p
                     className={`mt-2 text-sm ${
-                      !cloudHealth.online && driveConnected
+                      isCloudFailure
                         ? "text-amber-200"
                         : "text-zinc-300"
                     }`}
