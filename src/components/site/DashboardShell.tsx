@@ -37,8 +37,17 @@ function mediaIconForMime(mimeType: string) {
   return "folder";
 }
 
-function isPreviewableImage(mimeType: string) {
-  return mimeType.startsWith("image/");
+function getPreviewKind(mimeType: string) {
+  if (mimeType.startsWith("image/")) return "image";
+  if (mimeType.startsWith("video/")) return "video";
+  if (mimeType.startsWith("audio/")) return "audio";
+  if (mimeType === "application/pdf") return "pdf";
+  if (mimeType.startsWith("text/")) return "text";
+  return null;
+}
+
+function isPreviewableFile(mimeType: string) {
+  return getPreviewKind(mimeType) !== null;
 }
 
 function formatLatency(latencyMs: number | null) {
@@ -83,6 +92,9 @@ export function DashboardShell({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [previewItem, setPreviewItem] = useState<MediaItem | null>(null);
+  const [previewText, setPreviewText] = useState<string>("");
+  const [previewTextLoading, setPreviewTextLoading] = useState(false);
+  const [previewTextError, setPreviewTextError] = useState<string | null>(null);
   const [cloudHealth, setCloudHealth] = useState<CloudHealthState>({
     checkedAt: null,
     error: null,
@@ -117,6 +129,47 @@ export function DashboardShell({
       `${window.location.pathname}${window.location.search}#library`,
     );
   }, [uploadOpen]);
+
+  useEffect(() => {
+    if (!previewItem || getPreviewKind(previewItem.mimeType) !== "text") {
+      setPreviewText("");
+      setPreviewTextLoading(false);
+      setPreviewTextError(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    setPreviewText("");
+    setPreviewTextLoading(true);
+    setPreviewTextError(null);
+
+    fetch(`/api/media/${previewItem.id}/content`, {
+      signal: controller.signal,
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error("ไม่สามารถโหลดข้อความตัวอย่างได้");
+        }
+        return response.text();
+      })
+      .then((text) => {
+        setPreviewText(text);
+      })
+      .catch((error) => {
+        if (controller.signal.aborted) return;
+        setPreviewTextError(
+          error instanceof Error ? error.message : "โหลดข้อความไม่สำเร็จ",
+        );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setPreviewTextLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [previewItem]);
 
   useEffect(() => {
     function handleEscape(event: KeyboardEvent) {
@@ -417,7 +470,7 @@ export function DashboardShell({
   }
 
   function openPreview(item: MediaItem) {
-    if (!isPreviewableImage(item.mimeType)) return;
+    if (!isPreviewableFile(item.mimeType)) return;
     setPreviewItem(item);
   }
 
@@ -889,14 +942,14 @@ export function DashboardShell({
                           <button
                             type="button"
                             onClick={() => openPreview(item)}
-                            disabled={!isPreviewableImage(item.mimeType)}
+                            disabled={!isPreviewableFile(item.mimeType)}
                             className={`relative block aspect-square w-full overflow-hidden border-b border-white/8 bg-gradient-to-br from-cyan-400/[0.14] via-sky-500/[0.08] to-transparent text-left md:aspect-[4/3] ${
-                              isPreviewableImage(item.mimeType)
+                              isPreviewableFile(item.mimeType)
                                 ? "cursor-zoom-in"
                                 : "cursor-default"
                             }`}
                           >
-                            {isPreviewableImage(item.mimeType) ? (
+                            {getPreviewKind(item.mimeType) === "image" ? (
                               <>
                                 {/* biome-ignore lint/performance/noImgElement: authenticated media preview is streamed from a protected route */}
                                 <img
@@ -1188,12 +1241,66 @@ export function DashboardShell({
 
             <div className="relative overflow-auto bg-black/10 p-3 sm:p-5">
               <div className="flex min-h-[40vh] items-center justify-center rounded-[28px] border border-white/10 bg-black/18 p-3 shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset] backdrop-blur-xl sm:p-4">
-                {/* biome-ignore lint/performance/noImgElement: authenticated media preview must remain directly savable from the lightbox */}
-                <img
-                  src={`/api/media/${previewItem.id}/content`}
-                  alt={previewItem.fileName}
-                  className="max-h-[76vh] w-auto max-w-full rounded-[24px] border border-white/10 object-contain shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8)] select-auto"
-                />
+                {getPreviewKind(previewItem.mimeType) === "image" ? (
+                  <>
+                    {/* biome-ignore lint/performance/noImgElement: authenticated media preview must remain directly savable from the lightbox */}
+                    <img
+                      src={`/api/media/${previewItem.id}/content`}
+                      alt={previewItem.fileName}
+                      className="max-h-[76vh] w-auto max-w-full rounded-[24px] border border-white/10 object-contain shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8)] select-auto"
+                    />
+                  </>
+                ) : getPreviewKind(previewItem.mimeType) === "video" ? (
+                  <video
+                    src={`/api/media/${previewItem.id}/content`}
+                    controls
+                    className="max-h-[76vh] w-auto max-w-full rounded-[24px] border border-white/10 bg-black object-contain shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8)]"
+                  />
+                ) : getPreviewKind(previewItem.mimeType) === "audio" ? (
+                  <div className="flex w-full max-w-2xl flex-col items-center gap-6 rounded-[24px] border border-white/10 bg-white/[0.04] px-6 py-10 text-center">
+                    <div className="inline-flex h-18 w-18 items-center justify-center rounded-[28px] border border-cyan-300/16 bg-cyan-300/10 text-cyan-100 shadow-[0_20px_50px_-28px_rgba(34,211,238,0.45)]">
+                      <Icon name="video" className="h-8 w-8" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-semibold text-white">
+                        ตัวอย่างไฟล์เสียง
+                      </p>
+                      <p className="mt-2 text-sm text-zinc-400">
+                        เล่นตัวอย่างได้ทันทีใน popup นี้
+                      </p>
+                    </div>
+                    <audio
+                      src={`/api/media/${previewItem.id}/content`}
+                      controls
+                      className="w-full max-w-xl"
+                    />
+                  </div>
+                ) : getPreviewKind(previewItem.mimeType) === "pdf" ? (
+                  <iframe
+                    src={`/api/media/${previewItem.id}/content`}
+                    title={previewItem.fileName}
+                    className="h-[76vh] w-full rounded-[24px] border border-white/10 bg-white"
+                  />
+                ) : getPreviewKind(previewItem.mimeType) === "text" ? (
+                  <div className="w-full max-w-4xl overflow-hidden rounded-[24px] border border-white/10 bg-[#0b0f15]/90 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8)]">
+                    <div className="border-b border-white/8 px-5 py-3">
+                      <p className="text-sm font-medium text-white">
+                        Text Preview
+                      </p>
+                    </div>
+                    <div className="max-h-[72vh] overflow-auto px-5 py-4">
+                      {previewTextLoading ? (
+                        <p className="text-sm text-zinc-400">กำลังโหลดข้อความ...</p>
+                      ) : previewTextError ? (
+                        <p className="text-sm text-rose-300">{previewTextError}</p>
+                      ) : (
+                        <pre className="whitespace-pre-wrap break-words text-sm leading-7 text-zinc-200">
+                          {previewText || "ไฟล์นี้ไม่มีข้อความสำหรับแสดงตัวอย่าง"}
+                        </pre>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
