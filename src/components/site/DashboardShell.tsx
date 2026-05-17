@@ -614,14 +614,18 @@ export function DashboardShell({
 
               <div className="rounded-[26px] border border-white/10 bg-black/20 p-4 md:col-span-3 xl:order-4 xl:col-span-2">
                 <div className="flex items-start justify-between gap-4">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
                       สถานะ Cloud Server
                     </p>
-                    <p className="mt-3 text-lg font-semibold text-white">
-                      {driveConnected ? "เชื่อมต่อแล้ว" : "ยังไม่ได้เชื่อมต่อ"}
+                    <p
+                      className={`mt-3 text-3xl font-semibold leading-tight ${
+                        driveConnected ? "text-emerald-300" : "text-rose-300"
+                      }`}
+                    >
+                      {driveConnected ? "Online" : "Offline"}
                     </p>
-                    <p className="break-words text-sm leading-6 text-zinc-400">
+                    <p className="mt-2 break-words text-sm text-zinc-400">
                       {driveConnected
                         ? `บัญชี: ${driveAccountEmail ?? "Connected successfully"}`
                         : canConnectDrive
@@ -656,11 +660,15 @@ export function DashboardShell({
 
               <div className="rounded-[26px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-cyan-400/[0.06] p-4 md:col-span-3 xl:order-8 xl:col-span-2">
                 <div className="flex items-start justify-between gap-4">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
                       อัปโหลดล่าสุด
                     </p>
-                    <p className="mt-3 break-words text-base font-semibold text-white">
+                    <p
+                      className={`mt-3 block max-w-[14ch] overflow-hidden text-ellipsis whitespace-nowrap text-3xl font-semibold leading-tight ${
+                        dashboard.latestItem ? "text-pink-300" : "text-white"
+                      }`}
+                    >
                       {dashboard.latestItem
                         ? dashboard.latestItem.fileName
                         : "ยังไม่มีไฟล์ล่าสุด"}
