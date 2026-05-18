@@ -496,8 +496,8 @@ export function LibrarySection({
                                 className="h-4 w-4"
                               />
                               {allVisibleSelected
-                                ? "ยกเลิกเลือกทั้งหมดที่เห็น"
-                                : "เลือกทั้งหมดที่เห็น"}
+                                ? "ยกเลิกเลือกทั้งหมดในหน้านี้"
+                                : "เลือกทั้งหมดในหน้านี้"}
                             </span>
                             <span className="rounded-full bg-white/[0.04] px-2 py-1 text-[11px] text-zinc-400">
                               {visibleSelectedCount}/{paginatedItems.length}
@@ -525,7 +525,7 @@ export function LibrarySection({
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2.5 md:grid-cols-4 md:gap-3 lg:grid-cols-5">
+              <div className="grid items-start grid-cols-3 gap-2.5 md:grid-cols-4 md:gap-3 lg:grid-cols-5">
                 {paginatedItems.map((item) => (
                   <MediaCard
                     key={item.id}
@@ -551,7 +551,91 @@ export function LibrarySection({
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
+                  <div className="w-full md:hidden">
+                    <div className="flex items-center justify-center gap-2 overflow-x-auto pb-1">
+                      {pageNumbers.map((page, index) => {
+                        const previousPage = pageNumbers[index - 1];
+                        const showGap =
+                          index > 0 && previousPage && page - previousPage > 1;
+
+                        return (
+                          <div
+                            key={page}
+                            className="flex shrink-0 items-center gap-2"
+                          >
+                            {showGap ? (
+                              <span className="px-1 text-sm text-zinc-500">
+                                ...
+                              </span>
+                            ) : null}
+                            <button
+                              type="button"
+                              onClick={() => onPageChange(page)}
+                              className={`inline-flex h-10 min-w-10 shrink-0 items-center justify-center rounded-full border px-3 text-sm font-medium transition-all ${
+                                currentPage === page
+                                  ? "border-cyan-300/30 bg-[linear-gradient(180deg,rgba(34,211,238,0.22),rgba(14,165,233,0.14))] text-cyan-100 shadow-[0_12px_28px_-18px_rgba(34,211,238,0.9)]"
+                                  : "border-white/10 bg-white/[0.04] text-zinc-300 hover:border-cyan-300/18 hover:bg-cyan-400/[0.08] hover:text-white"
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 text-sm font-medium text-zinc-200 transition-all hover:border-cyan-300/20 hover:bg-cyan-400/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
+                      >
+                        <svg
+                          viewBox="0 0 20 20"
+                          className="h-4 w-4"
+                          fill="none"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="m11.5 5.5-4.5 4.5 4.5 4.5"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="1.8"
+                          />
+                        </svg>
+                        ก่อนหน้า
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onPageChange(Math.min(totalPages, currentPage + 1))
+                        }
+                        disabled={currentPage === totalPages}
+                        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 text-sm font-medium text-zinc-200 transition-all hover:border-cyan-300/20 hover:bg-cyan-400/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
+                      >
+                        ถัดไป
+                        <svg
+                          viewBox="0 0 20 20"
+                          className="h-4 w-4"
+                          fill="none"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="m8.5 5.5 4.5 4.5-4.5 4.5"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="1.8"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="hidden md:flex md:items-center md:justify-end md:gap-2">
                     <button
                       type="button"
                       onClick={() => onPageChange(Math.max(1, currentPage - 1))}
@@ -710,7 +794,7 @@ function MediaCard({
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-[22px] border transition-all duration-200 sm:rounded-[24px] xl:rounded-[28px] ${
+      className={`group relative self-start overflow-hidden rounded-[22px] border transition-all duration-200 sm:rounded-[24px] xl:rounded-[28px] ${
         isSelected
           ? "border-cyan-300/35 bg-cyan-400/[0.08] shadow-[0_22px_50px_-28px_rgba(34,211,238,0.55)]"
           : "border-white/8 bg-black/18 hover:border-cyan-300/20 hover:bg-white/[0.03]"
@@ -800,18 +884,18 @@ function MediaCard({
         </div>
       </button>
 
-      <div className="space-y-3 p-3 sm:space-y-4 sm:p-4">
-        <div className="space-y-1.5 sm:space-y-2">
+      <div className="space-y-1.5 px-3 pb-1.5 pt-2.5 sm:space-y-2 sm:px-3.5 sm:pb-2 sm:pt-3 md:space-y-2.5 md:px-4 md:pb-2.5 md:pt-3.5 lg:space-y-3 lg:pb-3.5 lg:pt-4">
+        <div className="space-y-0.5 sm:space-y-1 md:space-y-1.5 lg:space-y-2">
           <h3
             className="truncate text-sm font-semibold text-white sm:text-base"
             title={item.fileName}
           >
             {item.fileName}
           </h3>
-          <p className="truncate text-xs text-zinc-400 sm:text-sm">
+          <p className="truncate text-[10px] leading-4 text-zinc-400 sm:text-[11px] sm:leading-4 md:text-sm">
             @{item.uploaderUsername}
           </p>
-          <p className="text-[11px] text-zinc-500 sm:text-xs">
+          <p className="text-[10px] leading-4 text-zinc-500 sm:text-[11px] sm:leading-4 md:text-xs">
             <span className="whitespace-nowrap text-[10px] sm:hidden">
               {formatDateCompact(item.createdAt)}
             </span>
@@ -819,7 +903,7 @@ function MediaCard({
           </p>
         </div>
 
-        <p className="hidden min-h-10 text-sm leading-5 text-zinc-400 lg:block">
+        <p className="hidden text-sm leading-5 text-zinc-400 lg:block">
           {item.description || "ไม่มีโน้ตประกอบไฟล์นี้"}
         </p>
       </div>
