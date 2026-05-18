@@ -19,6 +19,7 @@ type IconName =
   | "check"
   | "x"
   | "bolt"
+  | "settings"
   | "user"
   | "heart"
   | "tag"
@@ -322,6 +323,25 @@ const iconMap: Record<IconName, ReactNode> = {
       strokeLinejoin="round"
       strokeWidth="2"
     />
+  ),
+  settings: (
+    <>
+      <circle
+        cx="12"
+        cy="12"
+        r="3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M12 3.5v2M12 18.5v2M20.5 12h-2M5.5 12h-2M17.96 6.04l-1.42 1.42M7.46 16.54l-1.42 1.42M17.96 17.96l-1.42-1.42M7.46 7.46 6.04 6.04"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
+    </>
   ),
   user: (
     <>
