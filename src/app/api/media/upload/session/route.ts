@@ -12,15 +12,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = (await request.json().catch(() => null)) as
-    | {
-        fileName?: string;
-        mimeType?: string;
-        fileSize?: number;
-        category?: string;
-        description?: string;
-      }
-    | null;
+  const body = (await request.json().catch(() => null)) as {
+    fileName?: string;
+    mimeType?: string;
+    fileSize?: number;
+    category?: string;
+    description?: string;
+  } | null;
 
   if (!body?.fileName || !body.fileSize) {
     return NextResponse.json(

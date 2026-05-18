@@ -35,7 +35,7 @@ export default function RootLayout({
       <body className="min-h-full w-full max-w-full overflow-x-hidden">
         <div className="flex min-h-screen w-full min-w-0 max-w-full flex-col overflow-x-hidden">
           <Header />
-          <main className="flex w-full min-w-0 flex-1 flex-col overflow-x-hidden">
+          <main className="flex w-full min-w-0 flex-1 flex-col overflow-x-hidden pt-16">
             {children}
           </main>
           <Footer />

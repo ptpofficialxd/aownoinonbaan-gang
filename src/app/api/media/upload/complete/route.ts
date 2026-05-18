@@ -11,18 +11,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = (await request.json().catch(() => null)) as
-    | {
-        driveFileId?: string;
-        fileName?: string;
-        mimeType?: string;
-        fileSize?: number;
-        category?: string;
-        description?: string | null;
-        driveViewLink?: string | null;
-        driveContentLink?: string | null;
-      }
-    | null;
+  const body = (await request.json().catch(() => null)) as {
+    driveFileId?: string;
+    fileName?: string;
+    mimeType?: string;
+    fileSize?: number;
+    category?: string;
+    description?: string | null;
+    driveViewLink?: string | null;
+    driveContentLink?: string | null;
+  } | null;
 
   if (!body?.driveFileId || !body.fileName || !body.mimeType) {
     return NextResponse.json(

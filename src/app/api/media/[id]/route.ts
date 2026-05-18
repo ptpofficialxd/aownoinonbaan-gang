@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { deleteDriveFile } from "@/lib/drive";
-import { deleteMediaItem, getMediaRecord } from "@/lib/media";
+import { deleteManagedMediaById } from "@/lib/media-management";
 import { getServerSession } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -16,16 +15,10 @@ export async function DELETE(
   }
 
   const params = await context.params;
-  const record = await getMediaRecord(params.id);
-  if (!record) {
+  const result = await deleteManagedMediaById(params.id);
+  if (!result.found) {
     return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
-
-  await deleteDriveFile(record.drive_file_id).catch((error) => {
-    throw error;
-  });
-
-  await deleteMediaItem(params.id);
 
   return NextResponse.json({ ok: true });
 }

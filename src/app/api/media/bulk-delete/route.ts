@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { deleteDriveFile } from "@/lib/drive";
-import { deleteMediaItems, getMediaRecords } from "@/lib/media";
+import { deleteManagedMediaBatch } from "@/lib/media-management";
 import { getServerSession } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -35,34 +34,24 @@ export async function POST(request: Request) {
     );
   }
 
-  const records = await getMediaRecords(ids);
-  if (!records.length) {
+  const result = await deleteManagedMediaBatch(ids);
+  if (!result.found) {
     return NextResponse.json({ error: "Files not found." }, { status: 404 });
   }
 
-  const deletedIds: string[] = [];
-  const failedIds: string[] = [];
-
-  for (const record of records) {
-    try {
-      await deleteDriveFile(record.drive_file_id);
-      await deleteMediaItems([record.id]);
-      deletedIds.push(record.id);
-    } catch {
-      failedIds.push(record.id);
-    }
-  }
-
-  if (!deletedIds.length) {
+  if (!result.deletedIds.length) {
     return NextResponse.json(
-      { error: "Could not delete the selected files.", failedIds },
+      {
+        error: "Could not delete the selected files.",
+        failedIds: result.failedIds,
+      },
       { status: 502 },
     );
   }
 
   return NextResponse.json({
-    ok: failedIds.length === 0,
-    deletedIds,
-    failedIds,
+    ok: result.failedIds.length === 0,
+    deletedIds: result.deletedIds,
+    failedIds: result.failedIds,
   });
 }

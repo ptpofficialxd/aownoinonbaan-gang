@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
@@ -81,37 +76,38 @@ export function UploadForm({
 
       const uploadedItem = await new Promise<MediaItem | null>(
         (resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", "/api/media/upload", true);
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", "/api/media/upload", true);
 
-        xhr.upload.onprogress = (uploadEvent) => {
-          if (!uploadEvent.lengthComputable) return;
-          const ratio = uploadEvent.total
-            ? uploadEvent.loaded / uploadEvent.total
-            : 0;
-          setProgress(Math.max(5, Math.min(88, Math.round(ratio * 100))));
-        };
+          xhr.upload.onprogress = (uploadEvent) => {
+            if (!uploadEvent.lengthComputable) return;
+            const ratio = uploadEvent.total
+              ? uploadEvent.loaded / uploadEvent.total
+              : 0;
+            setProgress(Math.max(5, Math.min(88, Math.round(ratio * 100))));
+          };
 
-        xhr.onerror = () => {
-          reject(new Error("Network Error: มีปัญหาขณะอัปโหลด"));
-        };
+          xhr.onerror = () => {
+            reject(new Error("Network Error: มีปัญหาขณะอัปโหลด"));
+          };
 
-        xhr.onload = () => {
-          let payload: { error?: string; mediaItem?: MediaItem | null } = {};
-          try {
-            payload = JSON.parse(xhr.responseText);
-          } catch {}
+          xhr.onload = () => {
+            let payload: { error?: string; mediaItem?: MediaItem | null } = {};
+            try {
+              payload = JSON.parse(xhr.responseText);
+            } catch {}
 
-          if (xhr.status < 200 || xhr.status >= 300) {
-            reject(new Error(payload.error || "อัปโหลดไม่สำเร็จ"));
-            return;
-          }
+            if (xhr.status < 200 || xhr.status >= 300) {
+              reject(new Error(payload.error || "อัปโหลดไม่สำเร็จ"));
+              return;
+            }
 
-          resolve(payload.mediaItem ?? null);
-        };
+            resolve(payload.mediaItem ?? null);
+          };
 
-        xhr.send(formData);
-      });
+          xhr.send(formData);
+        },
+      );
 
       setPhase("finalizing");
       setProgress(97);
@@ -353,9 +349,7 @@ export function UploadForm({
       ) : null}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-zinc-500">
-          ระบบจะบันทึกว่าไฟล์นี้ถูกอัปโหลดโดยคุณ
-        </p>
+        <p className="text-sm text-zinc-500">ระบบจะบันทึกว่าไฟล์นี้ถูกอัปโหลดโดยคุณ</p>
         <div className="flex items-center gap-3">
           {onCancel ? (
             <Button

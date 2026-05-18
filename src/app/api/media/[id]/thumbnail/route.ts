@@ -9,7 +9,7 @@ function getMimeBadgeLabel(mimeType: string) {
   if (mimeType.startsWith("image/")) {
     return mimeType === "image/jpeg"
       ? "JPG"
-      : mimeType.split("/")[1]?.toUpperCase() ?? "IMG";
+      : (mimeType.split("/")[1]?.toUpperCase() ?? "IMG");
   }
 
   if (mimeType.startsWith("video/")) return "VDO";
@@ -29,7 +29,7 @@ function getMimeBadgeLabel(mimeType: string) {
 
 function getExtension(fileName: string) {
   const parts = fileName.split(".");
-  return parts.length > 1 ? parts.at(-1)?.toUpperCase() ?? "" : "";
+  return parts.length > 1 ? (parts.at(-1)?.toUpperCase() ?? "") : "";
 }
 
 function escapeXml(value: string) {
