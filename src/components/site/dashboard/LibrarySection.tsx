@@ -63,7 +63,9 @@ export function LibrarySection({
 }) {
   const isSystemReady = canUploadNow;
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
+  const [actionMenuOpen, setActionMenuOpen] = useState(false);
   const categoryMenuRef = useRef<HTMLDivElement | null>(null);
+  const actionMenuRef = useRef<HTMLDivElement | null>(null);
   const pageStart = filteredItems.length
     ? (currentPage - 1) * itemsPerPage + 1
     : 0;
@@ -91,11 +93,15 @@ export function LibrarySection({
       if (!categoryMenuRef.current?.contains(event.target as Node)) {
         setCategoryMenuOpen(false);
       }
+      if (!actionMenuRef.current?.contains(event.target as Node)) {
+        setActionMenuOpen(false);
+      }
     }
 
     function handleEscape(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setCategoryMenuOpen(false);
+        setActionMenuOpen(false);
       }
     }
 
@@ -283,9 +289,9 @@ export function LibrarySection({
         <CardBody className="pt-6">
           {filteredItems.length ? (
             <div className="space-y-5">
-              <div className="sticky top-4 z-10 overflow-hidden rounded-[22px] border border-white/10 bg-[#0d1016]/85 p-3 backdrop-blur-xl sm:rounded-[26px] sm:p-4">
+              <div className="sticky top-4 z-30 overflow-visible rounded-[22px] border border-white/10 bg-[#0d1016]/85 p-3 backdrop-blur-xl sm:rounded-[26px] sm:p-4">
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/45 to-transparent" />
-                <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
                   <div>
                     <p className="text-xs font-medium text-white sm:text-sm">
                       {filteredItems.length} ไฟล์ในมุมมองนี้
@@ -298,25 +304,90 @@ export function LibrarySection({
                   </div>
 
                   {canManageDrive ? (
-                    <div className="flex flex-wrap gap-2">
+                    <div
+                      className="relative w-full md:w-auto md:self-end"
+                      ref={actionMenuRef}
+                    >
                       <button
                         type="button"
-                        onClick={onSelectAllVisible}
-                        className="inline-flex h-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-3 text-xs font-medium text-zinc-200 transition-all hover:border-white/15 hover:bg-white/[0.08] sm:h-10 sm:px-4 sm:text-sm"
+                        onClick={() => setActionMenuOpen((open) => !open)}
+                        aria-haspopup="menu"
+                        aria-expanded={actionMenuOpen}
+                        className="group inline-flex h-10 w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.03))] px-4 text-sm font-medium text-zinc-100 transition-all hover:border-cyan-300/20 hover:bg-cyan-400/[0.07] hover:text-white md:w-auto"
                       >
-                        {allVisibleSelected
-                          ? "ยกเลิกเลือกทั้งหมดที่เห็น"
-                          : "เลือกทั้งหมดที่เห็น"}
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-cyan-300/10 text-cyan-100 ring-1 ring-inset ring-cyan-200/10">
+                          <Icon name="bolt" className="h-3.5 w-3.5" />
+                        </span>
+                        จัดการรายการ
+                        <span
+                          className={`inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-zinc-300 transition-all duration-200 ${
+                            actionMenuOpen
+                              ? "rotate-180 border-cyan-300/20 bg-cyan-300/10 text-cyan-100"
+                              : "group-hover:border-cyan-300/18 group-hover:text-white"
+                          }`}
+                        >
+                          <svg
+                            viewBox="0 0 20 20"
+                            className="h-4 w-4"
+                            fill="none"
+                            aria-hidden="true"
+                          >
+                            <path
+                              d="m5.5 7.5 4.5 4.5 4.5-4.5"
+                              stroke="currentColor"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="1.8"
+                            />
+                          </svg>
+                        </span>
                       </button>
-                      <button
-                        type="button"
-                        onClick={onDeleteSelected}
-                        disabled={visibleSelectedCount === 0}
-                        className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-rose-400/18 bg-rose-400/10 px-3 text-xs font-medium text-rose-100 transition-all hover:border-rose-400/30 hover:bg-rose-400/16 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:px-4 sm:text-sm"
+
+                      <div
+                        className={`absolute left-0 right-0 top-[calc(100%+0.75rem)] z-50 overflow-hidden rounded-[24px] border border-cyan-300/14 bg-[linear-gradient(180deg,rgba(10,14,20,0.98),rgba(7,10,16,0.98))] p-2 shadow-[0_30px_80px_-28px_rgba(0,0,0,0.92),0_0_0_1px_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.08)] backdrop-blur-xl transition-all duration-200 md:left-auto md:right-0 md:w-[20rem] md:max-w-[calc(100vw-4rem)] ${
+                          actionMenuOpen
+                            ? "pointer-events-auto translate-y-0 opacity-100"
+                            : "pointer-events-none -translate-y-2 opacity-0"
+                        }`}
                       >
-                        <Icon name="trash" className="h-4 w-4" />
-                        ลบไฟล์ที่เลือก
-                      </button>
+                        <div className="mb-2 px-2 pt-1">
+                          <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                            Bulk Actions
+                          </p>
+                        </div>
+
+                        <div className="space-y-1">
+                          <button
+                            type="button"
+                            onClick={onSelectAllVisible}
+                            className="flex w-full items-center justify-between rounded-[18px] px-3 py-3 text-left text-sm text-zinc-200 transition-all hover:bg-white/[0.05] hover:text-white"
+                          >
+                            <span className="font-medium">
+                              {allVisibleSelected
+                                ? "ยกเลิกเลือกทั้งหมดที่เห็น"
+                                : "เลือกทั้งหมดที่เห็น"}
+                            </span>
+                            <span className="rounded-full bg-white/[0.04] px-2 py-1 text-[11px] text-zinc-400">
+                              {visibleSelectedCount}/{paginatedItems.length}
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={onDeleteSelected}
+                            disabled={visibleSelectedCount === 0}
+                            className="flex w-full items-center justify-between rounded-[18px] px-3 py-3 text-left text-sm text-rose-100 transition-all hover:bg-rose-400/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
+                          >
+                            <span className="inline-flex items-center gap-2 font-medium">
+                              <Icon name="trash" className="h-4 w-4" />
+                              ลบไฟล์ที่เลือก
+                            </span>
+                            <span className="rounded-full bg-rose-400/10 px-2 py-1 text-[11px] text-rose-200/80">
+                              {visibleSelectedCount}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   ) : null}
                 </div>
