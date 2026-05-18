@@ -348,7 +348,7 @@ export function LibrarySection({
                       </button>
 
                       <div
-                        className={`absolute right-0 top-[calc(100%+0.75rem)] z-50 w-[20rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[24px] border border-cyan-300/14 bg-[linear-gradient(180deg,rgba(10,14,20,0.98),rgba(7,10,16,0.98))] p-2 shadow-[0_30px_80px_-28px_rgba(0,0,0,0.92),0_0_0_1px_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.08)] backdrop-blur-xl transition-all duration-200 ${
+                        className={`absolute right-0 top-[calc(100%+0.75rem)] z-50 w-[17rem] max-w-[calc(100vw-2rem)] origin-top-right overflow-hidden rounded-[24px] border border-cyan-300/14 bg-[linear-gradient(180deg,rgba(10,14,20,0.98),rgba(7,10,16,0.98))] p-2 shadow-[0_30px_80px_-28px_rgba(0,0,0,0.92),0_0_0_1px_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.08)] backdrop-blur-xl transition-all duration-200 sm:w-[20rem] ${
                           actionMenuOpen
                             ? "pointer-events-auto translate-y-0 opacity-100"
                             : "pointer-events-none -translate-y-2 opacity-0"
