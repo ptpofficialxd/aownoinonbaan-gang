@@ -55,7 +55,10 @@ export function LibrarySection({
   return (
     <>
       {/* biome-ignore lint/correctness/useUniqueElementIds: top-level page anchor */}
-      <Card id="library" className="w-full min-w-0 rounded-[32px]">
+      <Card
+        id="library"
+        className="scroll-mt-16.5 w-full min-w-0 rounded-[32px]"
+      >
         <CardHeader className="border-b border-white/8 pb-5">
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -82,7 +85,7 @@ export function LibrarySection({
                   </span>
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-zinc-400">
-                  แบ่งปันความน่ารักของสาวๆกันครัฟพี่
+                  แบ่งปันความน่ารักของสาวๆกันครัฟเพ่
                 </p>
               </div>
 

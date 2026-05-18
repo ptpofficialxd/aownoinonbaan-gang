@@ -34,7 +34,7 @@ export function UploadModal({
                 เลือกไฟล์ที่ต้องการอัปโหลด
               </h3>
               <p className="mt-2 text-sm leading-6 text-zinc-400">
-                แบ่งปันความน่ารักของสาวๆกันครัฟพี่
+                แบ่งปันความน่ารักของสาวๆกันครัฟเพ่
               </p>
             </div>
 
