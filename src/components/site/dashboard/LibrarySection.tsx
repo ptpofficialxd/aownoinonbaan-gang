@@ -188,7 +188,10 @@ export function LibrarySection({
               </div>
             </div>
 
-            <div className="max-w-sm" ref={categoryMenuRef}>
+            <div
+              className={`max-w-sm ${categoryMenuOpen ? "relative z-40" : ""}`}
+              ref={categoryMenuRef}
+            >
               <p className="mb-2 text-[11px] uppercase tracking-[0.22em] text-zinc-500">
                 เลือกดูตามหมวดหมู่
               </p>
@@ -239,7 +242,7 @@ export function LibrarySection({
                 </button>
 
                 <div
-                  className={`absolute left-0 right-0 top-[calc(100%+0.75rem)] z-20 overflow-hidden rounded-[24px] border border-cyan-300/16 bg-[linear-gradient(180deg,rgba(7,12,18,0.98),rgba(5,8,15,0.98))] p-2 shadow-[0_30px_80px_-28px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.08)] backdrop-blur-xl transition-all duration-200 ${
+                  className={`absolute left-0 right-0 top-[calc(100%+0.75rem)] z-50 overflow-hidden rounded-[24px] border border-cyan-300/16 bg-[linear-gradient(180deg,rgba(7,12,18,0.98),rgba(5,8,15,0.98))] p-2 shadow-[0_30px_80px_-28px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.08)] backdrop-blur-xl transition-all duration-200 ${
                     categoryMenuOpen
                       ? "pointer-events-auto translate-y-0 opacity-100"
                       : "pointer-events-none -translate-y-2 opacity-0"
@@ -291,8 +294,8 @@ export function LibrarySection({
             <div className="space-y-5">
               <div className="sticky top-4 z-30 overflow-visible rounded-[22px] border border-white/10 bg-[#0d1016]/85 p-3 backdrop-blur-xl sm:rounded-[26px] sm:p-4">
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/45 to-transparent" />
-                <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
-                  <div>
+                <div className="flex items-start justify-between gap-3 sm:gap-4">
+                  <div className="min-w-0">
                     <p className="text-xs font-medium text-white sm:text-sm">
                       {filteredItems.length} ไฟล์ในหมวดหมู่นี้
                     </p>
@@ -305,7 +308,7 @@ export function LibrarySection({
 
                   {canManageDrive ? (
                     <div
-                      className="relative w-full md:w-auto md:self-end"
+                      className="relative ml-auto w-auto shrink-0 self-start"
                       ref={actionMenuRef}
                     >
                       <button
@@ -313,14 +316,15 @@ export function LibrarySection({
                         onClick={() => setActionMenuOpen((open) => !open)}
                         aria-haspopup="menu"
                         aria-expanded={actionMenuOpen}
-                        className="group inline-flex h-10 w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.03))] px-4 text-sm font-medium text-zinc-100 transition-all hover:border-cyan-300/20 hover:bg-cyan-400/[0.07] hover:text-white md:w-auto"
+                        className="group inline-flex h-9 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.03))] px-2.5 text-xs font-medium text-zinc-100 transition-all hover:border-cyan-300/20 hover:bg-cyan-400/[0.07] hover:text-white sm:h-10 sm:gap-2 sm:px-4 sm:text-sm"
                       >
-                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-cyan-300/10 text-cyan-100 ring-1 ring-inset ring-cyan-200/10">
-                          <Icon name="bolt" className="h-3.5 w-3.5" />
+                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-cyan-300/10 text-cyan-100 ring-1 ring-inset ring-cyan-200/10 sm:h-7 sm:w-7">
+                          <Icon name="bolt" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                         </span>
-                        จัดการรายการ
+                        <span className="sm:hidden">จัดการ</span>
+                        <span className="hidden sm:inline">จัดการรายการ</span>
                         <span
-                          className={`inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-zinc-300 transition-all duration-200 ${
+                          className={`inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-zinc-300 transition-all duration-200 sm:h-7 sm:w-7 ${
                             actionMenuOpen
                               ? "rotate-180 border-cyan-300/20 bg-cyan-300/10 text-cyan-100"
                               : "group-hover:border-cyan-300/18 group-hover:text-white"
@@ -328,7 +332,7 @@ export function LibrarySection({
                         >
                           <svg
                             viewBox="0 0 20 20"
-                            className="h-4 w-4"
+                            className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                             fill="none"
                             aria-hidden="true"
                           >
@@ -344,7 +348,7 @@ export function LibrarySection({
                       </button>
 
                       <div
-                        className={`absolute left-0 right-0 top-[calc(100%+0.75rem)] z-50 overflow-hidden rounded-[24px] border border-cyan-300/14 bg-[linear-gradient(180deg,rgba(10,14,20,0.98),rgba(7,10,16,0.98))] p-2 shadow-[0_30px_80px_-28px_rgba(0,0,0,0.92),0_0_0_1px_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.08)] backdrop-blur-xl transition-all duration-200 md:left-auto md:right-0 md:w-[20rem] md:max-w-[calc(100vw-4rem)] ${
+                        className={`absolute right-0 top-[calc(100%+0.75rem)] z-50 w-[20rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[24px] border border-cyan-300/14 bg-[linear-gradient(180deg,rgba(10,14,20,0.98),rgba(7,10,16,0.98))] p-2 shadow-[0_30px_80px_-28px_rgba(0,0,0,0.92),0_0_0_1px_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.08)] backdrop-blur-xl transition-all duration-200 ${
                           actionMenuOpen
                             ? "pointer-events-auto translate-y-0 opacity-100"
                             : "pointer-events-none -translate-y-2 opacity-0"
@@ -352,7 +356,7 @@ export function LibrarySection({
                       >
                         <div className="mb-2 px-2 pt-1">
                           <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                            Bulk Actions
+                            เมนูการจัดการ
                           </p>
                         </div>
 
