@@ -136,18 +136,20 @@ function buildFallbackThumbnail(fileName: string, mimeType: string) {
               : {
                   bg: "#334155",
                   soft: "#e2e8f0",
-                  page: "#0f1720",
+                  page: "#0d141d",
                   line: "#94a3b8",
                   title: "#F8FAFC",
                   header: "FILE",
                   body: `
-                    <rect x="308" y="340" width="560" height="240" rx="34" fill="#111827"/>
-                    <rect x="404" y="404" width="110" height="140" rx="24" fill="#1F2937"/>
-                    <path d="M472 404v44h42" fill="none" stroke="#CBD5E1" stroke-width="10" stroke-linejoin="round"/>
-                    <path d="M430 404h42l42 44v96H430z" fill="none" stroke="#CBD5E1" stroke-width="10" stroke-linejoin="round"/>
-                    <rect x="558" y="420" width="214" height="18" rx="9" fill="#64748B"/>
-                    <rect x="558" y="458" width="176" height="18" rx="9" fill="#475569"/>
-                    <rect x="558" y="496" width="128" height="18" rx="9" fill="#334155"/>
+                    <rect x="336" y="338" width="470" height="276" rx="32" fill="#F8FAFC"/>
+                    <rect x="336.5" y="338.5" width="469" height="275" rx="31.5" stroke="#CBD5E1"/>
+                    <path d="M694 338h58l54 54v10h-78c-18 0-34-16-34-34v-30Z" fill="#E2E8F0"/>
+                    <path d="M694 338h58l54 54" fill="none" stroke="#CBD5E1" stroke-width="8" stroke-linejoin="round"/>
+                    <rect x="390" y="416" width="138" height="50" rx="25" fill="#334155"/>
+                    <text x="459" y="448" text-anchor="middle" fill="#F8FAFC" font-size="24" font-family="Arial, sans-serif" font-weight="700" letter-spacing="3">FILE</text>
+                    <rect x="390" y="500" width="360" height="16" rx="8" fill="#CBD5E1"/>
+                    <rect x="390" y="536" width="326" height="16" rx="8" fill="#CBD5E1"/>
+                    <rect x="390" y="572" width="268" height="16" rx="8" fill="#E2E8F0"/>
                   `,
                 };
 

@@ -1013,7 +1013,11 @@ export function DashboardShell({
                                 <img
                                   src={`/api/media/${item.id}/thumbnail`}
                                   alt={item.fileName}
-                                  className="h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]"
+                                  className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03] ${
+                                    getPreviewKind(item.mimeType) === "video"
+                                      ? "object-center"
+                                      : "object-top"
+                                  }`}
                                 />
                               </>
                             )}
