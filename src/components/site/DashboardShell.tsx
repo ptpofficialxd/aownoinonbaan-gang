@@ -137,6 +137,16 @@ export function DashboardShell({
     return filteredItems.slice(startIndex, startIndex + itemsPerPage);
   }, [currentPage, filteredItems, itemsPerPage]);
 
+  const visibleSelectableIds = useMemo(
+    () =>
+      paginatedItems
+        .map((item) => item.id)
+        .filter((id) => !busyIdSet.has(id)),
+    [busyIdSet, paginatedItems],
+  );
+  const allVisibleSelected =
+    visibleSelectableIds.length > 0 &&
+    visibleSelectableIds.every((id) => selectedIdSet.has(id));
   const visibleSelectedCount = paginatedItems.filter((item) =>
     selectedIdSet.has(item.id),
   ).length;
@@ -176,11 +186,13 @@ export function DashboardShell({
   function selectAllVisible() {
     if (!canManageDrive) return;
     setSelectedIds((current) => {
+      if (allVisibleSelected) {
+        return current.filter((id) => !visibleSelectableIds.includes(id));
+      }
+
       const next = new Set(current);
-      for (const item of paginatedItems) {
-        if (!busyIdSet.has(item.id)) {
-          next.add(item.id);
-        }
+      for (const id of visibleSelectableIds) {
+        next.add(id);
       }
       return Array.from(next);
     });
@@ -198,10 +210,6 @@ export function DashboardShell({
         block: "start",
       });
     });
-  }
-
-  function clearSelection() {
-    setSelectedIds([]);
   }
 
   async function performDelete(ids: string[], fileLabel: string) {
@@ -310,7 +318,6 @@ export function DashboardShell({
             driveConnected={driveConnected}
             filteredItems={filteredItems}
             itemsPerPage={itemsPerPage}
-            onClearSelection={clearSelection}
             onDeleteItem={(item) => void handleDelete(item)}
             onDeleteSelected={() => void handleDeleteSelected()}
             onOpenPreview={openPreview}
@@ -320,6 +327,7 @@ export function DashboardShell({
             onSetActiveCategory={setActiveCategory}
             onToggleSelect={toggleSelected}
             onUploadOpen={() => setUploadOpen(true)}
+            allVisibleSelected={allVisibleSelected}
             paginatedItems={paginatedItems}
             search={search}
             selectedIds={selectedIds}

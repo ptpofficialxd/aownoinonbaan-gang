@@ -10,6 +10,7 @@ import { getMimeBadgeLabel, getPreviewKind, isPreviewableFile } from "./utils";
 
 export function LibrarySection({
   activeCategory,
+  allVisibleSelected,
   busyIdSet,
   canManageDrive,
   canUploadNow,
@@ -18,7 +19,6 @@ export function LibrarySection({
   driveConnected,
   filteredItems,
   itemsPerPage,
-  onClearSelection,
   onDeleteItem,
   onDeleteSelected,
   onOpenPreview,
@@ -36,6 +36,7 @@ export function LibrarySection({
   visibleSelectedCount,
 }: {
   activeCategory: string;
+  allVisibleSelected: boolean;
   busyIdSet: Set<string>;
   canManageDrive: boolean;
   canUploadNow: boolean;
@@ -44,7 +45,6 @@ export function LibrarySection({
   driveConnected: boolean;
   filteredItems: MediaItem[];
   itemsPerPage: number;
-  onClearSelection: () => void;
   onDeleteItem: (item: MediaItem) => void;
   onDeleteSelected: () => void;
   onOpenPreview: (item: MediaItem) => void;
@@ -184,7 +184,7 @@ export function LibrarySection({
 
             <div className="max-w-sm" ref={categoryMenuRef}>
               <p className="mb-2 text-[11px] uppercase tracking-[0.22em] text-zinc-500">
-                หมวดหมู่ที่กำลังดู
+                เลือกดูตามหมวดหมู่
               </p>
               <div className="relative">
                 <button
@@ -193,17 +193,17 @@ export function LibrarySection({
                   aria-expanded={categoryMenuOpen}
                   aria-label="เลือกหมวดหมู่ในคลัง"
                   onClick={() => setCategoryMenuOpen((open) => !open)}
-                  className="group flex h-12 w-full items-center justify-between rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] px-4 text-left text-white shadow-[0_16px_34px_-24px_rgba(34,211,238,0.45)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/20 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/35"
+                  className="group flex h-14 w-full items-center justify-between rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] px-4 py-3 text-left text-white shadow-[0_16px_34px_-24px_rgba(34,211,238,0.45)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/20 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/35"
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-100 ring-1 ring-inset ring-cyan-200/10">
                       <Icon name="heart" className="h-4 w-4" />
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-white">
+                      <p className="truncate text-sm font-medium leading-tight text-white">
                         {activeCategorySummary?.name ?? "ทั้งหมด"}
                       </p>
-                      <p className="text-[11px] tracking-[0.12em] text-zinc-500">
+                      <p className="mt-1 text-[11px] tracking-[0.12em] text-zinc-500">
                         {activeCategorySummary?.count ?? 0} ไฟล์
                       </p>
                     </div>
@@ -304,15 +304,9 @@ export function LibrarySection({
                         onClick={onSelectAllVisible}
                         className="inline-flex h-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-3 text-xs font-medium text-zinc-200 transition-all hover:border-white/15 hover:bg-white/[0.08] sm:h-10 sm:px-4 sm:text-sm"
                       >
-                        เลือกทั้งหมดที่เห็น
-                      </button>
-                      <button
-                        type="button"
-                        onClick={onClearSelection}
-                        disabled={selectedIds.length === 0}
-                        className="inline-flex h-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-3 text-xs font-medium text-zinc-200 transition-all hover:border-white/15 hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:px-4 sm:text-sm"
-                      >
-                        ล้างการเลือก
+                        {allVisibleSelected
+                          ? "ยกเลิกเลือกทั้งหมดที่เห็น"
+                          : "เลือกทั้งหมดที่เห็น"}
                       </button>
                       <button
                         type="button"
