@@ -225,9 +225,7 @@ export function DashboardOverview({
                     dashboard.latestItem ? "text-pink-300" : "text-white"
                   }`}
                 >
-                  {dashboard.latestItem
-                    ? dashboard.latestItem.fileName
-                    : "ยังไม่มีไฟล์ล่าสุด"}
+                  {dashboard.latestItem ? dashboard.latestItem.fileName : "-"}
                 </p>
                 <p className="mt-2 break-words text-sm text-zinc-400">
                   {dashboard.latestItem
