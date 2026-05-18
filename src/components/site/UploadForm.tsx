@@ -297,17 +297,17 @@ export function UploadForm({
           >
             โน้ต
           </label>
-          <div className="relative">
-            <Input
+          <div className="group relative flex h-14 w-full items-center rounded-[22px] border border-cyan-300/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] px-4 text-left text-white shadow-[0_18px_40px_-28px_rgba(34,211,238,0.28)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/26 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05))] focus-within:ring-2 focus-within:ring-cyan-300/40">
+            <div className="pointer-events-none inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-100 ring-1 ring-inset ring-cyan-200/10">
+              <Icon name="hash" className="h-4 w-4" />
+            </div>
+            <input
               id={descriptionId}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               placeholder="เพิ่มโน้ตสั้นๆ เกี่ยวกับไฟล์นี้"
-              className="h-14 rounded-[22px] border-cyan-300/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] pl-16 pr-4 text-sm text-white shadow-[0_18px_40px_-28px_rgba(34,211,238,0.22)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/26 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.09),rgba(255,255,255,0.04))] focus:border-cyan-300/26 focus:bg-[linear-gradient(180deg,rgba(255,255,255,0.09),rgba(255,255,255,0.04))] focus:ring-2 focus:ring-cyan-300/40 placeholder:text-zinc-500"
+              className="h-full w-full border-0 bg-transparent pl-3 pr-0 text-sm text-white outline-none placeholder:text-zinc-500"
             />
-            <div className="pointer-events-none absolute left-3 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-100 ring-1 ring-inset ring-cyan-200/10">
-              <Icon name="hash" className="h-4 w-4" />
-            </div>
           </div>
         </div>
       </div>
