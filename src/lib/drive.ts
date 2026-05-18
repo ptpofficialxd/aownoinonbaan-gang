@@ -449,15 +449,26 @@ async function getCategoryFolderId(
   return folderId;
 }
 
-export async function streamDriveFile(fileId: string) {
+export async function streamDriveFile(
+  fileId: string,
+  options?: {
+    range?: string | null;
+  },
+) {
   const token = await getAccessToken();
   const url = new URL(`${GOOGLE_DRIVE_API_URL}/${fileId}`);
   url.searchParams.set("alt", "media");
 
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+  };
+
+  if (options?.range) {
+    headers.Range = options.range;
+  }
+
   const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers,
     cache: "no-store",
   });
 

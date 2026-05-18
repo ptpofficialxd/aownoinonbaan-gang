@@ -36,7 +36,7 @@ export function PreviewModal({
         className="absolute inset-0"
       />
 
-      <div className="relative z-10 flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[32px] border border-white/14 bg-white/[0.075] shadow-[0_50px_160px_-44px_rgba(0,0,0,0.9)] ring-1 ring-white/8">
+      <article className="relative z-10 flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[32px] border border-white/14 bg-white/[0.075] shadow-[0_50px_160px_-44px_rgba(0,0,0,0.9)] ring-1 ring-white/8">
         <div
           className="pointer-events-none absolute inset-0"
           aria-hidden="true"
@@ -47,7 +47,7 @@ export function PreviewModal({
         />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent" />
 
-        <div className="relative flex items-start justify-between gap-4 border-b border-white/10 bg-black/12 px-4 py-4 backdrop-blur-xl sm:px-6">
+        <header className="relative flex items-start justify-between gap-4 border-b border-white/10 bg-black/12 px-4 py-4 backdrop-blur-xl sm:px-6">
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-white sm:text-base">
               {previewItem.fileName}
@@ -64,28 +64,24 @@ export function PreviewModal({
           >
             <Icon name="x" className="h-4 w-4" />
           </button>
-        </div>
+        </header>
 
-        <div className="relative overflow-auto bg-black/10 p-3 sm:p-5">
+        <section className="relative overflow-auto bg-black/10 p-3 sm:p-5">
           <div className="flex min-h-[40vh] items-center justify-center rounded-[28px] border border-white/10 bg-black/18 p-3 shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset] backdrop-blur-xl sm:p-4">
             {previewKind === "image" ? (
-              <>
-                {/* biome-ignore lint/performance/noImgElement: authenticated media preview must remain directly savable from the lightbox */}
-                <img
-                  src={`/api/media/${previewItem.id}/content`}
-                  alt={previewItem.fileName}
-                  className="max-h-[76vh] w-auto max-w-full rounded-[24px] border border-white/10 object-contain shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8)] select-auto"
-                />
-              </>
+              /* biome-ignore lint/performance/noImgElement: authenticated media preview must remain directly savable from the lightbox */
+              <img
+                src={`/api/media/${previewItem.id}/content`}
+                alt={previewItem.fileName}
+                className="max-h-[76vh] w-auto max-w-full rounded-[24px] border border-white/10 object-contain shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8)] select-auto"
+              />
             ) : previewKind === "video" ? (
-              <>
-                {/* biome-ignore lint/a11y/useMediaCaption: user-uploaded preview media does not include caption tracks */}
-                <video
-                  src={`/api/media/${previewItem.id}/content`}
-                  controls
-                  className="max-h-[76vh] w-auto max-w-full rounded-[24px] border border-white/10 bg-black object-contain shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8)]"
-                />
-              </>
+              /* biome-ignore lint/a11y/useMediaCaption: user-uploaded preview media does not include caption tracks */
+              <video
+                src={`/api/media/${previewItem.id}/content`}
+                controls
+                className="max-h-[76vh] w-auto max-w-full rounded-[24px] border border-white/10 bg-black object-contain shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8)]"
+              />
             ) : previewKind === "audio" ? (
               <div className="flex w-full max-w-2xl flex-col items-center gap-6 rounded-[24px] border border-white/10 bg-white/[0.04] px-6 py-10 text-center">
                 <div className="inline-flex h-18 w-18 items-center justify-center rounded-[28px] border border-cyan-300/16 bg-cyan-300/10 text-cyan-100 shadow-[0_20px_50px_-28px_rgba(34,211,238,0.45)]">
@@ -166,8 +162,8 @@ export function PreviewModal({
               </div>
             ) : null}
           </div>
-        </div>
-      </div>
+        </section>
+      </article>
     </div>
   );
 }
