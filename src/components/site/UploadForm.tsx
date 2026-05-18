@@ -303,10 +303,10 @@ export function UploadForm({
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               placeholder="เพิ่มโน้ตสั้นๆ เกี่ยวกับไฟล์นี้"
-              className="h-14 rounded-[22px] border-cyan-300/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] pl-16 pr-4 text-sm text-white shadow-[0_18px_40px_-28px_rgba(34,211,238,0.28)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/26 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05))] focus:bg-[linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05))] focus:ring-2 focus:ring-cyan-300/40 placeholder:text-zinc-500"
+              className="h-14 rounded-[22px] border-cyan-300/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] pl-16 pr-4 text-sm text-white shadow-[0_18px_40px_-28px_rgba(34,211,238,0.22)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/26 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.09),rgba(255,255,255,0.04))] focus:border-cyan-300/26 focus:bg-[linear-gradient(180deg,rgba(255,255,255,0.09),rgba(255,255,255,0.04))] focus:ring-2 focus:ring-cyan-300/40 placeholder:text-zinc-500"
             />
             <div className="pointer-events-none absolute left-3 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-100 ring-1 ring-inset ring-cyan-200/10">
-              <span className="text-base font-semibold leading-none">#</span>
+              <Icon name="hash" className="h-4 w-4" />
             </div>
           </div>
         </div>

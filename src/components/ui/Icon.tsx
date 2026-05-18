@@ -21,6 +21,7 @@ type IconName =
   | "bolt"
   | "user"
   | "tag"
+  | "hash"
   | "file"
   | "flame"
   | "chart-up"
@@ -348,6 +349,38 @@ const iconMap: Record<IconName, ReactNode> = {
       strokeLinejoin="round"
       strokeWidth="2"
     />
+  ),
+  hash: (
+    <>
+      <path
+        d="M9 3 7 21"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
+      <path
+        d="m17 3-2 18"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
+      <path
+        d="M4 9h16"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
+      <path
+        d="M3 15h16"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
+    </>
   ),
   file: (
     <>
