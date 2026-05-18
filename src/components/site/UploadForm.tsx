@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
@@ -25,14 +26,25 @@ export function UploadForm({
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState({ bottom: 0, left: 0, width: 0 });
   const fileId = useId();
   const categoryId = useId();
   const descriptionId = useId();
-  const categoryMenuRef = useRef<HTMLDivElement | null>(null);
+  const categoryButtonRef = useRef<HTMLButtonElement | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
-      if (!categoryMenuRef.current?.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        !categoryButtonRef.current?.contains(target) &&
+        !dropdownRef.current?.contains(target)
+      ) {
         setCategoryMenuOpen(false);
       }
     }
@@ -51,6 +63,18 @@ export function UploadForm({
       document.removeEventListener("keydown", handleEscape);
     };
   }, []);
+
+  function openDropdown() {
+    if (!categoryMenuOpen && categoryButtonRef.current) {
+      const rect = categoryButtonRef.current.getBoundingClientRect();
+      setDropdownPos({
+        bottom: window.innerHeight - rect.top + 8,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+    setCategoryMenuOpen((open) => !open);
+  }
 
   function uploadSingleFile(input: {
     file: File;
@@ -192,6 +216,67 @@ export function UploadForm({
   const fieldValueClass =
     "block w-full text-sm font-medium leading-tight tracking-[0.08em] text-white";
 
+  const dropdownContent = (
+    <div
+      ref={dropdownRef}
+      style={{
+        position: "fixed",
+        bottom: `${dropdownPos.bottom}px`,
+        left: `${dropdownPos.left}px`,
+        width: `${dropdownPos.width}px`,
+        zIndex: 9999,
+      }}
+      className="overflow-hidden rounded-[24px] border border-cyan-300/16 bg-[linear-gradient(180deg,rgba(7,12,18,0.98),rgba(5,8,15,0.98))] p-2 shadow-[0_30px_80px_-28px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.08)] backdrop-blur-xl"
+    >
+      <div className="mb-2 flex items-center justify-between px-2 pt-1">
+        <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+          เลือกหมวดหมู่
+        </p>
+        <p className="text-[11px] text-cyan-100/60">
+          {CATEGORIES.length} ตัวเลือก
+        </p>
+      </div>
+
+      <div
+        role="listbox"
+        aria-labelledby={categoryId}
+        className="max-h-80 space-y-1 overflow-y-auto pr-1"
+      >
+        {CATEGORIES.map((item) => {
+          const selected = item === category;
+
+          return (
+            <button
+              key={item}
+              type="button"
+              role="option"
+              aria-selected={selected}
+              onClick={() => {
+                setCategory(item);
+                setCategoryMenuOpen(false);
+                setError(null);
+              }}
+              className={`flex w-full items-center justify-between rounded-[18px] px-3 py-3 text-left text-sm transition-all duration-150 ${
+                selected
+                  ? "bg-[linear-gradient(90deg,rgba(34,211,238,0.2),rgba(59,130,246,0.08))] text-white ring-1 ring-inset ring-cyan-300/26"
+                  : "text-zinc-300 hover:bg-white/[0.05] hover:text-white"
+              }`}
+            >
+              <span className="font-medium tracking-[0.08em]">{item}</span>
+              <span
+                className={`inline-flex h-7 w-7 items-center justify-center rounded-full transition-all ${
+                  selected ? "bg-cyan-300/16 text-cyan-100" : "text-transparent"
+                }`}
+              >
+                <Icon name="check" className="h-4 w-4" />
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   return (
     <form onSubmit={onSubmit} className="space-y-5">
       <div className="rounded-[28px] border border-white/8 bg-black/18 p-4">
@@ -249,114 +334,54 @@ export function UploadForm({
           >
             หมวดหมู่
           </label>
-          <div ref={categoryMenuRef} className="relative">
-            <button
-              id={categoryId}
-              type="button"
-              aria-haspopup="listbox"
-              aria-expanded={categoryMenuOpen}
-              aria-label="เลือกหมวดหมู่"
-              onClick={() => setCategoryMenuOpen((open) => !open)}
-              className={`${fieldShellClass} shadow-[0_18px_40px_-28px_rgba(34,211,238,0.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/40`}
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <div className={fieldLeadingIconClass}>
-                  <Icon name="heart" className="h-4 w-4" />
-                </div>
-                <div className="min-w-0">
-                  <p className={fieldEyebrowClass}>เมมเบอร์</p>
-                  <p
-                    className={`${fieldValueClass} truncate ${
-                      category ? "text-white" : "text-zinc-500"
-                    }`}
-                  >
-                    {category || "เลือกหมวดหมู่"}
-                  </p>
-                </div>
+          <button
+            ref={categoryButtonRef}
+            id={categoryId}
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded={categoryMenuOpen}
+            aria-label="เลือกหมวดหมู่"
+            onClick={openDropdown}
+            className={`${fieldShellClass} shadow-[0_18px_40px_-28px_rgba(34,211,238,0.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/40`}
+          >
+            <div className="flex min-w-0 items-center gap-3">
+              <div className={fieldLeadingIconClass}>
+                <Icon name="heart" className="h-4 w-4" />
               </div>
-              <div
-                className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-zinc-300 transition-all duration-200 ${
-                  categoryMenuOpen
-                    ? "rotate-180 border-cyan-300/20 bg-cyan-300/10 text-cyan-100"
-                    : "group-hover:border-cyan-300/18 group-hover:text-white"
-                }`}
-              >
-                <svg
-                  viewBox="0 0 20 20"
-                  className="h-4 w-4"
-                  fill="none"
-                  aria-hidden="true"
+              <div className="min-w-0">
+                <p className={fieldEyebrowClass}>เมมเบอร์</p>
+                <p
+                  className={`${fieldValueClass} truncate ${
+                    category ? "text-white" : "text-zinc-500"
+                  }`}
                 >
-                  <path
-                    d="m5.5 7.5 4.5 4.5 4.5-4.5"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="1.8"
-                  />
-                </svg>
-              </div>
-            </button>
-
-            <div
-              className={`absolute bottom-[calc(100%+0.75rem)] left-0 right-0 z-30 overflow-hidden rounded-[24px] border border-cyan-300/16 bg-[linear-gradient(180deg,rgba(7,12,18,0.98),rgba(5,8,15,0.98))] p-2 shadow-[0_30px_80px_-28px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.08)] backdrop-blur-xl transition-all duration-200 ${
-                categoryMenuOpen
-                  ? "pointer-events-auto translate-y-0 opacity-100"
-                  : "pointer-events-none translate-y-2 opacity-0"
-              }`}
-            >
-              <div className="mb-2 flex items-center justify-between px-2 pt-1">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                  เลือกหมวดหมู่
+                  {category || "เลือกหมวดหมู่"}
                 </p>
-                <p className="text-[11px] text-cyan-100/60">
-                  {CATEGORIES.length} ตัวเลือก
-                </p>
-              </div>
-
-              <div
-                role="listbox"
-                aria-labelledby={categoryId}
-                className="max-h-80 space-y-1 overflow-y-auto pr-1"
-              >
-                {CATEGORIES.map((item) => {
-                  const selected = item === category;
-
-                  return (
-                    <button
-                      key={item}
-                      type="button"
-                      role="option"
-                      aria-selected={selected}
-                      onClick={() => {
-                        setCategory(item);
-                        setCategoryMenuOpen(false);
-                        setError(null);
-                      }}
-                      className={`flex w-full items-center justify-between rounded-[18px] px-3 py-3 text-left text-sm transition-all duration-150 ${
-                        selected
-                          ? "bg-[linear-gradient(90deg,rgba(34,211,238,0.2),rgba(59,130,246,0.08))] text-white ring-1 ring-inset ring-cyan-300/26"
-                          : "text-zinc-300 hover:bg-white/[0.05] hover:text-white"
-                      }`}
-                    >
-                      <span className="font-medium tracking-[0.08em]">
-                        {item}
-                      </span>
-                      <span
-                        className={`inline-flex h-7 w-7 items-center justify-center rounded-full transition-all ${
-                          selected
-                            ? "bg-cyan-300/16 text-cyan-100"
-                            : "text-transparent"
-                        }`}
-                      >
-                        <Icon name="check" className="h-4 w-4" />
-                      </span>
-                    </button>
-                  );
-                })}
               </div>
             </div>
-          </div>
+            <div
+              className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-zinc-300 transition-all duration-200 ${
+                categoryMenuOpen
+                  ? "rotate-180 border-cyan-300/20 bg-cyan-300/10 text-cyan-100"
+                  : "group-hover:border-cyan-300/18 group-hover:text-white"
+              }`}
+            >
+              <svg
+                viewBox="0 0 20 20"
+                className="h-4 w-4"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="m5.5 7.5 4.5 4.5 4.5-4.5"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.8"
+                />
+              </svg>
+            </div>
+          </button>
         </div>
 
         <div className="rounded-[24px] border border-white/8 bg-black/18 p-4">
@@ -429,7 +454,7 @@ export function UploadForm({
         </div>
       ) : null}
 
-      <div className="sticky bottom-0 -mx-2 flex flex-col items-center gap-3 rounded-[24px] border border-white/8 bg-[#101116]/92 px-2 pb-[calc(0.25rem+var(--safe-area-bottom))] pt-4 text-center backdrop-blur-xl sm:static sm:mx-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-0 sm:pb-0 sm:pt-0 sm:text-left">
+      <div className="sticky bottom-0 -mx-2 flex flex-col items-center gap-3 rounded-[24px] border border-white/8 bg-[#101116]/92 px-3 pb-3 pt-4 text-center backdrop-blur-xl sm:static sm:mx-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-0 sm:pb-0 sm:pt-0 sm:text-left">
         <p className="text-sm text-zinc-500">ระบบจะบันทึกว่าไฟล์นี้ถูกอัปโหลดโดยคุณ</p>
         <div className="flex items-center justify-center sm:justify-end">
           <Button
@@ -440,7 +465,7 @@ export function UploadForm({
             <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.22),transparent_55%)] opacity-80" />
             <span className="relative flex items-center gap-3">
               <span className="text-sm font-semibold tracking-[0.08em] text-zinc-950">
-                {busy ? "Uploading..." : "อัปโหลด"}
+                {busy ? "กำลังอัปโหลด..." : "อัปโหลด"}
               </span>
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/10 text-zinc-950 transition-transform duration-200 group-hover:translate-x-0.5">
                 <Icon
@@ -452,6 +477,8 @@ export function UploadForm({
           </Button>
         </div>
       </div>
+
+      {mounted && categoryMenuOpen && createPortal(dropdownContent, document.body)}
     </form>
   );
 }
