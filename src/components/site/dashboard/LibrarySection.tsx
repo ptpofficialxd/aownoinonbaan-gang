@@ -490,7 +490,11 @@ export function LibrarySection({
                             onClick={onSelectAllVisible}
                             className="flex w-full items-center justify-between rounded-[18px] px-3 py-3 text-left text-sm text-zinc-200 transition-all hover:bg-white/[0.05] hover:text-white"
                           >
-                            <span className="font-medium">
+                            <span className="inline-flex items-center gap-2 font-medium">
+                              <Icon
+                                name={allVisibleSelected ? "x" : "check"}
+                                className="h-4 w-4"
+                              />
                               {allVisibleSelected
                                 ? "ยกเลิกเลือกทั้งหมดที่เห็น"
                                 : "เลือกทั้งหมดที่เห็น"}
@@ -715,27 +719,39 @@ function MediaCard({
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
 
       {canManageDrive ? (
-        <button
-          type="button"
-          onClick={() => onToggleSelect(item.id)}
-          disabled={isBusy}
-          className={`absolute left-2 top-2 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full border backdrop-blur-md transition-all sm:left-3 sm:top-3 sm:h-9 sm:w-9 ${
-            isSelected
-              ? "border-cyan-300/45 bg-cyan-300 text-slate-950"
-              : "border-white/12 bg-black/40 text-white hover:border-white/30 hover:bg-black/55"
-          }`}
-          aria-label={
-            isSelected
-              ? `ยกเลิกการเลือก ${item.fileName}`
-              : `เลือก ${item.fileName}`
-          }
-        >
-          {isSelected ? (
-            <Icon name="check" className="h-4 w-4" />
-          ) : (
-            <div className="h-3 w-3 rounded-full border border-current" />
-          )}
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={() => onToggleSelect(item.id)}
+            disabled={isBusy}
+            className={`absolute left-2 top-2 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full border backdrop-blur-md transition-all sm:left-3 sm:top-3 sm:h-9 sm:w-9 ${
+              isSelected
+                ? "border-cyan-300/45 bg-cyan-300 text-slate-950"
+                : "border-white/12 bg-black/40 text-white hover:border-white/30 hover:bg-black/55"
+            }`}
+            aria-label={
+              isSelected
+                ? `ยกเลิกการเลือก ${item.fileName}`
+                : `เลือก ${item.fileName}`
+            }
+          >
+            {isSelected ? (
+              <Icon name="check" className="h-4 w-4" />
+            ) : (
+              <div className="h-3 w-3 rounded-full border border-current" />
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onDeleteItem(item)}
+            disabled={isBusy}
+            className="absolute right-2 top-2 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full border border-rose-400/18 bg-rose-400/12 text-rose-100 backdrop-blur-md transition-all hover:border-rose-400/30 hover:bg-rose-400/18 disabled:cursor-not-allowed disabled:opacity-60 sm:right-3 sm:top-3 sm:h-9 sm:w-9"
+            aria-label={`ลบ ${item.fileName}`}
+          >
+            <Icon name="trash" className="h-4 w-4" />
+          </button>
+        </>
       ) : null}
 
       <button
@@ -803,20 +819,6 @@ function MediaCard({
         <p className="hidden min-h-10 text-sm leading-5 text-zinc-400 lg:block">
           {item.description || "ไม่มีโน้ตประกอบไฟล์นี้"}
         </p>
-
-        <div className="flex items-center justify-end gap-2 pt-0.5 sm:pt-1">
-          {canManageDrive ? (
-            <button
-              type="button"
-              onClick={() => onDeleteItem(item)}
-              disabled={isBusy}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-rose-400/18 bg-rose-400/8 text-rose-100 transition-all hover:border-rose-400/30 hover:bg-rose-400/12 disabled:cursor-not-allowed disabled:opacity-60 sm:h-10 sm:w-10"
-              aria-label={`ลบ ${item.fileName}`}
-            >
-              <Icon name="trash" className="h-4 w-4" />
-            </button>
-          ) : null}
-        </div>
       </div>
     </div>
   );

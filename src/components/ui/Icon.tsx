@@ -326,19 +326,20 @@ const iconMap: Record<IconName, ReactNode> = {
   ),
   settings: (
     <>
+      <path
+        d="M9.6 4.8h4.8l.6 2.1a6.3 6.3 0 0 1 1.3.8l2-.8 2.4 4.1-1.5 1.5a6.9 6.9 0 0 1 0 1.5l1.5 1.5-2.4 4.1-2-.8a6.3 6.3 0 0 1-1.3.8l-.6 2.1H9.6l-.6-2.1a6.3 6.3 0 0 1-1.3-.8l-2 .8-2.4-4.1 1.5-1.5a6.9 6.9 0 0 1 0-1.5L3.3 11l2.4-4.1 2 .8a6.3 6.3 0 0 1 1.3-.8Z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
       <circle
         cx="12"
         cy="12"
-        r="3"
+        r="2.6"
         fill="none"
         stroke="currentColor"
-        strokeWidth="2"
-      />
-      <path
-        d="M12 3.5v2M12 18.5v2M20.5 12h-2M5.5 12h-2M17.96 6.04l-1.42 1.42M7.46 16.54l-1.42 1.42M17.96 17.96l-1.42-1.42M7.46 7.46 6.04 6.04"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
         strokeWidth="2"
       />
     </>
