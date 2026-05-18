@@ -107,18 +107,19 @@ export function DashboardShell({
   const isSystemReady = driveConnected && cloudHealth.online;
   const canUploadNow = isSystemReady;
 
-  function handleUploadedItem(item: MediaItem | null) {
-    if (!item) {
+  function handleUploadedItem(items: MediaItem[]) {
+    if (!items.length) {
       setUploadOpen(false);
       return;
     }
 
     startTransition(() => {
       setLibraryItems((current) => {
+        const uploadedIds = new Set(items.map((item) => item.id));
         const withoutDuplicate = current.filter(
-          (entry) => entry.id !== item.id,
+          (entry) => !uploadedIds.has(entry.id),
         );
-        return [item, ...withoutDuplicate];
+        return [...items.slice().reverse(), ...withoutDuplicate];
       });
       setUploadOpen(false);
       setActiveCategory("all");

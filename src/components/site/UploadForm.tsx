@@ -9,16 +9,19 @@ import { CATEGORIES, type MediaItem } from "@/lib/media";
 export function UploadForm({
   onUploaded,
 }: {
-  onUploaded?: (item: MediaItem | null) => void;
+  onUploaded?: (items: MediaItem[]) => void;
 }) {
   const [category, setCategory] = useState<string>(CATEGORIES[0]);
   const [description, setDescription] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<
     "idle" | "preparing" | "uploading" | "finalizing"
   >("idle");
+  const [uploadCount, setUploadCount] = useState(0);
+  const [currentUploadIndex, setCurrentUploadIndex] = useState(0);
+  const [currentFileName, setCurrentFileName] = useState("");
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -49,11 +52,63 @@ export function UploadForm({
     };
   }, []);
 
+  function uploadSingleFile(input: {
+    file: File;
+    category: string;
+    description: string;
+    fileIndex: number;
+    totalFiles: number;
+  }) {
+    const formData = new FormData();
+    formData.set("file", input.file);
+    formData.set("category", input.category);
+    formData.set("description", input.description);
+
+    return new Promise<MediaItem | null>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "/api/media/upload", true);
+
+      xhr.upload.onprogress = (uploadEvent) => {
+        if (!uploadEvent.lengthComputable) return;
+        const ratio = uploadEvent.total
+          ? uploadEvent.loaded / uploadEvent.total
+          : 0;
+        const currentProgress = Math.round(ratio * 100);
+        const overallProgress = Math.round(
+          ((input.fileIndex + currentProgress / 100) / input.totalFiles) * 100,
+        );
+        setProgress(Math.max(3, Math.min(97, overallProgress)));
+      };
+
+      xhr.onerror = () => {
+        reject(new Error(`Network Error: อัปโหลดไฟล์ ${input.file.name} ไม่สำเร็จ`));
+      };
+
+      xhr.onload = () => {
+        let payload: { error?: string; mediaItem?: MediaItem | null } = {};
+        try {
+          payload = JSON.parse(xhr.responseText);
+        } catch {}
+
+        if (xhr.status < 200 || xhr.status >= 300) {
+          reject(
+            new Error(payload.error || `อัปโหลดไฟล์ ${input.file.name} ไม่สำเร็จ`),
+          );
+          return;
+        }
+
+        resolve(payload.mediaItem ?? null);
+      };
+
+      xhr.send(formData);
+    });
+  }
+
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
 
-    if (!file) {
+    if (!files.length) {
       setError("เลือกไฟล์ก่อนอัปโหลด");
       return;
     }
@@ -61,62 +116,46 @@ export function UploadForm({
     setBusy(true);
     setProgress(0);
     setPhase("preparing");
+    setUploadCount(files.length);
+    setCurrentUploadIndex(0);
+    setCurrentFileName("");
     setError(null);
     setMessage(null);
 
     try {
       setPhase("uploading");
+      const uploadedItems: MediaItem[] = [];
 
-      const formData = new FormData();
-      formData.set("file", file);
-      formData.set("category", category);
-      formData.set("description", description);
+      for (const [index, file] of files.entries()) {
+        setCurrentUploadIndex(index + 1);
+        setCurrentFileName(file.name);
+        const uploadedItem = await uploadSingleFile({
+          file,
+          category,
+          description,
+          fileIndex: index,
+          totalFiles: files.length,
+        });
 
-      const uploadedItem = await new Promise<MediaItem | null>(
-        (resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.open("POST", "/api/media/upload", true);
-
-          xhr.upload.onprogress = (uploadEvent) => {
-            if (!uploadEvent.lengthComputable) return;
-            const ratio = uploadEvent.total
-              ? uploadEvent.loaded / uploadEvent.total
-              : 0;
-            setProgress(Math.max(5, Math.min(88, Math.round(ratio * 100))));
-          };
-
-          xhr.onerror = () => {
-            reject(new Error("Network Error: มีปัญหาขณะอัปโหลด"));
-          };
-
-          xhr.onload = () => {
-            let payload: { error?: string; mediaItem?: MediaItem | null } = {};
-            try {
-              payload = JSON.parse(xhr.responseText);
-            } catch {}
-
-            if (xhr.status < 200 || xhr.status >= 300) {
-              reject(new Error(payload.error || "อัปโหลดไม่สำเร็จ"));
-              return;
-            }
-
-            resolve(payload.mediaItem ?? null);
-          };
-
-          xhr.send(formData);
-        },
-      );
+        if (uploadedItem) {
+          uploadedItems.push(uploadedItem);
+        }
+      }
 
       setPhase("finalizing");
       setProgress(97);
 
       setProgress(100);
-      setMessage("อัปโหลดสำเร็จแล้ว ไฟล์ถูกส่งขึ้นคลาวด์เรียบร้อย");
+      setMessage(
+        files.length > 1
+          ? `อัปโหลดสำเร็จ ${files.length} ไฟล์แล้ว ไฟล์ทั้งหมดถูกส่งขึ้นคลาวด์เรียบร้อย`
+          : "อัปโหลดสำเร็จแล้ว ไฟล์ถูกส่งขึ้นคลาวด์เรียบร้อย",
+      );
       setDescription("");
-      setFile(null);
+      setFiles([]);
       const input = form.elements.namedItem("file") as HTMLInputElement | null;
       if (input) input.value = "";
-      onUploaded?.(uploadedItem);
+      onUploaded?.(uploadedItems);
     } catch (uploadError) {
       setError(
         uploadError instanceof Error ? uploadError.message : "อัปโหลดไม่สำเร็จ",
@@ -124,6 +163,8 @@ export function UploadForm({
     } finally {
       setBusy(false);
       setPhase("idle");
+      setCurrentUploadIndex(0);
+      setCurrentFileName("");
     }
   }
 
@@ -131,10 +172,19 @@ export function UploadForm({
     phase === "preparing"
       ? "กำลังเตรียมการอัปโหลด"
       : phase === "uploading"
-        ? `กำลังอัปโหลด ${progress}%`
+        ? `กำลังอัปโหลด ${currentUploadIndex}/${uploadCount || files.length} ไฟล์`
         : phase === "finalizing"
           ? "กำลังบันทึกไฟล์เข้าระบบ"
           : null;
+
+  const fieldShellClass =
+    "group flex h-14 w-full items-center justify-between rounded-[22px] border border-cyan-300/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] px-4 text-left text-white ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/26 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05))]";
+  const fieldLeadingIconClass =
+    "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-100 ring-1 ring-inset ring-cyan-200/10";
+  const fieldEyebrowClass =
+    "text-[11px] uppercase tracking-[0.24em] text-cyan-100/48";
+  const fieldValueClass =
+    "block w-full text-sm font-medium leading-tight tracking-[0.08em] text-white";
 
   return (
     <form onSubmit={onSubmit} className="space-y-5">
@@ -151,12 +201,20 @@ export function UploadForm({
                 </div>
                 <div>
                   <p className="text-sm font-medium text-white">
-                    {file ? file.name : "เลือกไฟล์ที่ต้องการอัปโหลด"}
+                    {files.length
+                      ? files.length === 1
+                        ? files[0]?.name
+                        : `เลือกแล้ว ${files.length} ไฟล์`
+                      : "เลือกไฟล์ที่ต้องการอัปโหลด"}
                   </p>
                   <p className="mt-1 text-sm text-zinc-500">
-                    {file
-                      ? `${(file.size / 1024 / 1024).toFixed(2)} MB`
-                      : "รูปภาพ วิดีโอ เอกสาร หรือไฟล์อื่นๆ จากในเครื่อง"}
+                    {files.length
+                      ? `${(
+                          files.reduce((sum, item) => sum + item.size, 0) /
+                          1024 /
+                          1024
+                        ).toFixed(2)} MB`
+                      : "รูปภาพ วิดีโอ เอกสาร หรือไฟล์อื่นๆ"}
                   </p>
                 </div>
               </div>
@@ -168,7 +226,10 @@ export function UploadForm({
           id={fileId}
           name="file"
           type="file"
-          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+          multiple
+          onChange={(event) =>
+            setFiles(Array.from(event.target.files ?? []))
+          }
           className="sr-only"
         />
       </div>
@@ -189,23 +250,19 @@ export function UploadForm({
               aria-expanded={categoryMenuOpen}
               aria-label="เลือกหมวดหมู่"
               onClick={() => setCategoryMenuOpen((open) => !open)}
-              className="group flex h-14 w-full items-center justify-between rounded-[22px] border border-cyan-300/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] px-4 text-left text-white shadow-[0_18px_40px_-28px_rgba(34,211,238,0.7)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/26 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/40"
+              className={`${fieldShellClass} shadow-[0_18px_40px_-28px_rgba(34,211,238,0.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/40`}
             >
               <div className="flex min-w-0 items-center gap-3">
-                <div className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-100 ring-1 ring-inset ring-cyan-200/10">
+                <div className={fieldLeadingIconClass}>
                   <Icon name="tag" className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-100/48">
-                    เมมเบอร์
-                  </p>
-                  <p className="truncate text-sm font-medium tracking-[0.08em] text-white">
-                    {category}
-                  </p>
+                  <p className={fieldEyebrowClass}>เมมเบอร์</p>
+                  <p className={`${fieldValueClass} truncate`}>{category}</p>
                 </div>
               </div>
               <div
-                className={`inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-zinc-300 transition-all duration-200 ${
+                className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-zinc-300 transition-all duration-200 ${
                   categoryMenuOpen
                     ? "rotate-180 border-cyan-300/20 bg-cyan-300/10 text-cyan-100"
                     : "group-hover:border-cyan-300/18 group-hover:text-white"
@@ -295,13 +352,17 @@ export function UploadForm({
           >
             โน้ต
           </label>
-          <div className="group relative flex h-14 w-full items-center rounded-[22px] border border-cyan-300/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] px-4 text-left text-white shadow-[0_18px_40px_-28px_rgba(34,211,238,0.28)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/26 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05))] focus-within:outline-none focus-within:ring-2 focus-within:ring-cyan-300/40">
+          <div
+            className={`${fieldShellClass} shadow-[0_18px_40px_-28px_rgba(34,211,238,0.28)] focus-within:outline-none focus-within:ring-2 focus-within:ring-cyan-300/40`}
+          >
             <div className="flex min-w-0 flex-1 items-center gap-3">
-              <div className="pointer-events-none inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-100 ring-1 ring-inset ring-cyan-200/10">
+              <div
+                className={`${fieldLeadingIconClass} pointer-events-none`}
+              >
                 <Icon name="hash" className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="pointer-events-none text-[11px] uppercase tracking-[0.24em] text-cyan-100/48">
+                <p className={`${fieldEyebrowClass} pointer-events-none`}>
                   เพิ่มเติม
                 </p>
                 <input
@@ -309,7 +370,7 @@ export function UploadForm({
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                   placeholder="เพิ่มโน้ตสั้นๆ เกี่ยวกับไฟล์นี้"
-                  className="block h-5 w-full border-0 bg-transparent p-0 text-sm font-medium tracking-[0.08em] text-white outline-none placeholder:font-normal placeholder:tracking-normal placeholder:text-zinc-500"
+                  className={`${fieldValueClass} border-0 bg-transparent p-0 outline-none placeholder:font-normal placeholder:tracking-normal placeholder:text-zinc-500`}
                 />
               </div>
             </div>
@@ -337,7 +398,7 @@ export function UploadForm({
                 {progressLabel ?? "กำลังอัปโหลด"}
               </p>
               <p className="mt-1 text-xs uppercase tracking-[0.2em] text-cyan-100/70">
-                รอแปปนึงนะงื้อออออ
+                {currentFileName || "รอแปปนึงนะงื้อออออ"}
               </p>
             </div>
             <div className="text-right">
@@ -355,12 +416,26 @@ export function UploadForm({
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
         <p className="text-sm text-zinc-500">ระบบจะบันทึกว่าไฟล์นี้ถูกอัปโหลดโดยคุณ</p>
-        <div className="flex items-center justify-end">
-          <Button type="submit" disabled={busy} className="h-12 min-w-44 px-6">
-            {busy ? "Uploading..." : "อัปโหลด"}
-            {!busy ? <Icon name="arrow-right" className="h-4 w-4" /> : null}
+        <div className="flex items-center justify-center sm:justify-end">
+          <Button
+            type="submit"
+            disabled={busy}
+            className="group relative h-12 min-w-34 overflow-hidden rounded-full border border-cyan-200/16 bg-[linear-gradient(180deg,rgba(82,221,248,0.98),rgba(24,190,234,0.94))] px-4 text-zinc-950 shadow-[0_18px_36px_-18px_rgba(34,211,238,0.72)] transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-100/24 hover:shadow-[0_22px_42px_-18px_rgba(34,211,238,0.82)] disabled:translate-y-0 disabled:border-cyan-200/10 disabled:bg-[linear-gradient(180deg,rgba(82,221,248,0.52),rgba(24,190,234,0.45))] disabled:text-zinc-900/65 disabled:shadow-[0_14px_28px_-22px_rgba(34,211,238,0.45)]"
+          >
+            <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.22),transparent_55%)] opacity-80" />
+            <span className="relative flex items-center gap-3">
+              <span className="text-sm font-semibold tracking-[0.08em] text-zinc-950">
+                {busy ? "Uploading..." : "อัปโหลด"}
+              </span>
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/10 text-zinc-950 transition-transform duration-200 group-hover:translate-x-0.5">
+                <Icon
+                  name={busy ? "upload" : "arrow-right"}
+                  className={`h-4 w-4 ${busy ? "animate-pulse" : ""}`}
+                />
+              </span>
+            </span>
           </Button>
         </div>
       </div>

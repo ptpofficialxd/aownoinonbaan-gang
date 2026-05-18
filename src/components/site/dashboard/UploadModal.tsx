@@ -9,7 +9,7 @@ export function UploadModal({
   open,
 }: {
   onClose: () => void;
-  onUploaded: (item: MediaItem | null) => void;
+  onUploaded: (items: MediaItem[]) => void;
   open: boolean;
 }) {
   if (!open) return null;
@@ -49,7 +49,7 @@ export function UploadModal({
         </div>
 
         <div className="px-6 py-6 sm:px-7">
-          <UploadForm onCancel={onClose} onUploaded={onUploaded} />
+          <UploadForm onUploaded={onUploaded} />
         </div>
       </div>
     </div>
