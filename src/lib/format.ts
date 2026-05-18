@@ -16,3 +16,16 @@ export function formatDate(value: string | Date) {
     timeStyle: "short",
   }).format(new Date(value));
 }
+
+export function formatDateCompact(value: string | Date) {
+  return new Intl.DateTimeFormat("th-TH", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })
+    .format(new Date(value))
+    .replace(",", "");
+}

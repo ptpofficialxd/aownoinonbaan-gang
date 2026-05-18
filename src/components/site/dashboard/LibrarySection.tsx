@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
-import { formatBytes, formatDate } from "@/lib/format";
+import { formatBytes, formatDate, formatDateCompact } from "@/lib/format";
 import type { MediaItem } from "@/lib/media";
 import type { DashboardSummary } from "./types";
 import { getMimeBadgeLabel, getPreviewKind, isPreviewableFile } from "./utils";
@@ -812,7 +812,10 @@ function MediaCard({
             @{item.uploaderUsername}
           </p>
           <p className="text-[11px] text-zinc-500 sm:text-xs">
-            {formatDate(item.createdAt)}
+            <span className="whitespace-nowrap text-[10px] sm:hidden">
+              {formatDateCompact(item.createdAt)}
+            </span>
+            <span className="hidden sm:inline">{formatDate(item.createdAt)}</span>
           </p>
         </div>
 
