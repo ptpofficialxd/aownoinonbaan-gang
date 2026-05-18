@@ -294,11 +294,11 @@ export function LibrarySection({
                 <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
                   <div>
                     <p className="text-xs font-medium text-white sm:text-sm">
-                      {filteredItems.length} ไฟล์ในมุมมองนี้
+                      {filteredItems.length} ไฟล์ในหมวดหมู่นี้
                     </p>
                     <p className="mt-1 text-xs text-zinc-400 sm:text-sm">
                       {canManageDrive
-                        ? `${selectedIds.length} ไฟล์ถูกเลือกอยู่ ตอนนี้เห็นในหน้านี้ ${visibleSelectedCount} ไฟล์`
+                        ? `${selectedIds.length} ไฟล์ถูกเลือกอยู่`
                         : `แสดง ${pageStart}-${pageEnd} จาก ${filteredItems.length} ไฟล์`}
                     </p>
                   </div>
