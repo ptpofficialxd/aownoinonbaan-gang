@@ -296,7 +296,103 @@ export function LibrarySection({
                   </div>
                 </div>
 
-                <div className="hidden gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_auto]">
+                <div className="hidden items-center gap-3 lg:flex">
+                  <div
+                    className={`w-[17.5rem] shrink-0 ${categoryMenuOpen ? "relative z-40" : ""}`}
+                    ref={desktopCategoryMenuRef}
+                  >
+                    <div className="relative">
+                      <button
+                        type="button"
+                        aria-haspopup="listbox"
+                        aria-expanded={categoryMenuOpen}
+                        aria-label="เลือกหมวดหมู่ในคลัง"
+                        onClick={() => setCategoryMenuOpen((open) => !open)}
+                        className="group flex h-12 w-full items-center justify-between rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] px-4 py-3 text-left text-white shadow-[0_16px_34px_-24px_rgba(34,211,238,0.45)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/20 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/35"
+                      >
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-100 ring-1 ring-inset ring-cyan-200/10">
+                            <Icon name="heart" className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium leading-tight text-white">
+                              {activeCategorySummary?.name ?? "ทั้งหมด"}
+                            </p>
+                            <p className="mt-1 text-[11px] tracking-[0.12em] text-zinc-500">
+                              {activeCategorySummary?.count ?? 0} ไฟล์
+                            </p>
+                          </div>
+                        </div>
+                        <div
+                          className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-zinc-300 transition-all duration-200 ${
+                            categoryMenuOpen
+                              ? "rotate-180 border-cyan-300/20 bg-cyan-300/10 text-cyan-100"
+                              : "group-hover:border-cyan-300/18 group-hover:text-white"
+                          }`}
+                        >
+                          <svg
+                            viewBox="0 0 20 20"
+                            className="h-4 w-4"
+                            fill="none"
+                            aria-hidden="true"
+                          >
+                            <path
+                              d="m5.5 7.5 4.5 4.5 4.5-4.5"
+                              stroke="currentColor"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="1.8"
+                            />
+                          </svg>
+                        </div>
+                      </button>
+
+                      <div
+                        className={`absolute left-0 right-0 top-[calc(100%+0.75rem)] z-50 overflow-hidden rounded-[24px] border border-cyan-300/16 bg-[linear-gradient(180deg,rgba(7,12,18,0.98),rgba(5,8,15,0.98))] p-2 shadow-[0_30px_80px_-28px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.08)] backdrop-blur-xl transition-all duration-200 ${
+                          categoryMenuOpen
+                            ? "pointer-events-auto translate-y-0 opacity-100"
+                            : "pointer-events-none -translate-y-2 opacity-0"
+                        }`}
+                      >
+                        <div className="mb-2 flex items-center justify-between px-2 pt-1">
+                          <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                            เลือกหมวดหมู่
+                          </p>
+                          <p className="text-[11px] text-cyan-100/60">
+                            {dashboard.categories.length + 1} ตัวเลือก
+                          </p>
+                        </div>
+
+                        <div
+                          role="listbox"
+                          className="max-h-80 space-y-1 overflow-y-auto pr-1"
+                        >
+                          <CategoryFilterOption
+                            active={activeCategory === "all"}
+                            count={dashboard.totalItems}
+                            label="ทั้งหมด"
+                            onClick={() => {
+                              onSetActiveCategory("all");
+                              setCategoryMenuOpen(false);
+                            }}
+                          />
+                          {dashboard.categories.map((category) => (
+                            <CategoryFilterOption
+                              key={category.name}
+                              active={activeCategory === category.name}
+                              count={category.count}
+                              label={category.name}
+                              onClick={() => {
+                                onSetActiveCategory(category.name);
+                                setCategoryMenuOpen(false);
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="relative">
                     <Icon
                       name="search"
@@ -311,105 +407,6 @@ export function LibrarySection({
                   </div>
 
                   {uploadButton}
-                </div>
-              </div>
-            </div>
-
-            <div
-              className={`hidden max-w-sm lg:block ${categoryMenuOpen ? "relative z-40" : ""}`}
-              ref={desktopCategoryMenuRef}
-            >
-              <p className="mb-2 text-[11px] uppercase tracking-[0.22em] text-zinc-500">
-                เลือกดูตามหมวดหมู่
-              </p>
-              <div className="relative">
-                <button
-                  type="button"
-                  aria-haspopup="listbox"
-                  aria-expanded={categoryMenuOpen}
-                  aria-label="เลือกหมวดหมู่ในคลัง"
-                  onClick={() => setCategoryMenuOpen((open) => !open)}
-                  className="group flex h-14 w-full items-center justify-between rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] px-4 py-3 text-left text-white shadow-[0_16px_34px_-24px_rgba(34,211,238,0.45)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/20 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/35"
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-100 ring-1 ring-inset ring-cyan-200/10">
-                      <Icon name="heart" className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium leading-tight text-white">
-                        {activeCategorySummary?.name ?? "ทั้งหมด"}
-                      </p>
-                      <p className="mt-1 text-[11px] tracking-[0.12em] text-zinc-500">
-                        {activeCategorySummary?.count ?? 0} ไฟล์
-                      </p>
-                    </div>
-                  </div>
-                  <div
-                    className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-zinc-300 transition-all duration-200 ${
-                      categoryMenuOpen
-                        ? "rotate-180 border-cyan-300/20 bg-cyan-300/10 text-cyan-100"
-                        : "group-hover:border-cyan-300/18 group-hover:text-white"
-                    }`}
-                  >
-                    <svg
-                      viewBox="0 0 20 20"
-                      className="h-4 w-4"
-                      fill="none"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="m5.5 7.5 4.5 4.5 4.5-4.5"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="1.8"
-                      />
-                    </svg>
-                  </div>
-                </button>
-
-                <div
-                  className={`absolute left-0 right-0 top-[calc(100%+0.75rem)] z-50 overflow-hidden rounded-[24px] border border-cyan-300/16 bg-[linear-gradient(180deg,rgba(7,12,18,0.98),rgba(5,8,15,0.98))] p-2 shadow-[0_30px_80px_-28px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.08)] backdrop-blur-xl transition-all duration-200 ${
-                    categoryMenuOpen
-                      ? "pointer-events-auto translate-y-0 opacity-100"
-                      : "pointer-events-none -translate-y-2 opacity-0"
-                  }`}
-                >
-                  <div className="mb-2 flex items-center justify-between px-2 pt-1">
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                      เลือกหมวดหมู่
-                    </p>
-                    <p className="text-[11px] text-cyan-100/60">
-                      {dashboard.categories.length + 1} ตัวเลือก
-                    </p>
-                  </div>
-
-                  <div
-                    role="listbox"
-                    className="max-h-80 space-y-1 overflow-y-auto pr-1"
-                  >
-                    <CategoryFilterOption
-                      active={activeCategory === "all"}
-                      count={dashboard.totalItems}
-                      label="ทั้งหมด"
-                      onClick={() => {
-                        onSetActiveCategory("all");
-                        setCategoryMenuOpen(false);
-                      }}
-                    />
-                    {dashboard.categories.map((category) => (
-                      <CategoryFilterOption
-                        key={category.name}
-                        active={activeCategory === category.name}
-                        count={category.count}
-                        label={category.name}
-                        onClick={() => {
-                          onSetActiveCategory(category.name);
-                          setCategoryMenuOpen(false);
-                        }}
-                      />
-                    ))}
-                  </div>
                 </div>
               </div>
             </div>
