@@ -8,10 +8,8 @@ import { CATEGORIES, type MediaItem } from "@/lib/media";
 
 export function UploadForm({
   onUploaded,
-  onCancel,
 }: {
   onUploaded?: (item: MediaItem | null) => void;
-  onCancel?: () => void;
 }) {
   const [category, setCategory] = useState<string>(CATEGORIES[0]);
   const [description, setDescription] = useState("");
@@ -297,17 +295,24 @@ export function UploadForm({
           >
             โน้ต
           </label>
-          <div className="group relative flex h-14 w-full items-center rounded-[22px] border border-cyan-300/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] px-4 text-left text-white shadow-[0_18px_40px_-28px_rgba(34,211,238,0.28)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/26 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05))] focus-within:ring-2 focus-within:ring-cyan-300/40">
-            <div className="pointer-events-none inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-100 ring-1 ring-inset ring-cyan-200/10">
-              <Icon name="hash" className="h-4 w-4" />
+          <div className="group relative flex h-14 w-full items-center rounded-[22px] border border-cyan-300/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] px-4 text-left text-white shadow-[0_18px_40px_-28px_rgba(34,211,238,0.28)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/26 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05))] focus-within:outline-none focus-within:ring-2 focus-within:ring-cyan-300/40">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div className="pointer-events-none inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-100 ring-1 ring-inset ring-cyan-200/10">
+                <Icon name="hash" className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="pointer-events-none text-[11px] uppercase tracking-[0.24em] text-cyan-100/48">
+                  เพิ่มเติม
+                </p>
+                <input
+                  id={descriptionId}
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                  placeholder="เพิ่มโน้ตสั้นๆ เกี่ยวกับไฟล์นี้"
+                  className="block h-5 w-full border-0 bg-transparent p-0 text-sm font-medium tracking-[0.08em] text-white outline-none placeholder:font-normal placeholder:tracking-normal placeholder:text-zinc-500"
+                />
+              </div>
             </div>
-            <input
-              id={descriptionId}
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              placeholder="เพิ่มโน้ตสั้นๆ เกี่ยวกับไฟล์นี้"
-              className="h-full w-full border-0 bg-transparent pl-3 pr-0 text-sm text-white outline-none placeholder:text-zinc-500"
-            />
           </div>
         </div>
       </div>
@@ -352,17 +357,7 @@ export function UploadForm({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-zinc-500">ระบบจะบันทึกว่าไฟล์นี้ถูกอัปโหลดโดยคุณ</p>
-        <div className="flex items-center gap-3">
-          {onCancel ? (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onCancel}
-              className="h-12 px-5"
-            >
-              Cancel
-            </Button>
-          ) : null}
+        <div className="flex items-center justify-end">
           <Button type="submit" disabled={busy} className="h-12 min-w-44 px-6">
             {busy ? "Uploading..." : "อัปโหลด"}
             {!busy ? <Icon name="arrow-right" className="h-4 w-4" /> : null}
