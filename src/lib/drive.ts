@@ -468,6 +468,46 @@ export async function streamDriveFile(fileId: string) {
   return res;
 }
 
+export async function streamDriveThumbnail(fileId: string) {
+  const token = await getAccessToken();
+  const metadataUrl = new URL(`${GOOGLE_DRIVE_API_URL}/${fileId}`);
+  metadataUrl.searchParams.set("fields", "thumbnailLink");
+  metadataUrl.searchParams.set("supportsAllDrives", "true");
+
+  const metadataRes = await fetch(metadataUrl, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!metadataRes.ok) {
+    throw new Error(`Drive thumbnail metadata failed: ${metadataRes.status}`);
+  }
+
+  const metadata = (await metadataRes.json()) as {
+    thumbnailLink?: string;
+  };
+
+  if (!metadata.thumbnailLink) {
+    return null;
+  }
+
+  const thumbnailUrl = metadata.thumbnailLink.replace(/=s\d+$/, "=s1200");
+  const thumbnailRes = await fetch(thumbnailUrl, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!thumbnailRes.ok) {
+    throw new Error(`Drive thumbnail fetch failed: ${thumbnailRes.status}`);
+  }
+
+  return thumbnailRes;
+}
+
 export async function deleteDriveFile(fileId: string) {
   const token = await getAccessToken();
   const url = new URL(`${GOOGLE_DRIVE_API_URL}/${fileId}`);

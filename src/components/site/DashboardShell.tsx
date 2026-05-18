@@ -37,17 +37,66 @@ function mediaIconForMime(mimeType: string) {
   return "folder";
 }
 
+function getMimeBadgeLabel(mimeType: string) {
+  if (mimeType.startsWith("image/")) {
+    return mimeType === "image/jpeg"
+      ? "JPG"
+      : mimeType.split("/")[1]?.toUpperCase() ?? "IMG";
+  }
+
+  if (mimeType.startsWith("video/")) return "VDO";
+  if (mimeType.startsWith("audio/")) return "AUD";
+  if (mimeType.startsWith("text/")) return "TXT";
+  if (mimeType === "application/pdf") return "PDF";
+  if (
+    mimeType === "application/msword" ||
+    mimeType ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  ) {
+    return "DOC";
+  }
+  if (mimeType.startsWith("application/")) return "FILE";
+  return mimeType.split("/")[0].toUpperCase();
+}
+
 function getPreviewKind(mimeType: string) {
   if (mimeType.startsWith("image/")) return "image";
   if (mimeType.startsWith("video/")) return "video";
   if (mimeType.startsWith("audio/")) return "audio";
   if (mimeType === "application/pdf") return "pdf";
+  if (
+    mimeType === "application/msword" ||
+    mimeType ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  ) {
+    return "document";
+  }
   if (mimeType.startsWith("text/")) return "text";
   return null;
 }
 
 function isPreviewableFile(mimeType: string) {
   return getPreviewKind(mimeType) !== null;
+}
+
+function getPreviewHint(mimeType: string) {
+  const previewKind = getPreviewKind(mimeType);
+  if (previewKind === "image") {
+    return "Preview รูปภาพ";
+  }
+  if (previewKind === "video" || previewKind === "audio") {
+    return "Preview วิดีโอ";
+  }
+  if (previewKind === "pdf") {
+    return "Preview เอกสาร PDF";
+  }
+  if (previewKind === "text") {
+    return "Preview เนื้อหาในไฟล์";
+  }
+  if (previewKind === "document") {
+    return "แสดง document cover สำหรับไฟล์เอกสารชนิดนี้";
+  }
+  return "เปิดดูไฟล์ได้ใน popup นี้";
 }
 
 function formatLatency(latencyMs: number | null) {
@@ -958,6 +1007,18 @@ export function DashboardShell({
                                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                                 />
                               </>
+                            ) : getPreviewKind(item.mimeType) === "video" ||
+                                getPreviewKind(item.mimeType) === "text" ||
+                                getPreviewKind(item.mimeType) === "pdf" ||
+                                getPreviewKind(item.mimeType) === "document" ? (
+                              <>
+                                {/* biome-ignore lint/performance/noImgElement: thumbnail preview is proxied from a protected route */}
+                                <img
+                                  src={`/api/media/${item.id}/thumbnail`}
+                                  alt={item.fileName}
+                                  className="h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]"
+                                />
+                              </>
                             ) : (
                               <div className="flex h-full items-center justify-center">
                                 <div className="inline-flex h-18 w-18 items-center justify-center rounded-[24px] border border-white/10 bg-white/8 text-cyan-100">
@@ -976,15 +1037,7 @@ export function DashboardShell({
                                   {item.category}
                                 </Badge>
                                 <Badge className="border-white/12 bg-black/35 px-2 py-0.5 text-[9px] tracking-[0.14em] text-white sm:px-3 sm:py-1 sm:text-[11px]">
-                                  {item.mimeType.startsWith("image/")
-                                    ? item.mimeType === "image/jpeg"
-                                      ? "JPG"
-                                      : item.mimeType.split("/")[1]?.toUpperCase() ?? "IMG"
-                                    : item.mimeType.startsWith("video/")
-                                      ? "VDO"
-                                    : item.mimeType.startsWith("application/")
-                                      ? "FILE"
-                                    : item.mimeType.split("/")[0]}
+                                  {getMimeBadgeLabel(item.mimeType)}
                                 </Badge>
                               </div>
                               <span className="whitespace-nowrap rounded-full border border-white/12 bg-black/40 px-2 py-0.5 text-[10px] font-medium tabular-nums text-zinc-200 sm:px-2.5 sm:py-1 sm:text-[11px]">
@@ -1226,7 +1279,7 @@ export function DashboardShell({
                   {previewItem.fileName}
                 </p>
                 <p className="mt-1 text-xs text-zinc-300/80 sm:text-sm">
-                  คลิกขวา / กดค้างบนรูป เพื่อบันทึกไฟล์ได้เลย
+                  {getPreviewHint(previewItem.mimeType)}
                 </p>
               </div>
 
@@ -1298,6 +1351,44 @@ export function DashboardShell({
                           {previewText || "ไฟล์นี้ไม่มีข้อความสำหรับแสดงตัวอย่าง"}
                         </pre>
                       )}
+                    </div>
+                  </div>
+                ) : getPreviewKind(previewItem.mimeType) === "document" ? (
+                  <div className="w-full max-w-3xl overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8)]">
+                    <div className="border-b border-white/8 px-6 py-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="rounded-full border border-indigo-300/20 bg-indigo-400/12 px-3 py-1 text-xs font-semibold tracking-[0.18em] text-indigo-100">
+                          DOC PREVIEW
+                        </span>
+                        <span className="text-xs text-zinc-400">
+                          เนื้อหาไฟล์ Word ยังไม่ถูกเรนเดอร์โดยตรง
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-5 px-6 py-6">
+                      <div className="rounded-[24px] border border-white/10 bg-[#f8faff] p-5 text-slate-900">
+                        <div className="flex items-center justify-between">
+                          <span className="rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-white">
+                            DOC
+                          </span>
+                          <span className="text-xs font-medium text-slate-400">
+                            DOCUMENT
+                          </span>
+                        </div>
+                        <div className="mt-5 h-3 w-2/3 rounded-full bg-slate-900/85" />
+                        <div className="mt-4 space-y-2.5">
+                          <div className="h-2 w-full rounded-full bg-slate-300/90" />
+                          <div className="h-2 w-11/12 rounded-full bg-slate-300/85" />
+                          <div className="h-2 w-10/12 rounded-full bg-slate-300/80" />
+                          <div className="h-2 w-8/12 rounded-full bg-slate-300/75" />
+                          <div className="h-2 w-7/12 rounded-full bg-slate-200/90" />
+                        </div>
+                      </div>
+                      <p className="text-sm leading-6 text-zinc-300">
+                        ตอนนี้ระบบทำ thumbnail และ document cover ให้แล้ว แต่ browser
+                        ยังไม่สามารถเรนเดอร์เนื้อหา DOC/DOCX ตรงๆ ได้เหมือน PDF
+                        หากต้องการอ่านไฟล์เต็ม แนะนำให้ดาวน์โหลดหรือเปิดด้วยโปรแกรมเอกสาร
+                      </p>
                     </div>
                   </div>
                 ) : null}
