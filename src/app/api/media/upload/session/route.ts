@@ -5,6 +5,8 @@ import { getServerSession } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const preferredRegion = "sin1";
+export const maxDuration = 120;
 
 export async function POST(request: Request) {
   const session = await getServerSession();
