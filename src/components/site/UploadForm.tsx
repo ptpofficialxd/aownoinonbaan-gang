@@ -27,12 +27,17 @@ export function UploadForm({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [dropdownPos, setDropdownPos] = useState({ bottom: 0, left: 0, width: 0 });
+  const [dropdownPos, setDropdownPos] = useState({
+    bottom: 0,
+    left: 0,
+    width: 0,
+  });
   const fileId = useId();
   const categoryId = useId();
   const descriptionId = useId();
   const categoryButtonRef = useRef<HTMLButtonElement | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const uploadChunkSize = 4_194_304;
 
   useEffect(() => {
     setMounted(true);
@@ -83,50 +88,227 @@ export function UploadForm({
     fileIndex: number;
     totalFiles: number;
   }) {
-    const formData = new FormData();
-    formData.set("file", input.file);
-    formData.set("category", input.category);
-    formData.set("description", input.description);
+    return uploadSingleFileViaDrive(input);
+  }
 
-    return new Promise<MediaItem | null>((resolve, reject) => {
+  async function uploadSingleFileViaDrive(input: {
+    file: File;
+    category: string;
+    description: string;
+    fileIndex: number;
+    totalFiles: number;
+  }) {
+    const sessionRes = await fetch("/api/media/upload/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        fileName: input.file.name,
+        mimeType: input.file.type || "application/octet-stream",
+        fileSize: input.file.size,
+        category: input.category,
+        description: input.description,
+      }),
+    });
+
+    const sessionPayload = (await sessionRes.json().catch(() => null)) as {
+      error?: string;
+      sessionUrl?: string;
+    } | null;
+
+    if (!sessionRes.ok || !sessionPayload?.sessionUrl) {
+      throw new Error(
+        sessionPayload?.error || `เริ่มอัปโหลดไฟล์ ${input.file.name} ไม่สำเร็จ`,
+      );
+    }
+
+    let uploadResult: {
+      id: string;
+      name: string;
+      mimeType: string;
+      size?: string;
+      webViewLink?: string;
+      webContentLink?: string;
+    } | null = null;
+
+    for (let start = 0; start < input.file.size; ) {
+      const endExclusive = Math.min(start + uploadChunkSize, input.file.size);
+      const end = endExclusive - 1;
+      const chunk = input.file.slice(start, endExclusive);
+
+      const chunkResult = await uploadChunkViaServer({
+        chunk,
+        sessionUrl: sessionPayload.sessionUrl,
+        start,
+        end,
+        total: input.file.size,
+        fileName: input.file.name,
+        fileIndex: input.fileIndex,
+        totalFiles: input.totalFiles,
+      });
+
+      if (chunkResult.uploadResult) {
+        uploadResult = chunkResult.uploadResult;
+      }
+
+      start = chunkResult.nextStart;
+    }
+
+    if (!uploadResult?.id || !uploadResult.name || !uploadResult.mimeType) {
+      throw new Error(
+        `อัปโหลดไฟล์ ${input.file.name} ไม่สำเร็จ ระบบไม่ได้รับข้อมูลไฟล์สุดท้าย`,
+      );
+    }
+
+    const completeRes = await fetch("/api/media/upload/complete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        driveFileId: uploadResult.id,
+        fileName: uploadResult.name,
+        mimeType: uploadResult.mimeType,
+        fileSize: Number(uploadResult.size || input.file.size || 0),
+        category: input.category,
+        description: input.description,
+        driveViewLink:
+          uploadResult.webViewLink || uploadResult.webContentLink || null,
+        driveContentLink: uploadResult.webContentLink || null,
+      }),
+    });
+
+    const completePayload = (await completeRes.json().catch(() => null)) as {
+      error?: string;
+      mediaItem?: MediaItem | null;
+    } | null;
+
+    if (!completeRes.ok) {
+      throw new Error(
+        completePayload?.error || `บันทึกไฟล์ ${input.file.name} เข้าระบบไม่สำเร็จ`,
+      );
+    }
+
+    return completePayload?.mediaItem ?? null;
+  }
+
+  function uploadChunkViaServer(input: {
+    chunk: Blob;
+    sessionUrl: string;
+    start: number;
+    end: number;
+    total: number;
+    fileName: string;
+    fileIndex: number;
+    totalFiles: number;
+  }) {
+    return new Promise<{
+      nextStart: number;
+      uploadResult: {
+        id: string;
+        name: string;
+        mimeType: string;
+        size?: string;
+        webViewLink?: string;
+        webContentLink?: string;
+      } | null;
+    }>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      xhr.open("POST", "/api/media/upload", true);
+      xhr.open("POST", "/api/media/upload/chunk", true);
+      xhr.setRequestHeader("X-Upload-Session-Url", input.sessionUrl);
+      xhr.setRequestHeader("X-Upload-Start", String(input.start));
+      xhr.setRequestHeader("X-Upload-End", String(input.end));
+      xhr.setRequestHeader("X-Upload-Total", String(input.total));
+      xhr.setRequestHeader(
+        "Content-Type",
+        input.chunk.type || "application/octet-stream",
+      );
 
       xhr.upload.onprogress = (uploadEvent) => {
         if (!uploadEvent.lengthComputable) return;
-        const ratio = uploadEvent.total
+        const localRatio = uploadEvent.total
           ? uploadEvent.loaded / uploadEvent.total
           : 0;
-        const currentProgress = Math.round(ratio * 100);
+        const uploadedBytes = input.start + input.chunk.size * localRatio;
+        const fileRatio = input.total ? uploadedBytes / input.total : 0;
         const overallProgress = Math.round(
-          ((input.fileIndex + currentProgress / 100) / input.totalFiles) * 100,
+          ((input.fileIndex + fileRatio) / input.totalFiles) * 100,
         );
         setProgress(Math.max(3, Math.min(97, overallProgress)));
       };
 
       xhr.onerror = () => {
+        console.error("Chunk relay upload failed", {
+          fileName: input.fileName,
+          start: input.start,
+          end: input.end,
+          status: xhr.status,
+          statusText: xhr.statusText,
+        });
         reject(
-          new Error(`Network Error: อัปโหลดไฟล์ ${input.file.name} ไม่สำเร็จ`),
+          new Error(
+            `Network Error: อัปโหลดไฟล์ ${input.fileName} ไม่สำเร็จ (chunk ${input.start}-${input.end})`,
+          ),
         );
       };
 
       xhr.onload = () => {
-        let payload: { error?: string; mediaItem?: MediaItem | null } = {};
+        let payload: {
+          error?: string;
+          done?: boolean;
+          range?: string | null;
+          uploadResult?: {
+            id?: string;
+            name?: string;
+            mimeType?: string;
+            size?: string;
+            webViewLink?: string;
+            webContentLink?: string;
+          } | null;
+        } = {};
+
         try {
           payload = JSON.parse(xhr.responseText);
         } catch {}
 
         if (xhr.status < 200 || xhr.status >= 300) {
           reject(
-            new Error(payload.error || `อัปโหลดไฟล์ ${input.file.name} ไม่สำเร็จ`),
+            new Error(
+              payload.error ||
+                `อัปโหลดไฟล์ ${input.fileName} ไม่สำเร็จ (status ${xhr.status})`,
+            ),
           );
           return;
         }
 
-        resolve(payload.mediaItem ?? null);
+        const uploadedRange = payload.range?.match(/bytes=0-(\d+)/i);
+        const nextStart = uploadedRange
+          ? Number(uploadedRange[1]) + 1
+          : input.end + 1;
+
+        if (payload.done && payload.uploadResult) {
+          resolve({
+            nextStart: input.total,
+            uploadResult: {
+              id: payload.uploadResult.id || "",
+              name: payload.uploadResult.name || "",
+              mimeType: payload.uploadResult.mimeType || "",
+              size: payload.uploadResult.size,
+              webViewLink: payload.uploadResult.webViewLink,
+              webContentLink: payload.uploadResult.webContentLink,
+            },
+          });
+          return;
+        }
+
+        resolve({
+          nextStart,
+          uploadResult: null,
+        });
       };
 
-      xhr.send(formData);
+      xhr.send(input.chunk);
     });
   }
 
@@ -187,6 +369,7 @@ export function UploadForm({
       if (input) input.value = "";
       onUploaded?.(uploadedItems);
     } catch (uploadError) {
+      console.error("Upload flow failed", uploadError);
       setError(
         uploadError instanceof Error ? uploadError.message : "อัปโหลดไม่สำเร็จ",
       );
@@ -478,7 +661,9 @@ export function UploadForm({
         </div>
       </div>
 
-      {mounted && categoryMenuOpen && createPortal(dropdownContent, document.body)}
+      {mounted &&
+        categoryMenuOpen &&
+        createPortal(dropdownContent, document.body)}
     </form>
   );
 }

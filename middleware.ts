@@ -11,6 +11,7 @@ import {
 const PUBLIC_PREFIXES = [
   "/login",
   "/api/auth/login",
+  "/api/media/upload/",
   "/_next/",
   "/favicon",
   "/icon",
