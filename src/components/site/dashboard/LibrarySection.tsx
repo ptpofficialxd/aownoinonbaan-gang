@@ -64,7 +64,8 @@ export function LibrarySection({
   const isSystemReady = canUploadNow;
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
   const [actionMenuOpen, setActionMenuOpen] = useState(false);
-  const categoryMenuRef = useRef<HTMLDivElement | null>(null);
+  const mobileCategoryMenuRef = useRef<HTMLDivElement | null>(null);
+  const desktopCategoryMenuRef = useRef<HTMLDivElement | null>(null);
   const actionMenuRef = useRef<HTMLDivElement | null>(null);
   const pageStart = filteredItems.length
     ? (currentPage - 1) * itemsPerPage + 1
@@ -87,10 +88,36 @@ export function LibrarySection({
           count: dashboard.totalItems,
         }
       : dashboard.categories.find((category) => category.name === activeCategory);
+  const uploadButton = canUploadNow ? (
+    <button
+      type="button"
+      onClick={onUploadOpen}
+      className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-400/10 px-4 text-sm font-medium text-cyan-100 transition-all hover:border-cyan-300/35 hover:bg-cyan-400/16 sm:px-5"
+    >
+      <Icon name="upload" className="h-4 w-4" />
+      <span className="hidden sm:inline">อัปโหลด</span>
+    </button>
+  ) : driveConnected ? (
+    <button
+      type="button"
+      disabled
+      className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-rose-300/18 bg-rose-400/8 px-4 text-sm font-medium text-rose-100/70 opacity-80 sm:px-5"
+      title="Cloud health check ไม่ผ่าน จึงยังไม่พร้อมอัปโหลด"
+    >
+      <Icon name="upload" className="h-4 w-4" />
+      <span className="hidden sm:inline">ไม่พร้อมอัปโหลด</span>
+    </button>
+  ) : null;
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
-      if (!categoryMenuRef.current?.contains(event.target as Node)) {
+      const clickedInsideMobileCategory = mobileCategoryMenuRef.current?.contains(
+        event.target as Node,
+      );
+      const clickedInsideDesktopCategory =
+        desktopCategoryMenuRef.current?.contains(event.target as Node);
+
+      if (!clickedInsideMobileCategory && !clickedInsideDesktopCategory) {
         setCategoryMenuOpen(false);
       }
       if (!actionMenuRef.current?.contains(event.target as Node)) {
@@ -151,46 +178,112 @@ export function LibrarySection({
                 </p>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] lg:w-[29rem]">
-                <div className="relative">
-                  <Icon
-                    name="search"
-                    className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500"
-                  />
-                  <Input
-                    value={search}
-                    onChange={(event) => onSearchChange(event.target.value)}
-                    placeholder="ค้นหาชื่อไฟล์ คนอัปโหลด หรือโน้ต"
-                    className="h-12 rounded-full border-white/12 bg-white/[0.04] pl-11"
-                  />
+              <div className="w-full lg:w-[29rem]">
+                <div
+                  className={`relative lg:hidden ${categoryMenuOpen ? "z-40" : ""}`}
+                  ref={mobileCategoryMenuRef}
+                >
+                  <div className="flex items-stretch gap-2 sm:gap-3">
+                    <button
+                      type="button"
+                      aria-haspopup="listbox"
+                      aria-expanded={categoryMenuOpen}
+                      aria-label="เลือกหมวดหมู่ในคลัง"
+                      onClick={() => setCategoryMenuOpen((open) => !open)}
+                      className="group inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] text-cyan-100 shadow-[0_16px_34px_-24px_rgba(34,211,238,0.45)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/20 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/35"
+                    >
+                      <Icon name="heart" className="h-4 w-4" />
+                    </button>
+
+                    <div className="relative min-w-0 flex-1">
+                      <Icon
+                        name="search"
+                        className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500"
+                      />
+                      <Input
+                        value={search}
+                        onChange={(event) => onSearchChange(event.target.value)}
+                        placeholder="ค้นหา..."
+                        className="h-12 rounded-full border-white/12 bg-white/[0.04] pl-11"
+                      />
+                    </div>
+
+                    {uploadButton}
+                  </div>
+
+                  <div
+                    className={`absolute left-0 right-0 top-[calc(100%+0.75rem)] z-50 overflow-hidden rounded-[24px] border border-cyan-300/16 bg-[linear-gradient(180deg,rgba(7,12,18,0.98),rgba(5,8,15,0.98))] p-2 shadow-[0_30px_80px_-28px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.08)] backdrop-blur-xl transition-all duration-200 ${
+                      categoryMenuOpen
+                        ? "pointer-events-auto translate-y-0 opacity-100"
+                        : "pointer-events-none -translate-y-2 opacity-0"
+                    }`}
+                  >
+                    <div className="mb-2 flex items-center justify-between px-2 pt-1">
+                      <div>
+                        <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                          เลือกหมวดหมู่
+                        </p>
+                        <p className="mt-1 text-xs text-zinc-400">
+                          {activeCategorySummary?.name ?? "ทั้งหมด"} ·{" "}
+                          {activeCategorySummary?.count ?? 0} ไฟล์
+                        </p>
+                      </div>
+                      <p className="text-[11px] text-cyan-100/60">
+                        {dashboard.categories.length + 1} ตัวเลือก
+                      </p>
+                    </div>
+
+                    <div
+                      role="listbox"
+                      className="max-h-80 space-y-1 overflow-y-auto pr-1"
+                    >
+                      <CategoryFilterOption
+                        active={activeCategory === "all"}
+                        count={dashboard.totalItems}
+                        label="ทั้งหมด"
+                        onClick={() => {
+                          onSetActiveCategory("all");
+                          setCategoryMenuOpen(false);
+                        }}
+                      />
+                      {dashboard.categories.map((category) => (
+                        <CategoryFilterOption
+                          key={category.name}
+                          active={activeCategory === category.name}
+                          count={category.count}
+                          label={category.name}
+                          onClick={() => {
+                            onSetActiveCategory(category.name);
+                            setCategoryMenuOpen(false);
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
-                {canUploadNow ? (
-                  <button
-                    type="button"
-                    onClick={onUploadOpen}
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-400/10 px-5 text-sm font-medium text-cyan-100 transition-all hover:border-cyan-300/35 hover:bg-cyan-400/16"
-                  >
-                    <Icon name="upload" className="h-4 w-4" />
-                    อัปโหลด
-                  </button>
-                ) : driveConnected ? (
-                  <button
-                    type="button"
-                    disabled
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-rose-300/18 bg-rose-400/8 px-5 text-sm font-medium text-rose-100/70 opacity-80"
-                    title="Cloud health check ไม่ผ่าน จึงยังไม่พร้อมอัปโหลด"
-                  >
-                    <Icon name="upload" className="h-4 w-4" />
-                    ไม่พร้อมอัปโหลด
-                  </button>
-                ) : null}
+                <div className="hidden gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_auto]">
+                  <div className="relative">
+                    <Icon
+                      name="search"
+                      className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500"
+                    />
+                    <Input
+                      value={search}
+                      onChange={(event) => onSearchChange(event.target.value)}
+                      placeholder="ค้นหา..."
+                      className="h-12 rounded-full border-white/12 bg-white/[0.04] pl-11"
+                    />
+                  </div>
+
+                  {uploadButton}
+                </div>
               </div>
             </div>
 
             <div
-              className={`max-w-sm ${categoryMenuOpen ? "relative z-40" : ""}`}
-              ref={categoryMenuRef}
+              className={`hidden max-w-sm lg:block ${categoryMenuOpen ? "relative z-40" : ""}`}
+              ref={desktopCategoryMenuRef}
             >
               <p className="mb-2 text-[11px] uppercase tracking-[0.22em] text-zinc-500">
                 เลือกดูตามหมวดหมู่
