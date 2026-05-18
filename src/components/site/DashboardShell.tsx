@@ -42,10 +42,31 @@ export function DashboardShell({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [previewItem, setPreviewItem] = useState<MediaItem | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(15);
   const deferredSearch = useDeferredValue(search);
   const cloudHealth = useCloudHealth(driveConnected);
   const { previewText, previewTextError, previewTextLoading } =
     usePreviewText(previewItem);
+
+  useEffect(() => {
+    function updateItemsPerPage() {
+      const width = window.innerWidth;
+      if (width >= 1024) {
+        setItemsPerPage(15);
+        return;
+      }
+      if (width >= 768) {
+        setItemsPerPage(12);
+        return;
+      }
+      setItemsPerPage(9);
+    }
+
+    updateItemsPerPage();
+    window.addEventListener("resize", updateItemsPerPage);
+    return () => window.removeEventListener("resize", updateItemsPerPage);
+  }, []);
 
   useEffect(() => {
     function syncUiFromHash() {
@@ -101,7 +122,22 @@ export function DashboardShell({
     });
   }, [activeCategory, deferredSearch, libraryItems]);
 
-  const visibleSelectedCount = filteredItems.filter((item) =>
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / itemsPerPage));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory, deferredSearch, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
+
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredItems.slice(startIndex, startIndex + itemsPerPage);
+  }, [currentPage, filteredItems, itemsPerPage]);
+
+  const visibleSelectedCount = paginatedItems.filter((item) =>
     selectedIdSet.has(item.id),
   ).length;
   const isSystemReady = driveConnected && cloudHealth.online;
@@ -141,12 +177,26 @@ export function DashboardShell({
     if (!canManageDrive) return;
     setSelectedIds((current) => {
       const next = new Set(current);
-      for (const item of filteredItems) {
+      for (const item of paginatedItems) {
         if (!busyIdSet.has(item.id)) {
           next.add(item.id);
         }
       }
       return Array.from(next);
+    });
+  }
+
+  function handlePageChange(page: number) {
+    setCurrentPage(page);
+
+    if (typeof window === "undefined") return;
+
+    window.requestAnimationFrame(() => {
+      const libraryElement = document.getElementById("library");
+      libraryElement?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     });
   }
 
@@ -255,21 +305,26 @@ export function DashboardShell({
             busyIdSet={busyIdSet}
             canManageDrive={canManageDrive}
             canUploadNow={canUploadNow}
+            currentPage={currentPage}
             dashboard={dashboard}
             driveConnected={driveConnected}
             filteredItems={filteredItems}
+            itemsPerPage={itemsPerPage}
             onClearSelection={clearSelection}
             onDeleteItem={(item) => void handleDelete(item)}
             onDeleteSelected={() => void handleDeleteSelected()}
             onOpenPreview={openPreview}
+            onPageChange={handlePageChange}
             onSearchChange={setSearch}
             onSelectAllVisible={selectAllVisible}
             onSetActiveCategory={setActiveCategory}
             onToggleSelect={toggleSelected}
             onUploadOpen={() => setUploadOpen(true)}
+            paginatedItems={paginatedItems}
             search={search}
             selectedIds={selectedIds}
             selectedIdSet={selectedIdSet}
+            totalPages={totalPages}
             visibleSelectedCount={visibleSelectedCount}
           />
 

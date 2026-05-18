@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
@@ -12,45 +13,100 @@ export function LibrarySection({
   busyIdSet,
   canManageDrive,
   canUploadNow,
+  currentPage,
   dashboard,
   driveConnected,
   filteredItems,
+  itemsPerPage,
   onClearSelection,
   onDeleteItem,
   onDeleteSelected,
   onOpenPreview,
+  onPageChange,
   onSearchChange,
   onSelectAllVisible,
   onSetActiveCategory,
   onToggleSelect,
   onUploadOpen,
+  paginatedItems,
   search,
   selectedIds,
   selectedIdSet,
+  totalPages,
   visibleSelectedCount,
 }: {
   activeCategory: string;
   busyIdSet: Set<string>;
   canManageDrive: boolean;
   canUploadNow: boolean;
+  currentPage: number;
   dashboard: DashboardSummary;
   driveConnected: boolean;
   filteredItems: MediaItem[];
+  itemsPerPage: number;
   onClearSelection: () => void;
   onDeleteItem: (item: MediaItem) => void;
   onDeleteSelected: () => void;
   onOpenPreview: (item: MediaItem) => void;
+  onPageChange: (page: number) => void;
   onSearchChange: (value: string) => void;
   onSelectAllVisible: () => void;
   onSetActiveCategory: (value: string) => void;
   onToggleSelect: (id: string) => void;
   onUploadOpen: () => void;
+  paginatedItems: MediaItem[];
   search: string;
   selectedIds: string[];
   selectedIdSet: Set<string>;
+  totalPages: number;
   visibleSelectedCount: number;
 }) {
   const isSystemReady = canUploadNow;
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
+  const categoryMenuRef = useRef<HTMLDivElement | null>(null);
+  const pageStart = filteredItems.length
+    ? (currentPage - 1) * itemsPerPage + 1
+    : 0;
+  const pageEnd = filteredItems.length
+    ? Math.min(currentPage * itemsPerPage, filteredItems.length)
+    : 0;
+  const pageNumbers = Array.from(
+    { length: totalPages },
+    (_, index) => index + 1,
+  ).filter((page) => {
+    if (totalPages <= 5) return true;
+    if (page === 1 || page === totalPages) return true;
+    return Math.abs(page - currentPage) <= 1;
+  });
+  const activeCategorySummary =
+    activeCategory === "all"
+      ? {
+          name: "ทั้งหมด",
+          count: dashboard.totalItems,
+        }
+      : dashboard.categories.find((category) => category.name === activeCategory);
+
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent) {
+      if (!categoryMenuRef.current?.contains(event.target as Node)) {
+        setCategoryMenuOpen(false);
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setCategoryMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
 
   return (
     <>
@@ -126,22 +182,100 @@ export function LibrarySection({
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2.5">
-              <CategoryFilterChip
-                active={activeCategory === "all"}
-                count={dashboard.totalItems}
-                label="ทั้งหมด"
-                onClick={() => onSetActiveCategory("all")}
-              />
-              {dashboard.categories.map((category) => (
-                <CategoryFilterChip
-                  key={category.name}
-                  active={activeCategory === category.name}
-                  count={category.count}
-                  label={category.name}
-                  onClick={() => onSetActiveCategory(category.name)}
-                />
-              ))}
+            <div className="max-w-sm" ref={categoryMenuRef}>
+              <p className="mb-2 text-[11px] uppercase tracking-[0.22em] text-zinc-500">
+                หมวดหมู่ที่กำลังดู
+              </p>
+              <div className="relative">
+                <button
+                  type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded={categoryMenuOpen}
+                  aria-label="เลือกหมวดหมู่ในคลัง"
+                  onClick={() => setCategoryMenuOpen((open) => !open)}
+                  className="group flex h-12 w-full items-center justify-between rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] px-4 text-left text-white shadow-[0_16px_34px_-24px_rgba(34,211,238,0.45)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/20 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/35"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-100 ring-1 ring-inset ring-cyan-200/10">
+                      <Icon name="heart" className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-white">
+                        {activeCategorySummary?.name ?? "ทั้งหมด"}
+                      </p>
+                      <p className="text-[11px] tracking-[0.12em] text-zinc-500">
+                        {activeCategorySummary?.count ?? 0} ไฟล์
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-zinc-300 transition-all duration-200 ${
+                      categoryMenuOpen
+                        ? "rotate-180 border-cyan-300/20 bg-cyan-300/10 text-cyan-100"
+                        : "group-hover:border-cyan-300/18 group-hover:text-white"
+                    }`}
+                  >
+                    <svg
+                      viewBox="0 0 20 20"
+                      className="h-4 w-4"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="m5.5 7.5 4.5 4.5 4.5-4.5"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="1.8"
+                      />
+                    </svg>
+                  </div>
+                </button>
+
+                <div
+                  className={`absolute left-0 right-0 top-[calc(100%+0.75rem)] z-20 overflow-hidden rounded-[24px] border border-cyan-300/16 bg-[linear-gradient(180deg,rgba(7,12,18,0.98),rgba(5,8,15,0.98))] p-2 shadow-[0_30px_80px_-28px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.08)] backdrop-blur-xl transition-all duration-200 ${
+                    categoryMenuOpen
+                      ? "pointer-events-auto translate-y-0 opacity-100"
+                      : "pointer-events-none -translate-y-2 opacity-0"
+                  }`}
+                >
+                  <div className="mb-2 flex items-center justify-between px-2 pt-1">
+                    <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+                      เลือกหมวดหมู่
+                    </p>
+                    <p className="text-[11px] text-cyan-100/60">
+                      {dashboard.categories.length + 1} ตัวเลือก
+                    </p>
+                  </div>
+
+                  <div
+                    role="listbox"
+                    className="max-h-80 space-y-1 overflow-y-auto pr-1"
+                  >
+                    <CategoryFilterOption
+                      active={activeCategory === "all"}
+                      count={dashboard.totalItems}
+                      label="ทั้งหมด"
+                      onClick={() => {
+                        onSetActiveCategory("all");
+                        setCategoryMenuOpen(false);
+                      }}
+                    />
+                    {dashboard.categories.map((category) => (
+                      <CategoryFilterOption
+                        key={category.name}
+                        active={activeCategory === category.name}
+                        count={category.count}
+                        label={category.name}
+                        onClick={() => {
+                          onSetActiveCategory(category.name);
+                          setCategoryMenuOpen(false);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -158,8 +292,8 @@ export function LibrarySection({
                     </p>
                     <p className="mt-1 text-xs text-zinc-400 sm:text-sm">
                       {canManageDrive
-                        ? `${selectedIds.length} ไฟล์ถูกเลือกอยู่ ตอนนี้เห็นในหน้าจอ ${visibleSelectedCount} ไฟล์`
-                        : "เปิดดูไฟล์ได้ทันทีจากการ์ดแต่ละใบ"}
+                        ? `${selectedIds.length} ไฟล์ถูกเลือกอยู่ ตอนนี้เห็นในหน้านี้ ${visibleSelectedCount} ไฟล์`
+                        : `แสดง ${pageStart}-${pageEnd} จาก ${filteredItems.length} ไฟล์`}
                     </p>
                   </div>
 
@@ -194,8 +328,8 @@ export function LibrarySection({
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2.5 md:grid-cols-4 md:gap-3 2xl:grid-cols-5">
-                {filteredItems.map((item) => (
+              <div className="grid grid-cols-3 gap-2.5 md:grid-cols-4 md:gap-3 lg:grid-cols-5">
+                {paginatedItems.map((item) => (
                   <MediaCard
                     key={item.id}
                     busyIdSet={busyIdSet}
@@ -208,6 +342,98 @@ export function LibrarySection({
                   />
                 ))}
               </div>
+
+              {totalPages > 1 ? (
+                <div className="flex flex-col gap-3 rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                  <div className="text-center sm:text-left">
+                    <p className="text-sm font-medium text-white">
+                      หน้า {currentPage} / {totalPages}
+                    </p>
+                    <p className="mt-1 text-xs text-zinc-400 sm:text-sm">
+                      กำลังดูไฟล์ {pageStart}-{pageEnd} จากทั้งหมด {filteredItems.length} ไฟล์
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-end">
+                    <button
+                      type="button"
+                      onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm font-medium text-zinc-200 transition-all hover:border-cyan-300/20 hover:bg-cyan-400/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      <svg
+                        viewBox="0 0 20 20"
+                        className="h-4 w-4"
+                        fill="none"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="m11.5 5.5-4.5 4.5 4.5 4.5"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1.8"
+                        />
+                      </svg>
+                      ก่อนหน้า
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      {pageNumbers.map((page, index) => {
+                        const previousPage = pageNumbers[index - 1];
+                        const showGap =
+                          index > 0 && previousPage && page - previousPage > 1;
+
+                        return (
+                          <div key={page} className="flex items-center gap-2">
+                            {showGap ? (
+                              <span className="px-1 text-sm text-zinc-500">
+                                ...
+                              </span>
+                            ) : null}
+                            <button
+                              type="button"
+                              onClick={() => onPageChange(page)}
+                              className={`inline-flex h-10 min-w-10 items-center justify-center rounded-full border px-3 text-sm font-medium transition-all ${
+                                currentPage === page
+                                  ? "border-cyan-300/30 bg-[linear-gradient(180deg,rgba(34,211,238,0.22),rgba(14,165,233,0.14))] text-cyan-100 shadow-[0_12px_28px_-18px_rgba(34,211,238,0.9)]"
+                                  : "border-white/10 bg-white/[0.04] text-zinc-300 hover:border-cyan-300/18 hover:bg-cyan-400/[0.08] hover:text-white"
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onPageChange(Math.min(totalPages, currentPage + 1))
+                      }
+                      disabled={currentPage === totalPages}
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm font-medium text-zinc-200 transition-all hover:border-cyan-300/20 hover:bg-cyan-400/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      ถัดไป
+                      <svg
+                        viewBox="0 0 20 20"
+                        className="h-4 w-4"
+                        fill="none"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="m8.5 5.5 4.5 4.5-4.5 4.5"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1.8"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </div>
           ) : (
             <div className="rounded-[28px] border border-dashed border-white/12 bg-black/12 px-6 py-16 text-center">
@@ -228,7 +454,7 @@ export function LibrarySection({
   );
 }
 
-function CategoryFilterChip({
+function CategoryFilterOption({
   active,
   count,
   label,
@@ -243,13 +469,23 @@ function CategoryFilterChip({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full border px-4 py-2 text-sm transition-all ${
+      className={`flex w-full items-center justify-between rounded-[18px] px-3 py-3 text-left text-sm transition-all ${
         active
-          ? "border-cyan-300/30 bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 shadow-[0_14px_35px_-18px_rgba(34,211,238,0.7)]"
-          : "border-white/10 bg-white/5 text-zinc-300 hover:border-white/15 hover:bg-white/8 hover:text-white"
+          ? "bg-[linear-gradient(90deg,rgba(34,211,238,0.2),rgba(59,130,246,0.08))] text-white ring-1 ring-inset ring-cyan-300/26"
+          : "text-zinc-300 hover:bg-white/[0.05] hover:text-white"
       }`}
     >
-      {label} <span className="opacity-70">({count})</span>
+      <span className="font-medium tracking-[0.08em]">{label}</span>
+      <span
+        className={`inline-flex items-center gap-2 rounded-full px-2 py-1 text-[11px] ${
+          active
+            ? "bg-cyan-300/16 text-cyan-100"
+            : "bg-white/[0.04] text-zinc-500"
+        }`}
+      >
+        {count}
+        {active ? <Icon name="check" className="h-3.5 w-3.5" /> : null}
+      </span>
     </button>
   );
 }

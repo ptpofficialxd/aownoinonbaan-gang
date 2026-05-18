@@ -11,7 +11,7 @@ export function UploadForm({
 }: {
   onUploaded?: (items: MediaItem[]) => void;
 }) {
-  const [category, setCategory] = useState<string>(CATEGORIES[0]);
+  const [category, setCategory] = useState<string>("");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
@@ -109,7 +109,11 @@ export function UploadForm({
     const form = event.currentTarget;
 
     if (!files.length) {
-      setError("เลือกไฟล์ก่อนอัปโหลด");
+      setError("เลือกไฟล์ก่อนทำการอัปโหลด");
+      return;
+    }
+    if (!category) {
+      setError("เลือกหมวดหมู่ก่อนทำการอัปโหลด");
       return;
     }
 
@@ -227,9 +231,10 @@ export function UploadForm({
           name="file"
           type="file"
           multiple
-          onChange={(event) =>
-            setFiles(Array.from(event.target.files ?? []))
-          }
+          onChange={(event) => {
+            setFiles(Array.from(event.target.files ?? []));
+            setError(null);
+          }}
           className="sr-only"
         />
       </div>
@@ -254,11 +259,17 @@ export function UploadForm({
             >
               <div className="flex min-w-0 items-center gap-3">
                 <div className={fieldLeadingIconClass}>
-                  <Icon name="tag" className="h-4 w-4" />
+                  <Icon name="heart" className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
                   <p className={fieldEyebrowClass}>เมมเบอร์</p>
-                  <p className={`${fieldValueClass} truncate`}>{category}</p>
+                  <p
+                    className={`${fieldValueClass} truncate ${
+                      category ? "text-white" : "text-zinc-500"
+                    }`}
+                  >
+                    {category || "เลือกหมวดหมู่"}
+                  </p>
                 </div>
               </div>
               <div
@@ -318,6 +329,7 @@ export function UploadForm({
                       onClick={() => {
                         setCategory(item);
                         setCategoryMenuOpen(false);
+                        setError(null);
                       }}
                       className={`flex w-full items-center justify-between rounded-[18px] px-3 py-3 text-left text-sm transition-all duration-150 ${
                         selected
@@ -379,8 +391,9 @@ export function UploadForm({
       </div>
 
       {error ? (
-        <p className="rounded-[22px] border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-          {error}
+        <p className="flex items-center gap-2 rounded-[22px] border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+          <span className="h-2 w-2 shrink-0 rounded-full bg-rose-300" />
+          <span>{error}</span>
         </p>
       ) : null}
 

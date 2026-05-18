@@ -20,6 +20,7 @@ type IconName =
   | "x"
   | "bolt"
   | "user"
+  | "heart"
   | "tag"
   | "hash"
   | "file"
@@ -340,6 +341,16 @@ const iconMap: Record<IconName, ReactNode> = {
         strokeWidth="2"
       />
     </>
+  ),
+  heart: (
+    <path
+      d="M12 20.5 4.8 13.8a4.9 4.9 0 0 1 0-7 4.7 4.7 0 0 1 6.8 0L12 7.2l.4-.4a4.7 4.7 0 0 1 6.8 0 4.9 4.9 0 0 1 0 7Z"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
   ),
   tag: (
     <path
