@@ -190,12 +190,46 @@ export function LibrarySection({
                       aria-expanded={categoryMenuOpen}
                       aria-label="เลือกหมวดหมู่ในคลัง"
                       onClick={() => setCategoryMenuOpen((open) => !open)}
-                      className="group inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] text-cyan-100 shadow-[0_16px_34px_-24px_rgba(34,211,238,0.45)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/20 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/35"
+                      className="group inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] text-cyan-100 shadow-[0_16px_34px_-24px_rgba(34,211,238,0.45)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/20 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/35 sm:w-[12.5rem] sm:justify-between sm:px-3"
                     >
-                      <Icon name="heart" className="h-4 w-4" />
+                      <span className="inline-flex items-center justify-center sm:h-8 sm:w-8 sm:rounded-2xl sm:bg-cyan-300/10 sm:ring-1 sm:ring-inset sm:ring-cyan-200/10">
+                        <Icon name="heart" className="h-4 w-4" />
+                      </span>
+                      <span className="hidden min-w-0 flex-1 items-center gap-3 px-3 sm:flex">
+                        <span className="min-w-0 text-left">
+                          <span className="block truncate text-sm font-medium leading-tight text-white">
+                            {activeCategorySummary?.name ?? "ทั้งหมด"}
+                          </span>
+                          <span className="mt-1 block text-[11px] tracking-[0.12em] text-zinc-500">
+                            {activeCategorySummary?.count ?? 0} ไฟล์
+                          </span>
+                        </span>
+                      </span>
+                      <span
+                        className={`hidden h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-zinc-300 transition-all duration-200 sm:inline-flex ${
+                          categoryMenuOpen
+                            ? "rotate-180 border-cyan-300/20 bg-cyan-300/10 text-cyan-100"
+                            : "group-hover:border-cyan-300/18 group-hover:text-white"
+                        }`}
+                      >
+                        <svg
+                          viewBox="0 0 20 20"
+                          className="h-4 w-4"
+                          fill="none"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="m5.5 7.5 4.5 4.5 4.5-4.5"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="1.8"
+                          />
+                        </svg>
+                      </span>
                     </button>
 
-                    <div className="relative min-w-0 flex-1">
+                    <div className="relative min-w-0 flex-1 sm:flex-[1.35]">
                       <Icon
                         name="search"
                         className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500"
