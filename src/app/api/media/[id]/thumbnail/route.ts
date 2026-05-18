@@ -27,6 +27,11 @@ function getMimeBadgeLabel(mimeType: string) {
   return mimeType.split("/")[0].toUpperCase();
 }
 
+function getExtension(fileName: string) {
+  const parts = fileName.split(".");
+  return parts.length > 1 ? parts.at(-1)?.toUpperCase() ?? "" : "";
+}
+
 function escapeXml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -38,30 +43,125 @@ function escapeXml(value: string) {
 
 function buildFallbackThumbnail(fileName: string, mimeType: string) {
   const label = getMimeBadgeLabel(mimeType);
+  const extension = getExtension(fileName);
   const title = fileName.length > 26 ? `${fileName.slice(0, 26)}...` : fileName;
-  const accent =
+  const isArchive = ["ZIP", "RAR", "7Z"].includes(extension);
+  const variant =
     label === "PDF"
-      ? { bg: "#f43f5e", soft: "#ffe4e6" }
+      ? {
+          bg: "#f43f5e",
+          soft: "#ffe4e6",
+          page: "#fff7f7",
+          line: "#fecdd3",
+          header: "PAGE 1",
+          body: `
+            <rect x="308" y="342" width="560" height="18" rx="9" fill="#CBD5E1"/>
+            <rect x="308" y="382" width="516" height="18" rx="9" fill="#CBD5E1"/>
+            <rect x="308" y="422" width="470" height="18" rx="9" fill="#CBD5E1"/>
+            <rect x="308" y="462" width="532" height="18" rx="9" fill="#E2E8F0"/>
+            <rect x="308" y="532" width="584" height="132" rx="28" fill="#FFE4E6"/>
+          `,
+        }
       : label === "DOC"
-        ? { bg: "#4f46e5", soft: "#e0e7ff" }
+        ? {
+            bg: "#4f46e5",
+            soft: "#e0e7ff",
+            page: "#f8faff",
+            line: "#c7d2fe",
+            header: "DOCVIEW",
+            body: `
+              <rect x="308" y="342" width="560" height="18" rx="9" fill="#CBD5E1"/>
+              <rect x="308" y="382" width="516" height="18" rx="9" fill="#CBD5E1"/>
+              <rect x="308" y="422" width="470" height="18" rx="9" fill="#CBD5E1"/>
+              <rect x="308" y="462" width="410" height="18" rx="9" fill="#E2E8F0"/>
+              <rect x="308" y="532" width="320" height="18" rx="9" fill="#E2E8F0"/>
+            `,
+          }
         : label === "TXT"
-          ? { bg: "#0ea5e9", soft: "#e0f2fe" }
-          : { bg: "#334155", soft: "#e2e8f0" };
+          ? {
+              bg: "#0ea5e9",
+              soft: "#e0f2fe",
+              page: "#f8fafc",
+              line: "#bae6fd",
+              title: "#0F172A",
+              header: "PREVIEW",
+              body: `
+                <rect x="308" y="342" width="560" height="18" rx="9" fill="#CBD5E1"/>
+                <rect x="308" y="382" width="516" height="18" rx="9" fill="#CBD5E1"/>
+                <rect x="308" y="422" width="470" height="18" rx="9" fill="#CBD5E1"/>
+                <rect x="308" y="462" width="532" height="18" rx="9" fill="#E2E8F0"/>
+                <rect x="308" y="502" width="420" height="18" rx="9" fill="#E2E8F0"/>
+              `,
+            }
+          : label === "AUD"
+            ? {
+                bg: "#14b8a6",
+                soft: "#ccfbf1",
+                page: "#08161b",
+                line: "#2dd4bf",
+                title: "#E6FFFB",
+                header: "AUDIO",
+                body: `
+                  <rect x="308" y="340" width="560" height="220" rx="30" fill="#0F1F24"/>
+                  <rect x="352" y="418" width="18" height="64" rx="9" fill="#2DD4BF"/>
+                  <rect x="392" y="390" width="18" height="120" rx="9" fill="#5EEAD4"/>
+                  <rect x="432" y="442" width="18" height="38" rx="9" fill="#99F6E4"/>
+                  <rect x="472" y="372" width="18" height="154" rx="9" fill="#2DD4BF"/>
+                  <rect x="512" y="404" width="18" height="92" rx="9" fill="#5EEAD4"/>
+                  <rect x="552" y="352" width="18" height="178" rx="9" fill="#99F6E4"/>
+                  <rect x="592" y="430" width="18" height="50" rx="9" fill="#2DD4BF"/>
+                  <rect x="632" y="390" width="18" height="118" rx="9" fill="#5EEAD4"/>
+                  <rect x="672" y="420" width="18" height="62" rx="9" fill="#99F6E4"/>
+                  <rect x="712" y="378" width="18" height="142" rx="9" fill="#2DD4BF"/>
+                  <rect x="752" y="408" width="18" height="88" rx="9" fill="#5EEAD4"/>
+                  <rect x="792" y="438" width="18" height="44" rx="9" fill="#99F6E4"/>
+                `,
+              }
+            : isArchive
+              ? {
+                  bg: "#f59e0b",
+                  soft: "#fef3c7",
+                  page: "#15110a",
+                  line: "#fbbf24",
+                  title: "#FFF7ED",
+                  header: "ARCHIVE",
+                  body: `
+                    <rect x="308" y="340" width="560" height="250" rx="34" fill="#16120C"/>
+                    <rect x="354" y="382" width="468" height="166" rx="28" fill="#2A1F0B"/>
+                    <rect x="354" y="438" width="468" height="22" rx="11" fill="#F59E0B"/>
+                    <rect x="560" y="382" width="56" height="166" fill="#FCD34D"/>
+                    <rect x="542" y="416" width="92" height="18" rx="9" fill="#FDE68A"/>
+                  `,
+                }
+              : {
+                  bg: "#334155",
+                  soft: "#e2e8f0",
+                  page: "#0f1720",
+                  line: "#94a3b8",
+                  title: "#F8FAFC",
+                  header: "FILE",
+                  body: `
+                    <rect x="308" y="340" width="560" height="240" rx="34" fill="#111827"/>
+                    <rect x="404" y="404" width="110" height="140" rx="24" fill="#1F2937"/>
+                    <path d="M472 404v44h42" fill="none" stroke="#CBD5E1" stroke-width="10" stroke-linejoin="round"/>
+                    <path d="M430 404h42l42 44v96H430z" fill="none" stroke="#CBD5E1" stroke-width="10" stroke-linejoin="round"/>
+                    <rect x="558" y="420" width="214" height="18" rx="9" fill="#64748B"/>
+                    <rect x="558" y="458" width="176" height="18" rx="9" fill="#475569"/>
+                    <rect x="558" y="496" width="128" height="18" rx="9" fill="#334155"/>
+                  `,
+                };
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="1200" height="900" rx="56" fill="#0f1720"/>
   <rect x="0" y="0" width="1200" height="900" rx="56" fill="url(#bg)"/>
-  <rect x="248" y="110" width="704" height="680" rx="40" fill="#F8FAFC"/>
+  <rect x="248" y="110" width="704" height="680" rx="40" fill="${variant.page}"/>
   <rect x="248.5" y="110.5" width="703" height="679" rx="39.5" stroke="rgba(255,255,255,0.18)"/>
-  <rect x="308" y="172" width="128" height="56" rx="28" fill="${accent.bg}"/>
+  <rect x="308" y="172" width="128" height="56" rx="28" fill="${variant.bg}"/>
   <text x="372" y="208" text-anchor="middle" fill="white" font-size="28" font-family="Arial, sans-serif" font-weight="700" letter-spacing="4">${escapeXml(label)}</text>
-  <text x="308" y="292" fill="#0F172A" font-size="46" font-family="Arial, sans-serif" font-weight="700">${escapeXml(title)}</text>
-  <rect x="308" y="342" width="560" height="18" rx="9" fill="#CBD5E1"/>
-  <rect x="308" y="382" width="516" height="18" rx="9" fill="#CBD5E1"/>
-  <rect x="308" y="422" width="470" height="18" rx="9" fill="#CBD5E1"/>
-  <rect x="308" y="462" width="532" height="18" rx="9" fill="#E2E8F0"/>
-  <rect x="308" y="532" width="584" height="132" rx="28" fill="${accent.soft}"/>
+  <text x="848" y="206" text-anchor="end" fill="${variant.line}" font-size="20" font-family="Arial, sans-serif" font-weight="700" letter-spacing="3">${escapeXml(variant.header)}</text>
+  <text x="308" y="292" fill="${variant.title ?? "#0F172A"}" font-size="46" font-family="Arial, sans-serif" font-weight="700">${escapeXml(title)}</text>
+  ${variant.body}
   <defs>
     <linearGradient id="bg" x1="120" y1="44" x2="1138" y2="846" gradientUnits="userSpaceOnUse">
       <stop stop-color="#10303B"/>

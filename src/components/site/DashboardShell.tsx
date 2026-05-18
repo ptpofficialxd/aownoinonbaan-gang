@@ -1007,10 +1007,7 @@ export function DashboardShell({
                                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                                 />
                               </>
-                            ) : getPreviewKind(item.mimeType) === "video" ||
-                                getPreviewKind(item.mimeType) === "text" ||
-                                getPreviewKind(item.mimeType) === "pdf" ||
-                                getPreviewKind(item.mimeType) === "document" ? (
+                            ) : (
                               <>
                                 {/* biome-ignore lint/performance/noImgElement: thumbnail preview is proxied from a protected route */}
                                 <img
@@ -1019,15 +1016,6 @@ export function DashboardShell({
                                   className="h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]"
                                 />
                               </>
-                            ) : (
-                              <div className="flex h-full items-center justify-center">
-                                <div className="inline-flex h-18 w-18 items-center justify-center rounded-[24px] border border-white/10 bg-white/8 text-cyan-100">
-                                  <Icon
-                                    name={mediaIconForMime(item.mimeType)}
-                                    className="h-8 w-8"
-                                  />
-                                </div>
-                              </div>
                             )}
 
                             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/75 to-transparent sm:h-24" />
