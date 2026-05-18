@@ -121,12 +121,17 @@ export function DashboardShell({
       return matchesCategory && matchesSearch;
     });
   }, [activeCategory, deferredSearch, libraryItems]);
+  const paginationResetKey = `${activeCategory}:${deferredSearch}:${itemsPerPage}`;
 
-  const totalPages = Math.max(1, Math.ceil(filteredItems.length / itemsPerPage));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredItems.length / itemsPerPage),
+  );
 
   useEffect(() => {
+    void paginationResetKey;
     setCurrentPage(1);
-  }, [activeCategory, deferredSearch, itemsPerPage]);
+  }, [paginationResetKey]);
 
   useEffect(() => {
     setCurrentPage((current) => Math.min(current, totalPages));
@@ -139,9 +144,7 @@ export function DashboardShell({
 
   const visibleSelectableIds = useMemo(
     () =>
-      paginatedItems
-        .map((item) => item.id)
-        .filter((id) => !busyIdSet.has(id)),
+      paginatedItems.map((item) => item.id).filter((id) => !busyIdSet.has(id)),
     [busyIdSet, paginatedItems],
   );
   const allVisibleSelected =

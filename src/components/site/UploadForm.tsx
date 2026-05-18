@@ -81,7 +81,9 @@ export function UploadForm({
       };
 
       xhr.onerror = () => {
-        reject(new Error(`Network Error: อัปโหลดไฟล์ ${input.file.name} ไม่สำเร็จ`));
+        reject(
+          new Error(`Network Error: อัปโหลดไฟล์ ${input.file.name} ไม่สำเร็จ`),
+        );
       };
 
       xhr.onload = () => {
@@ -215,8 +217,8 @@ export function UploadForm({
                     {files.length
                       ? `${(
                           files.reduce((sum, item) => sum + item.size, 0) /
-                          1024 /
-                          1024
+                            1024 /
+                            1024
                         ).toFixed(2)} MB`
                       : "รูปภาพ วิดีโอ เอกสาร หรือไฟล์อื่นๆ"}
                   </p>
@@ -368,9 +370,7 @@ export function UploadForm({
             className={`${fieldShellClass} shadow-[0_18px_40px_-28px_rgba(34,211,238,0.28)] focus-within:outline-none focus-within:ring-2 focus-within:ring-cyan-300/40`}
           >
             <div className="flex min-w-0 flex-1 items-center gap-3">
-              <div
-                className={`${fieldLeadingIconClass} pointer-events-none`}
-              >
+              <div className={`${fieldLeadingIconClass} pointer-events-none`}>
                 <Icon name="hash" className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
@@ -429,7 +429,7 @@ export function UploadForm({
         </div>
       ) : null}
 
-      <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
+      <div className="sticky bottom-0 -mx-2 flex flex-col items-center gap-3 rounded-[24px] border border-white/8 bg-[#101116]/92 px-2 pb-[calc(0.25rem+var(--safe-area-bottom))] pt-4 text-center backdrop-blur-xl sm:static sm:mx-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-0 sm:pb-0 sm:pt-0 sm:text-left">
         <p className="text-sm text-zinc-500">ระบบจะบันทึกว่าไฟล์นี้ถูกอัปโหลดโดยคุณ</p>
         <div className="flex items-center justify-center sm:justify-end">
           <Button

@@ -87,7 +87,9 @@ export function LibrarySection({
           name: "ทั้งหมด",
           count: dashboard.totalItems,
         }
-      : dashboard.categories.find((category) => category.name === activeCategory);
+      : dashboard.categories.find(
+          (category) => category.name === activeCategory,
+        );
   const uploadButton = canUploadNow ? (
     <button
       type="button"
@@ -111,9 +113,8 @@ export function LibrarySection({
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
-      const clickedInsideMobileCategory = mobileCategoryMenuRef.current?.contains(
-        event.target as Node,
-      );
+      const clickedInsideMobileCategory =
+        mobileCategoryMenuRef.current?.contains(event.target as Node);
       const clickedInsideDesktopCategory =
         desktopCategoryMenuRef.current?.contains(event.target as Node);
 
@@ -443,7 +444,10 @@ export function LibrarySection({
                         className="group inline-flex h-9 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.03))] px-2.5 text-xs font-medium text-zinc-100 transition-all hover:border-cyan-300/20 hover:bg-cyan-400/[0.07] hover:text-white sm:h-10 sm:gap-2 sm:px-4 sm:text-sm"
                       >
                         <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-cyan-300/10 text-cyan-100 ring-1 ring-inset ring-cyan-200/10 sm:h-7 sm:w-7">
-                          <Icon name="settings" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                          <Icon
+                            name="settings"
+                            className="h-3 w-3 sm:h-3.5 sm:w-3.5"
+                          />
                         </span>
                         <span className="sm:hidden">จัดการ</span>
                         <span className="hidden sm:inline">จัดการรายการ</span>
@@ -547,7 +551,8 @@ export function LibrarySection({
                       หน้า {currentPage} / {totalPages}
                     </p>
                     <p className="mt-1 text-xs text-zinc-400 sm:text-sm">
-                      กำลังดูไฟล์ {pageStart}-{pageEnd} จากทั้งหมด {filteredItems.length} ไฟล์
+                      กำลังดูไฟล์ {pageStart}-{pageEnd} จากทั้งหมด{" "}
+                      {filteredItems.length} ไฟล์
                     </p>
                   </div>
 
@@ -587,7 +592,9 @@ export function LibrarySection({
                     <div className="mt-2 grid grid-cols-2 gap-2">
                       <button
                         type="button"
-                        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                        onClick={() =>
+                          onPageChange(Math.max(1, currentPage - 1))
+                        }
                         disabled={currentPage === 1}
                         className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 text-sm font-medium text-zinc-200 transition-all hover:border-cyan-300/20 hover:bg-cyan-400/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
                       >
@@ -899,7 +906,9 @@ function MediaCard({
             <span className="whitespace-nowrap text-[10px] sm:hidden">
               {formatDateCompact(item.createdAt)}
             </span>
-            <span className="hidden sm:inline">{formatDate(item.createdAt)}</span>
+            <span className="hidden sm:inline">
+              {formatDate(item.createdAt)}
+            </span>
           </p>
         </div>
 

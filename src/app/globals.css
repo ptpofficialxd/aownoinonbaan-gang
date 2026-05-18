@@ -8,6 +8,8 @@
   --border: 255 255 255 / 0.08;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* biome-ignore lint/suspicious/noUnknownAtRules: Tailwind CSS v4 theme directive */
