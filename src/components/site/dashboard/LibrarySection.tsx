@@ -5,11 +5,7 @@ import { Input } from "@/components/ui/Input";
 import { formatBytes, formatDate } from "@/lib/format";
 import type { MediaItem } from "@/lib/media";
 import type { DashboardSummary } from "./types";
-import {
-  getMimeBadgeLabel,
-  getPreviewKind,
-  isPreviewableFile,
-} from "./utils";
+import { getMimeBadgeLabel, getPreviewKind, isPreviewableFile } from "./utils";
 
 export function LibrarySection({
   activeCategory,

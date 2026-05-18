@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "เอาน้อยนอนบ้าน",
+  icons: {
+    icon: "/เอาน้อยนอนบ้าน_favicons.png",
+    shortcut: "/เอาน้อยนอนบ้าน_favicons.png",
+    apple: "/เอาน้อยนอนบ้าน_favicons.png",
+  },
 };
 
 export const viewport: Viewport = {

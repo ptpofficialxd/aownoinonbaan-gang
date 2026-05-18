@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export function Logo() {
@@ -6,9 +7,15 @@ export function Logo() {
       href="/"
       className="group inline-flex min-w-0 max-w-full items-center gap-2 text-zinc-100 transition-colors lg:gap-2.5"
     >
-      <span className="relative inline-flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-cyan-400 to-violet-500 shadow-[0_8px_30px_-12px_rgba(34,211,238,0.6)]">
-        <span className="absolute inset-px rounded-[10px] bg-[#0b0d12]" />
-        <span className="relative text-sm font-black text-cyan-300">A</span>
+      <span className="relative inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border border-cyan-300/20 bg-white/[0.03] shadow-[0_8px_30px_-12px_rgba(34,211,238,0.45)]">
+        <Image
+          src="/เอาน้อยนอนบ้าน.png"
+          alt="เอาน้อยนอนบ้าน"
+          width={36}
+          height={36}
+          className="h-full w-full object-cover"
+          priority
+        />
       </span>
       <span className="flex min-w-0 flex-col leading-tight">
         <span className="truncate text-xs font-semibold tracking-tight md:text-sm">
