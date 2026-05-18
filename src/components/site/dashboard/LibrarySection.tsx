@@ -9,7 +9,6 @@ import {
   getMimeBadgeLabel,
   getPreviewKind,
   isPreviewableFile,
-  mediaIconForMime,
 } from "./utils";
 
 export function LibrarySection({
@@ -328,7 +327,7 @@ function MediaCard({
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
             />
           </>
-        ) : previewKind ? (
+        ) : (
           <>
             {/* biome-ignore lint/performance/noImgElement: thumbnail preview is proxied from a protected route */}
             <img
@@ -339,13 +338,6 @@ function MediaCard({
               }`}
             />
           </>
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-zinc-400">
-            <Icon
-              name={mediaIconForMime(item.mimeType)}
-              className="h-10 w-10"
-            />
-          </div>
         )}
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/75 to-transparent sm:h-24" />

@@ -93,10 +93,7 @@ export function PreviewModal({
                 </div>
                 <div>
                   <p className="text-lg font-semibold text-white">
-                    ตัวอย่างไฟล์เสียง
-                  </p>
-                  <p className="mt-2 text-sm text-zinc-400">
-                    เล่นตัวอย่างได้ทันทีใน popup นี้
+                    เล่นตัวอย่างไฟล์เสียง
                   </p>
                 </div>
                 {/* biome-ignore lint/a11y/useMediaCaption: user-uploaded preview media does not include caption tracks */}
