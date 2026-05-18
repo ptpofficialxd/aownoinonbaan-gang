@@ -92,20 +92,20 @@ export function LibrarySection({
     <button
       type="button"
       onClick={onUploadOpen}
-      className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-400/10 px-4 text-sm font-medium text-cyan-100 transition-all hover:border-cyan-300/35 hover:bg-cyan-400/16 sm:px-5"
+      className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-400/10 px-4 text-sm font-medium text-cyan-100 transition-all hover:border-cyan-300/35 hover:bg-cyan-400/16 sm:px-5"
     >
       <Icon name="upload" className="h-4 w-4" />
-      <span className="hidden sm:inline">อัปโหลด</span>
+      <span className="hidden whitespace-nowrap sm:inline">อัปโหลด</span>
     </button>
   ) : driveConnected ? (
     <button
       type="button"
       disabled
-      className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-rose-300/18 bg-rose-400/8 px-4 text-sm font-medium text-rose-100/70 opacity-80 sm:px-5"
+      className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full border border-rose-300/18 bg-rose-400/8 px-4 text-sm font-medium text-rose-100/70 opacity-80 sm:px-5"
       title="Cloud health check ไม่ผ่าน จึงยังไม่พร้อมอัปโหลด"
     >
       <Icon name="upload" className="h-4 w-4" />
-      <span className="hidden sm:inline">ไม่พร้อมอัปโหลด</span>
+      <span className="hidden whitespace-nowrap sm:inline">ไม่พร้อมอัปโหลด</span>
     </button>
   ) : null;
 
@@ -178,7 +178,7 @@ export function LibrarySection({
                 </p>
               </div>
 
-              <div className="w-full lg:w-[29rem]">
+              <div className="w-full lg:flex lg:w-full lg:max-w-[44rem] lg:justify-end">
                 <div
                   className={`relative lg:hidden ${categoryMenuOpen ? "z-40" : ""}`}
                   ref={mobileCategoryMenuRef}
@@ -296,7 +296,7 @@ export function LibrarySection({
                   </div>
                 </div>
 
-                <div className="hidden items-center gap-3 lg:flex">
+                <div className="hidden w-full items-center gap-3 lg:flex">
                   <div
                     className={`w-[17.5rem] shrink-0 ${categoryMenuOpen ? "relative z-40" : ""}`}
                     ref={desktopCategoryMenuRef}
@@ -393,7 +393,7 @@ export function LibrarySection({
                     </div>
                   </div>
 
-                  <div className="relative">
+                  <div className="relative min-w-[4.5rem] flex-1">
                     <Icon
                       name="search"
                       className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500"
@@ -402,7 +402,7 @@ export function LibrarySection({
                       value={search}
                       onChange={(event) => onSearchChange(event.target.value)}
                       placeholder="ค้นหา..."
-                      className="h-12 rounded-full border-white/12 bg-white/[0.04] pl-11"
+                      className="h-12 min-w-0 rounded-full border-white/12 bg-white/[0.04] pl-11"
                     />
                   </div>
 
