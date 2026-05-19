@@ -111,7 +111,7 @@ function LoginView() {
                   htmlFor={usernameId}
                   className="mb-1.5 block text-xs font-medium text-zinc-400"
                 >
-                  Username
+                  ชื่อผู้ใช้
                 </label>
                 <div className="relative">
                   <Icon
@@ -125,6 +125,7 @@ function LoginView() {
                     disabled={busy}
                     value={username}
                     onChange={(event) => setUsername(event.target.value)}
+                    placeholder="yourusername"
                     className="rounded-xl bg-white/5 pl-10 pr-4 text-zinc-100 placeholder:text-zinc-500 ring-1 ring-inset ring-white/10 transition-all hover:ring-white/20 focus:bg-white/10 focus:ring-2 focus:ring-cyan-400/40 disabled:opacity-50"
                   />
                 </div>
@@ -134,7 +135,7 @@ function LoginView() {
                   htmlFor={passwordId}
                   className="mb-1.5 block text-xs font-medium text-zinc-400"
                 >
-                  Password
+                  รหัสผ่าน
                 </label>
                 <div className="relative">
                   <Icon
