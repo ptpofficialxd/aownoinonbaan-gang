@@ -17,8 +17,6 @@ import {
 import type { DashboardSummary } from "./types";
 import { getMimeBadgeLabel, getPreviewKind, isPreviewableFile } from "./utils";
 
-const videoThumbnailCache = new Map<string, string>();
-
 function getSectionAccentClass(section: CategorySection) {
   if (section === "CGM48") {
     return {
@@ -1085,10 +1083,6 @@ function MediaCard({
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
             />
           </>
-        ) : previewKind === "video" && !item.thumbnailDriveFileId ? (
-          <>
-            <VideoThumbnail item={item} />
-          </>
         ) : (
           <>
             <ThumbnailPreview item={item} />
@@ -1141,6 +1135,12 @@ function MediaCard({
 }
 
 function ThumbnailPreview({ item }: { item: MediaItem }) {
+  const previewKind = getPreviewKind(item.mimeType);
+  const alignmentClass =
+    previewKind === "pdf" || previewKind === "text" || previewKind === "document"
+      ? "object-top"
+      : "object-center";
+
   return (
     <>
       {/* biome-ignore lint/performance/noImgElement: thumbnail preview is proxied from a protected route */}
@@ -1148,161 +1148,8 @@ function ThumbnailPreview({ item }: { item: MediaItem }) {
         src={`/api/media/${item.id}/thumbnail`}
         alt={item.fileName}
         loading="lazy"
-        className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]"
+        className={`h-full w-full object-cover ${alignmentClass} transition-transform duration-300 group-hover:scale-[1.03]`}
       />
     </>
-  );
-}
-
-function VideoThumbnail({ item }: { item: MediaItem }) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const [thumbnailSrc, setThumbnailSrc] = useState<string | null>(
-    videoThumbnailCache.get(item.id) ?? null,
-  );
-
-  useEffect(() => {
-    if (thumbnailSrc) return;
-
-    const element = containerRef.current;
-    if (!element) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      {
-        rootMargin: "120px",
-      },
-    );
-
-    observer.observe(element);
-
-    return () => observer.disconnect();
-  }, [thumbnailSrc]);
-
-  useEffect(() => {
-    if (!isVisible || thumbnailSrc) return;
-
-    let cancelled = false;
-    let captured = false;
-    const video = document.createElement("video");
-    const appendedParent = containerRef.current ?? document.body;
-
-    video.preload = "metadata";
-    video.muted = true;
-    video.playsInline = true;
-    video.setAttribute("muted", "");
-    video.setAttribute("playsinline", "");
-    video.setAttribute("webkit-playsinline", "true");
-    video.crossOrigin = "anonymous";
-    video.src = `/api/media/${item.id}/content`;
-    video.style.position = "absolute";
-    video.style.width = "1px";
-    video.style.height = "1px";
-    video.style.opacity = "0";
-    video.style.pointerEvents = "none";
-    video.style.left = "-9999px";
-    video.style.top = "0";
-    appendedParent.appendChild(video);
-
-    const cleanup = () => {
-      video.pause();
-      video.removeAttribute("src");
-      video.load();
-      video.remove();
-    };
-
-    const captureFrame = () => {
-      if (cancelled || captured || !video.videoWidth || !video.videoHeight) {
-        return false;
-      }
-
-      const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-
-      const context = canvas.getContext("2d");
-      if (!context) return false;
-
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      try {
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.76);
-        captured = true;
-        videoThumbnailCache.set(item.id, dataUrl);
-        if (!cancelled) {
-          setThumbnailSrc(dataUrl);
-        }
-        return true;
-      } catch {
-        return false;
-      }
-    };
-
-    const seekAndCapture = () => {
-      const seekTime =
-        Number.isFinite(video.duration) && video.duration > 0.6
-          ? Math.min(0.2, video.duration / 4)
-          : 0;
-
-      if (seekTime <= 0) {
-        captureFrame();
-        return;
-      }
-
-      try {
-        video.currentTime = seekTime;
-      } catch {
-        captureFrame();
-      }
-    };
-
-    const handleLoadedMetadata = () => {
-      seekAndCapture();
-    };
-
-    const handleLoadedData = () => {
-      captureFrame();
-    };
-
-    const handleCanPlay = () => {
-      captureFrame();
-    };
-
-    const handleSeeked = () => {
-      captureFrame();
-    };
-
-    video.addEventListener("loadedmetadata", handleLoadedMetadata);
-    video.addEventListener("loadeddata", handleLoadedData);
-    video.addEventListener("canplay", handleCanPlay);
-    video.addEventListener("seeked", handleSeeked);
-    video.addEventListener("error", cleanup, { once: true });
-    video.load();
-
-    return () => {
-      cancelled = true;
-      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      video.removeEventListener("loadeddata", handleLoadedData);
-      video.removeEventListener("canplay", handleCanPlay);
-      video.removeEventListener("seeked", handleSeeked);
-      cleanup();
-    };
-  }, [isVisible, item.id, thumbnailSrc]);
-
-  return (
-    <div ref={containerRef} className="h-full w-full">
-      {/* biome-ignore lint/performance/noImgElement: thumbnail preview is proxied from a protected route */}
-      <img
-        src={thumbnailSrc ?? `/api/media/${item.id}/thumbnail`}
-        alt={item.fileName}
-        loading="lazy"
-        className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]"
-      />
-    </div>
   );
 }

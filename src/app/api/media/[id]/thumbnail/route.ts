@@ -4,6 +4,8 @@ import { getServerSession } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+const THUMBNAIL_CACHE_CONTROL =
+  "private, max-age=86400, stale-while-revalidate=604800";
 
 function getMimeBadgeLabel(mimeType: string) {
   if (mimeType.startsWith("image/")) {
@@ -198,7 +200,7 @@ export async function GET(
           headers: {
             "Content-Type":
               storedThumbnailRes.headers.get("content-type") || "image/jpeg",
-            "Cache-Control": "private, no-store",
+            "Cache-Control": THUMBNAIL_CACHE_CONTROL,
           },
         });
       }
@@ -212,7 +214,7 @@ export async function GET(
         headers: {
           "Content-Type":
             thumbnailRes.headers.get("content-type") || "image/jpeg",
-          "Cache-Control": "private, no-store",
+          "Cache-Control": THUMBNAIL_CACHE_CONTROL,
         },
       });
     }
@@ -222,7 +224,7 @@ export async function GET(
   return new Response(svg, {
     headers: {
       "Content-Type": "image/svg+xml; charset=utf-8",
-      "Cache-Control": "private, no-store",
+      "Cache-Control": THUMBNAIL_CACHE_CONTROL,
     },
   });
 }

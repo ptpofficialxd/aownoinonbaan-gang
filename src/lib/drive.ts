@@ -309,6 +309,7 @@ export async function uploadFileToDrive(input: {
   file: File;
   category?: string | null;
   description?: string | null;
+  uploadKind?: "media" | "thumbnail";
 }) {
   const { sessionUrl } = await createDriveUploadSession({
     fileName: input.fileName,
@@ -316,6 +317,7 @@ export async function uploadFileToDrive(input: {
     fileSize: input.file.size,
     category: input.category,
     description: input.description,
+    uploadKind: input.uploadKind,
   });
 
   const uploadRes = await fetch(sessionUrl, {

@@ -58,7 +58,12 @@ export function DashboardShell({
   const dragDepthRef = useRef(0);
   const deferredSearch = useDeferredValue(search);
   const cloudHealth = useCloudHealth(driveConnected);
-  const { previewText, previewTextError, previewTextLoading } =
+  const {
+    previewText,
+    previewTextError,
+    previewTextLoading,
+    previewTextTruncated,
+  } =
     usePreviewText(previewItem);
 
   useEffect(() => {
@@ -450,6 +455,7 @@ export function DashboardShell({
         previewText={previewText}
         previewTextError={previewTextError}
         previewTextLoading={previewTextLoading}
+        previewTextTruncated={previewTextTruncated}
       />
 
       {dragOverlayVisible ? (

@@ -232,6 +232,7 @@ export function UploadForm({
     }
 
     let thumbnailDriveFileId: string | null = null;
+    let thumbnailMimeType: string | null = null;
 
     if (thumbnailFile) {
       const uploadedThumbnail = await uploadCompanionFileViaDrive({
@@ -242,6 +243,7 @@ export function UploadForm({
         totalFiles: input.totalFiles,
       });
       thumbnailDriveFileId = uploadedThumbnail?.id ?? null;
+      thumbnailMimeType = uploadedThumbnail?.mimeType || thumbnailFile.type || null;
     }
 
     const completeRes = await fetch("/api/media/upload/complete", {
@@ -252,6 +254,7 @@ export function UploadForm({
       body: JSON.stringify({
         driveFileId: uploadResult.id,
         thumbnailDriveFileId,
+        thumbnailMimeType,
         fileName: uploadResult.name,
         mimeType: uploadResult.mimeType,
         fileSize: Number(uploadResult.size || input.file.size || 0),

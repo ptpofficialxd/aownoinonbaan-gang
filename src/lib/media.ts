@@ -103,6 +103,14 @@ export type MediaItem = {
   uploaderUsername: string;
 };
 
+export type MediaThumbnailBackfillItem = {
+  id: string;
+  driveFileId: string;
+  fileName: string;
+  mimeType: string;
+  category: string;
+};
+
 type MediaRow = {
   id: string;
   drive_file_id: string;
@@ -124,6 +132,14 @@ type MediaRecordRow = {
   thumbnail_drive_file_id: string | null;
   file_name: string;
   mime_type: string;
+};
+
+type MediaThumbnailBackfillRow = {
+  id: string;
+  drive_file_id: string;
+  file_name: string;
+  mime_type: string;
+  category: string;
 };
 
 export function normalizeCategory(value: string) {
@@ -232,6 +248,48 @@ export async function getMediaRecords(mediaIds: string[]) {
   return rows;
 }
 
+export async function listVideoItemsMissingThumbnails(limit = 100) {
+  const safeLimit = Math.max(1, Math.min(Math.trunc(limit) || 100, 1000));
+  const rows = (await sql()`
+    SELECT
+      id,
+      drive_file_id,
+      file_name,
+      mime_type,
+      category
+    FROM media_items
+    WHERE mime_type LIKE 'video/%'
+      AND thumbnail_drive_file_id IS NULL
+    ORDER BY created_at ASC
+    LIMIT ${safeLimit}
+  `) as MediaThumbnailBackfillRow[];
+
+  return rows.map((row) => ({
+    id: row.id,
+    driveFileId: row.drive_file_id,
+    fileName: row.file_name,
+    mimeType: row.mime_type,
+    category: row.category,
+  })) satisfies MediaThumbnailBackfillItem[];
+}
+
+export async function updateMediaThumbnail(input: {
+  mediaId: string;
+  thumbnailDriveFileId: string;
+  thumbnailMimeType?: string | null;
+}) {
+  const rows = (await sql()`
+    UPDATE media_items
+    SET
+      thumbnail_drive_file_id = ${input.thumbnailDriveFileId},
+      thumbnail_mime_type = ${input.thumbnailMimeType ?? "image/jpeg"}
+    WHERE id = ${input.mediaId}
+    RETURNING id
+  `) as Array<{ id: string }>;
+
+  return rows[0]?.id ?? null;
+}
+
 export async function deleteMediaItem(mediaId: string) {
   const rows = (await sql()`
     DELETE FROM media_items
@@ -257,6 +315,7 @@ export async function deleteMediaItems(mediaIds: string[]) {
 export async function createMediaItem(input: {
   driveFileId: string;
   thumbnailDriveFileId?: string | null;
+  thumbnailMimeType?: string | null;
   fileName: string;
   mimeType: string;
   fileSize: number;
@@ -269,6 +328,7 @@ export async function createMediaItem(input: {
     INSERT INTO media_items (
       drive_file_id,
       thumbnail_drive_file_id,
+      thumbnail_mime_type,
       file_name,
       mime_type,
       file_size,
@@ -280,6 +340,7 @@ export async function createMediaItem(input: {
     VALUES (
       ${input.driveFileId},
       ${input.thumbnailDriveFileId ?? null},
+      ${input.thumbnailMimeType ?? null},
       ${input.fileName},
       ${input.mimeType},
       ${input.fileSize},

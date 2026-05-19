@@ -10,6 +10,7 @@
     "lint": "biome check",
     "format": "biome format --write",
     "db:setup": "bun scripts/db-setup.mjs",
+    "thumbnails:backfill": "bun scripts/backfill-video-thumbnails.mjs",
     "user:add": "bun scripts/add-user.mjs",
     "user:list": "bun scripts/list-users.mjs",
     "user:password": "bun scripts/hash-password.mjs"

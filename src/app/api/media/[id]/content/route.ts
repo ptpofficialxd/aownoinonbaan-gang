@@ -5,6 +5,8 @@ import { getServerSession } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+const CONTENT_CACHE_CONTROL =
+  "private, max-age=3600, stale-while-revalidate=86400";
 
 export async function GET(
   request: Request,
@@ -38,7 +40,7 @@ export async function GET(
     "Content-Disposition",
     `inline; filename="${encodeURIComponent(record.file_name)}"`,
   );
-  responseHeaders.set("Cache-Control", "private, no-store");
+  responseHeaders.set("Cache-Control", CONTENT_CACHE_CONTROL);
 
   const contentLength = driveResponse.headers.get("content-length");
   const contentRange = driveResponse.headers.get("content-range");

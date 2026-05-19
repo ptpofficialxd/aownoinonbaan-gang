@@ -8,12 +8,14 @@ export function PreviewModal({
   previewText,
   previewTextError,
   previewTextLoading,
+  previewTextTruncated,
 }: {
   onClose: () => void;
   previewItem: MediaItem | null;
   previewText: string;
   previewTextError: string | null;
   previewTextLoading: boolean;
+  previewTextTruncated: boolean;
 }) {
   if (!previewItem) return null;
 
@@ -80,6 +82,7 @@ export function PreviewModal({
               <video
                 src={`/api/media/${previewItem.id}/content`}
                 controls
+                preload="metadata"
                 className="max-h-[76vh] w-auto max-w-full rounded-[24px] border border-white/10 bg-black object-contain shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8)]"
               />
             ) : previewKind === "audio" ? (
@@ -96,6 +99,7 @@ export function PreviewModal({
                 <audio
                   src={`/api/media/${previewItem.id}/content`}
                   controls
+                  preload="metadata"
                   className="w-full max-w-xl"
                 />
               </div>
@@ -108,7 +112,14 @@ export function PreviewModal({
             ) : previewKind === "text" ? (
               <div className="w-full max-w-4xl overflow-hidden rounded-[24px] border border-white/10 bg-[#0b0f15]/90 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8)]">
                 <div className="border-b border-white/8 px-5 py-3">
-                  <p className="text-sm font-medium text-white">พรีวิวข้อความ</p>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-medium text-white">พรีวิวข้อความ</p>
+                    {previewTextTruncated ? (
+                      <span className="text-xs text-zinc-400">
+                        แสดงเฉพาะช่วงต้นไฟล์
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
                 <div className="max-h-[72vh] overflow-auto px-5 py-4">
                   {previewTextLoading ? (

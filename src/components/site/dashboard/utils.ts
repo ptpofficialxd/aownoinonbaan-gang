@@ -44,6 +44,13 @@ export function getMimeBadgeLabel(mimeType: string) {
 }
 
 export function getPreviewKind(mimeType: string) {
+  if (
+    mimeType === "application/json" ||
+    mimeType === "application/xml" ||
+    mimeType === "application/javascript"
+  ) {
+    return "text";
+  }
   if (mimeType.startsWith("image/")) return "image";
   if (mimeType.startsWith("video/")) return "video";
   if (mimeType.startsWith("audio/")) return "audio";
