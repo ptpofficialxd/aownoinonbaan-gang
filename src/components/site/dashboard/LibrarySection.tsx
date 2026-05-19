@@ -1077,27 +1077,21 @@ function MediaCard({
       >
         {previewKind === "image" ? (
           <>
-            {/* biome-ignore lint/performance/noImgElement: authenticated media preview is streamed from a protected route */}
+            {/* biome-ignore lint/performance/noImgElement: thumbnail preview is proxied from a protected route */}
             <img
-              src={`/api/media/${item.id}/content`}
+              src={`/api/media/${item.id}/thumbnail`}
               alt={item.fileName}
+              loading="lazy"
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
             />
           </>
+        ) : previewKind === "video" && !item.thumbnailDriveFileId ? (
+          <>
+            <VideoThumbnail item={item} />
+          </>
         ) : (
           <>
-            {previewKind === "video" ? (
-              <VideoThumbnail item={item} />
-            ) : (
-              <>
-                {/* biome-ignore lint/performance/noImgElement: thumbnail preview is proxied from a protected route */}
-                <img
-                  src={`/api/media/${item.id}/thumbnail`}
-                  alt={item.fileName}
-                  className="h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]"
-                />
-              </>
-            )}
+            <ThumbnailPreview item={item} />
           </>
         )}
 
@@ -1146,6 +1140,20 @@ function MediaCard({
   );
 }
 
+function ThumbnailPreview({ item }: { item: MediaItem }) {
+  return (
+    <>
+      {/* biome-ignore lint/performance/noImgElement: thumbnail preview is proxied from a protected route */}
+      <img
+        src={`/api/media/${item.id}/thumbnail`}
+        alt={item.fileName}
+        loading="lazy"
+        className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]"
+      />
+    </>
+  );
+}
+
 function VideoThumbnail({ item }: { item: MediaItem }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -1167,7 +1175,7 @@ function VideoThumbnail({ item }: { item: MediaItem }) {
         }
       },
       {
-        rootMargin: "240px",
+        rootMargin: "120px",
       },
     );
 
@@ -1184,7 +1192,7 @@ function VideoThumbnail({ item }: { item: MediaItem }) {
     const video = document.createElement("video");
     const appendedParent = containerRef.current ?? document.body;
 
-    video.preload = "auto";
+    video.preload = "metadata";
     video.muted = true;
     video.playsInline = true;
     video.setAttribute("muted", "");
@@ -1223,7 +1231,7 @@ function VideoThumbnail({ item }: { item: MediaItem }) {
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       try {
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.76);
         captured = true;
         videoThumbnailCache.set(item.id, dataUrl);
         if (!cancelled) {
@@ -1237,8 +1245,8 @@ function VideoThumbnail({ item }: { item: MediaItem }) {
 
     const seekAndCapture = () => {
       const seekTime =
-        Number.isFinite(video.duration) && video.duration > 0.4
-          ? Math.min(0.35, video.duration / 3)
+        Number.isFinite(video.duration) && video.duration > 0.6
+          ? Math.min(0.2, video.duration / 4)
           : 0;
 
       if (seekTime <= 0) {
@@ -1292,6 +1300,7 @@ function VideoThumbnail({ item }: { item: MediaItem }) {
       <img
         src={thumbnailSrc ?? `/api/media/${item.id}/thumbnail`}
         alt={item.fileName}
+        loading="lazy"
         className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]"
       />
     </div>

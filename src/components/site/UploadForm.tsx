@@ -165,6 +165,8 @@ export function UploadForm({
     fileIndex: number;
     totalFiles: number;
   }) {
+    const thumbnailFile = await createVideoThumbnailFile(input.file);
+
     const sessionRes = await fetch("/api/media/upload/session", {
       method: "POST",
       headers: {
@@ -228,6 +230,19 @@ export function UploadForm({
       );
     }
 
+    let thumbnailDriveFileId: string | null = null;
+
+    if (thumbnailFile) {
+      const uploadedThumbnail = await uploadCompanionFileViaDrive({
+        file: thumbnailFile,
+        category: input.category,
+        description: `Thumbnail for ${input.file.name}`,
+        fileIndex: input.fileIndex,
+        totalFiles: input.totalFiles,
+      });
+      thumbnailDriveFileId = uploadedThumbnail?.id ?? null;
+    }
+
     const completeRes = await fetch("/api/media/upload/complete", {
       method: "POST",
       headers: {
@@ -235,6 +250,7 @@ export function UploadForm({
       },
       body: JSON.stringify({
         driveFileId: uploadResult.id,
+        thumbnailDriveFileId,
         fileName: uploadResult.name,
         mimeType: uploadResult.mimeType,
         fileSize: Number(uploadResult.size || input.file.size || 0),
@@ -376,6 +392,162 @@ export function UploadForm({
       };
 
       xhr.send(input.chunk);
+    });
+  }
+
+  async function uploadCompanionFileViaDrive(input: {
+    file: File;
+    category: string;
+    description: string;
+    fileIndex: number;
+    totalFiles: number;
+  }) {
+    const sessionRes = await fetch("/api/media/upload/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        fileName: input.file.name,
+        mimeType: input.file.type || "application/octet-stream",
+        fileSize: input.file.size,
+        category: input.category,
+        description: input.description,
+      }),
+    });
+
+    const sessionPayload = (await sessionRes.json().catch(() => null)) as {
+      error?: string;
+      sessionUrl?: string;
+    } | null;
+
+    if (!sessionRes.ok || !sessionPayload?.sessionUrl) {
+      throw new Error(
+        sessionPayload?.error || `อัปโหลด thumbnail ของ ${input.file.name} ไม่สำเร็จ`,
+      );
+    }
+
+    let uploadResult: {
+      id: string;
+      name: string;
+      mimeType: string;
+      size?: string;
+      webViewLink?: string;
+      webContentLink?: string;
+    } | null = null;
+
+    for (let start = 0; start < input.file.size; ) {
+      const endExclusive = Math.min(start + uploadChunkSize, input.file.size);
+      const end = endExclusive - 1;
+      const chunk = input.file.slice(start, endExclusive);
+
+      const chunkResult = await uploadChunkViaServer({
+        chunk,
+        sessionUrl: sessionPayload.sessionUrl,
+        start,
+        end,
+        total: input.file.size,
+        fileName: input.file.name,
+        fileIndex: input.fileIndex,
+        totalFiles: input.totalFiles,
+      });
+
+      if (chunkResult.uploadResult) {
+        uploadResult = chunkResult.uploadResult;
+      }
+
+      start = chunkResult.nextStart;
+    }
+
+    return uploadResult;
+  }
+
+  function createVideoThumbnailFile(file: File) {
+    if (!file.type.startsWith("video/")) {
+      return Promise.resolve(null);
+    }
+
+    return new Promise<File | null>((resolve) => {
+      const objectUrl = URL.createObjectURL(file);
+      const video = document.createElement("video");
+      let settled = false;
+
+      video.preload = "metadata";
+      video.muted = true;
+      video.playsInline = true;
+      video.src = objectUrl;
+      video.load();
+
+      const cleanup = () => {
+        video.removeAttribute("src");
+        video.load();
+        URL.revokeObjectURL(objectUrl);
+      };
+
+      const finish = (value: File | null) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve(value);
+      };
+
+      const captureFrame = () => {
+        if (!video.videoWidth || !video.videoHeight) {
+          finish(null);
+          return;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext("2d");
+
+        if (!context) {
+          finish(null);
+          return;
+        }
+
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              finish(null);
+              return;
+            }
+
+            const baseName = file.name.replace(/\.[^/.]+$/, "");
+            finish(
+              new File([blob], `${baseName}.thumbnail.jpg`, {
+                type: "image/jpeg",
+              }),
+            );
+          },
+          "image/jpeg",
+          0.82,
+        );
+      };
+
+      const seekAndCapture = () => {
+        const seekTime =
+          Number.isFinite(video.duration) && video.duration > 0.6
+            ? Math.min(0.2, video.duration / 4)
+            : 0;
+
+        if (seekTime <= 0) {
+          captureFrame();
+          return;
+        }
+
+        try {
+          video.currentTime = seekTime;
+        } catch {
+          captureFrame();
+        }
+      };
+
+      video.addEventListener("loadedmetadata", seekAndCapture, { once: true });
+      video.addEventListener("seeked", captureFrame, { once: true });
+      video.addEventListener("error", () => finish(null), { once: true });
     });
   }
 

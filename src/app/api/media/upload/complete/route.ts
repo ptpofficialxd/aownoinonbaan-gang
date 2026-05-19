@@ -16,6 +16,7 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => null)) as {
     driveFileId?: string;
+    thumbnailDriveFileId?: string | null;
     fileName?: string;
     mimeType?: string;
     fileSize?: number;
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
 
   const mediaId = await createMediaItem({
     driveFileId: body.driveFileId,
+    thumbnailDriveFileId: body.thumbnailDriveFileId || null,
     fileName: body.fileName,
     mimeType: body.mimeType,
     fileSize: Number(body.fileSize || 0),
@@ -47,6 +49,7 @@ export async function POST(request: Request) {
     ? {
         id: mediaId,
         driveFileId: body.driveFileId,
+        thumbnailDriveFileId: body.thumbnailDriveFileId || null,
         fileName: body.fileName,
         mimeType: body.mimeType,
         fileSize: Number(body.fileSize || 0),

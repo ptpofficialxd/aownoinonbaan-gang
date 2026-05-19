@@ -42,6 +42,7 @@ export async function POST(request: Request) {
 
   const mediaId = await createMediaItem({
     driveFileId: uploaded.id,
+    thumbnailDriveFileId: null,
     fileName: uploaded.name,
     mimeType: uploaded.mimeType || file.type || "application/octet-stream",
     fileSize: Number(uploaded.size || file.size || 0),
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
     ? {
         id: mediaId,
         driveFileId: uploaded.id,
+        thumbnailDriveFileId: null,
         fileName: uploaded.name,
         mimeType: uploaded.mimeType || file.type || "application/octet-stream",
         fileSize: Number(uploaded.size || file.size || 0),

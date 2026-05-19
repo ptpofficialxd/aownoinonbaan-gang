@@ -91,6 +91,7 @@ export type Category = (typeof CATEGORIES)[number];
 export type MediaItem = {
   id: string;
   driveFileId: string;
+  thumbnailDriveFileId: string | null;
   fileName: string;
   mimeType: string;
   fileSize: number;
@@ -105,6 +106,7 @@ export type MediaItem = {
 type MediaRow = {
   id: string;
   drive_file_id: string;
+  thumbnail_drive_file_id: string | null;
   file_name: string;
   mime_type: string;
   file_size: string | number;
@@ -119,6 +121,7 @@ type MediaRow = {
 type MediaRecordRow = {
   id: string;
   drive_file_id: string;
+  thumbnail_drive_file_id: string | null;
   file_name: string;
   mime_type: string;
 };
@@ -170,6 +173,7 @@ function mapMediaRow(row: MediaRow): MediaItem {
   return {
     id: row.id,
     driveFileId: row.drive_file_id,
+    thumbnailDriveFileId: row.thumbnail_drive_file_id,
     fileName: row.file_name,
     mimeType: row.mime_type,
     fileSize: Number(row.file_size ?? 0),
@@ -187,6 +191,7 @@ export async function listMediaItems() {
     SELECT
       media_items.id,
       media_items.drive_file_id,
+      media_items.thumbnail_drive_file_id,
       media_items.file_name,
       media_items.mime_type,
       media_items.file_size,
@@ -206,7 +211,7 @@ export async function listMediaItems() {
 
 export async function getMediaRecord(mediaId: string) {
   const rows = (await sql()`
-    SELECT id, drive_file_id, file_name, mime_type
+    SELECT id, drive_file_id, thumbnail_drive_file_id, file_name, mime_type
     FROM media_items
     WHERE id = ${mediaId}
     LIMIT 1
@@ -219,7 +224,7 @@ export async function getMediaRecords(mediaIds: string[]) {
   if (!mediaIds.length) return [];
 
   const rows = (await sql()`
-    SELECT id, drive_file_id, file_name, mime_type
+    SELECT id, drive_file_id, thumbnail_drive_file_id, file_name, mime_type
     FROM media_items
     WHERE id = ANY(${mediaIds}::uuid[])
   `) as MediaRecordRow[];
@@ -251,6 +256,7 @@ export async function deleteMediaItems(mediaIds: string[]) {
 
 export async function createMediaItem(input: {
   driveFileId: string;
+  thumbnailDriveFileId?: string | null;
   fileName: string;
   mimeType: string;
   fileSize: number;
@@ -262,6 +268,7 @@ export async function createMediaItem(input: {
   const rows = (await sql()`
     INSERT INTO media_items (
       drive_file_id,
+      thumbnail_drive_file_id,
       file_name,
       mime_type,
       file_size,
@@ -272,6 +279,7 @@ export async function createMediaItem(input: {
     )
     VALUES (
       ${input.driveFileId},
+      ${input.thumbnailDriveFileId ?? null},
       ${input.fileName},
       ${input.mimeType},
       ${input.fileSize},

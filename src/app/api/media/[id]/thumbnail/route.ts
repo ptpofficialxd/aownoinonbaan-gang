@@ -1,4 +1,4 @@
-import { streamDriveThumbnail } from "@/lib/drive";
+import { streamDriveFile, streamDriveThumbnail } from "@/lib/drive";
 import { getMediaRecord } from "@/lib/media";
 import { getServerSession } from "@/lib/session";
 
@@ -186,6 +186,23 @@ export async function GET(
   const record = await getMediaRecord(params.id);
   if (!record) {
     return new Response("File not found", { status: 404 });
+  }
+
+  if (record.thumbnail_drive_file_id) {
+    try {
+      const storedThumbnailRes = await streamDriveFile(
+        record.thumbnail_drive_file_id,
+      );
+      if (storedThumbnailRes?.body) {
+        return new Response(storedThumbnailRes.body, {
+          headers: {
+            "Content-Type":
+              storedThumbnailRes.headers.get("content-type") || "image/jpeg",
+            "Cache-Control": "private, no-store",
+          },
+        });
+      }
+    } catch {}
   }
 
   try {
