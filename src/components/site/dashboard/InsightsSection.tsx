@@ -16,10 +16,10 @@ export function InsightsSection({
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
             <Badge className="w-fit border-white/10 bg-white/6 text-zinc-300">
-              ฮิตจังอะเรา
+              ฮอตจังอะเรา
             </Badge>
             <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-rose-300/20 bg-rose-400/10 text-rose-200 shadow-[0_0_20px_rgba(251,113,133,0.18)]">
-              <Icon name="flame" className="h-3 w-3" />
+              <Icon name="heart" className="h-3 w-3" />
             </span>
           </div>
           <div className="mt-5 space-y-4">
@@ -59,7 +59,7 @@ export function InsightsSection({
               จำนวนอัปโหลด
             </Badge>
             <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-sky-300/20 bg-sky-400/10 text-sky-200 shadow-[0_0_20px_rgba(56,189,248,0.18)]">
-              <Icon name="chart-up" className="h-3 w-3" />
+              <Icon name="chart-bars" className="h-3 w-3" />
             </span>
           </div>
           <div className="mt-5 space-y-3">
@@ -86,17 +86,32 @@ export function InsightsSection({
           </div>
 
           <div className="mt-5 rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-zinc-500">
-              ขยันมากมั้ง (เยอะสุด)
-            </p>
-            <p className="mt-2 text-base font-semibold text-white">
-              {topMember ? `@${topMember.username}` : ""}
-            </p>
-            <p className="mt-1 text-sm text-zinc-400">
-              {topMember
-                ? `${topMember.name} · ${topMember.uploads} ครั้ง`
-                : "อัปโหลดไฟล์เพื่อเริ่มกิจกรรม Leaderboard"}
-            </p>
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-zinc-500">
+                  ขยันมากมั้ง (เยอะสุด)
+                </p>
+                <p className="mt-2 text-base font-semibold text-white">
+                  {topMember ? `@${topMember.username}` : ""}
+                </p>
+                <p className="mt-1 text-sm text-zinc-400">
+                  {topMember
+                    ? `${topMember.name} · ${topMember.uploads} ครั้ง`
+                    : "อัปโหลดไฟล์เพื่อเริ่มกิจกรรม Leaderboard"}
+                </p>
+              </div>
+
+              {topMember ? (
+                <div className="shrink-0 items-center justify-center self-stretch flex">
+                  {/* biome-ignore lint/performance/noImgElement: decorative remote gif is intentionally rendered as a plain image */}
+                  <img
+                    src="https://cdn.pixabay.com/animation/2025/06/26/05/26/05-26-59-506_512.gif"
+                    alt=""
+                    className="h-12 w-12 object-contain sm:h-16 sm:w-16"
+                  />
+                </div>
+              ) : null}
+            </div>
           </div>
         </CardHeader>
       </Card>

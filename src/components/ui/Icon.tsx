@@ -27,6 +27,7 @@ type IconName =
   | "file"
   | "flame"
   | "chart-up"
+  | "chart-bars"
   | "google-drive";
 
 const iconMap: Record<IconName, ReactNode> = {
@@ -468,6 +469,34 @@ const iconMap: Record<IconName, ReactNode> = {
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth="2"
+      />
+    </>
+  ),
+  "chart-bars": (
+    <>
+      <rect
+        x="4"
+        y="11"
+        width="3"
+        height="8"
+        rx="1.2"
+        fill="currentColor"
+      />
+      <rect
+        x="10.5"
+        y="7"
+        width="3"
+        height="12"
+        rx="1.2"
+        fill="currentColor"
+      />
+      <rect
+        x="17"
+        y="4"
+        width="3"
+        height="15"
+        rx="1.2"
+        fill="currentColor"
       />
     </>
   ),
