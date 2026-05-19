@@ -8,6 +8,8 @@ import type { MediaItem } from "@/lib/media";
 import type { DashboardSummary } from "./types";
 import { getMimeBadgeLabel, getPreviewKind, isPreviewableFile } from "./utils";
 
+const videoThumbnailCache = new Map<string, string>();
+
 export function LibrarySection({
   activeCategory,
   allVisibleSelected,
@@ -864,14 +866,18 @@ function MediaCard({
           </>
         ) : (
           <>
-            {/* biome-ignore lint/performance/noImgElement: thumbnail preview is proxied from a protected route */}
-            <img
-              src={`/api/media/${item.id}/thumbnail`}
-              alt={item.fileName}
-              className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03] ${
-                previewKind === "video" ? "object-center" : "object-top"
-              }`}
-            />
+            {previewKind === "video" ? (
+              <VideoThumbnail item={item} />
+            ) : (
+              <>
+                {/* biome-ignore lint/performance/noImgElement: thumbnail preview is proxied from a protected route */}
+                <img
+                  src={`/api/media/${item.id}/thumbnail`}
+                  alt={item.fileName}
+                  className="h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]"
+                />
+              </>
+            )}
           </>
         )}
 
@@ -916,6 +922,117 @@ function MediaCard({
           {item.description || "ไม่มีโน้ตประกอบไฟล์นี้"}
         </p>
       </div>
+    </div>
+  );
+}
+
+function VideoThumbnail({ item }: { item: MediaItem }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [thumbnailSrc, setThumbnailSrc] = useState<string | null>(
+    videoThumbnailCache.get(item.id) ?? null,
+  );
+
+  useEffect(() => {
+    if (thumbnailSrc) return;
+
+    const element = containerRef.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      {
+        rootMargin: "240px",
+      },
+    );
+
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [thumbnailSrc]);
+
+  useEffect(() => {
+    if (!isVisible || thumbnailSrc) return;
+
+    let cancelled = false;
+    const video = document.createElement("video");
+
+    video.preload = "metadata";
+    video.muted = true;
+    video.playsInline = true;
+    video.crossOrigin = "anonymous";
+    video.src = `/api/media/${item.id}/content`;
+
+    const cleanup = () => {
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+    };
+
+    const captureFrame = () => {
+      if (cancelled || !video.videoWidth || !video.videoHeight) return;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      const context = canvas.getContext("2d");
+      if (!context) return;
+
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      try {
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+        videoThumbnailCache.set(item.id, dataUrl);
+        if (!cancelled) {
+          setThumbnailSrc(dataUrl);
+        }
+      } catch {}
+    };
+
+    const handleLoadedData = () => {
+      const seekTime =
+        Number.isFinite(video.duration) && video.duration > 0.4
+          ? Math.min(0.35, video.duration / 3)
+          : 0;
+
+      if (seekTime <= 0) {
+        captureFrame();
+        return;
+      }
+
+      try {
+        video.currentTime = seekTime;
+      } catch {
+        captureFrame();
+      }
+    };
+
+    video.addEventListener("loadeddata", handleLoadedData);
+    video.addEventListener("seeked", captureFrame, { once: true });
+    video.addEventListener("error", cleanup, { once: true });
+
+    return () => {
+      cancelled = true;
+      video.removeEventListener("loadeddata", handleLoadedData);
+      video.removeEventListener("seeked", captureFrame);
+      cleanup();
+    };
+  }, [isVisible, item.id, thumbnailSrc]);
+
+  return (
+    <div ref={containerRef} className="h-full w-full">
+      {/* biome-ignore lint/performance/noImgElement: thumbnail preview is proxied from a protected route */}
+      <img
+        src={thumbnailSrc ?? `/api/media/${item.id}/thumbnail`}
+        alt={item.fileName}
+        className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]"
+      />
     </div>
   );
 }
