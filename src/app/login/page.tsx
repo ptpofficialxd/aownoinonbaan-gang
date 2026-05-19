@@ -78,13 +78,13 @@ function LoginView() {
             </div>
 
             <h1 className="text-2xl font-semibold tracking-tight text-white">
-              Login{" — "}
+              เอาน้อยนอนบ้าน{" "}
               <span className="break-words bg-gradient-to-br from-cyan-300 via-cyan-400 to-violet-400 bg-clip-text text-transparent">
-                เอาน้อยนอนบ้าน
+                Space
               </span>
             </h1>
             <p className="mt-2 break-words text-sm leading-6 text-zinc-400">
-              Developed by{" "}
+              Developed by{" — "}
               <a
                 href="https://www.instagram.com/ptpofficialxd/"
                 target="_blank"
