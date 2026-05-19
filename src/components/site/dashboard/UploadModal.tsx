@@ -4,10 +4,12 @@ import type { MediaItem } from "@/lib/media";
 import { UploadForm } from "../UploadForm";
 
 export function UploadModal({
+  initialFiles,
   onClose,
   onUploaded,
   open,
 }: {
+  initialFiles?: File[];
   onClose: () => void;
   onUploaded: (items: MediaItem[]) => void;
   open: boolean;
@@ -49,7 +51,7 @@ export function UploadModal({
         </div>
 
         <div className="overflow-y-auto px-6 py-6 sm:px-7">
-          <UploadForm onUploaded={onUploaded} />
+          <UploadForm initialFiles={initialFiles} onUploaded={onUploaded} />
         </div>
       </div>
     </div>

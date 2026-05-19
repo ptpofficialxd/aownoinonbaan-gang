@@ -5,6 +5,7 @@ import {
   useDeferredValue,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import type { MediaItem } from "@/lib/media";
@@ -41,9 +42,12 @@ export function DashboardShell({
   const [busyIds, setBusyIds] = useState<string[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [pendingUploadFiles, setPendingUploadFiles] = useState<File[]>([]);
+  const [dragOverlayVisible, setDragOverlayVisible] = useState(false);
   const [previewItem, setPreviewItem] = useState<MediaItem | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(15);
+  const dragDepthRef = useRef(0);
   const deferredSearch = useDeferredValue(search);
   const cloudHealth = useCloudHealth(driveConnected);
   const { previewText, previewTextError, previewTextLoading } =
@@ -156,21 +160,95 @@ export function DashboardShell({
   const isSystemReady = driveConnected && cloudHealth.online;
   const canUploadNow = isSystemReady;
 
+  useEffect(() => {
+    function isDesktopViewport() {
+      return window.innerWidth >= 1024;
+    }
+
+    function hasFiles(dataTransfer: DataTransfer | null) {
+      if (!dataTransfer) return false;
+      return Array.from(dataTransfer.types).includes("Files");
+    }
+
+    function handleDragEnter(event: DragEvent) {
+      if (!isDesktopViewport() || !canUploadNow || !hasFiles(event.dataTransfer)) {
+        return;
+      }
+
+      event.preventDefault();
+      dragDepthRef.current += 1;
+      setDragOverlayVisible(true);
+    }
+
+    function handleDragOver(event: DragEvent) {
+      if (!isDesktopViewport() || !canUploadNow || !hasFiles(event.dataTransfer)) {
+        return;
+      }
+
+      event.preventDefault();
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = "copy";
+      }
+    }
+
+    function handleDragLeave(event: DragEvent) {
+      if (!isDesktopViewport() || !hasFiles(event.dataTransfer)) {
+        return;
+      }
+
+      event.preventDefault();
+      dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+
+      if (dragDepthRef.current === 0) {
+        setDragOverlayVisible(false);
+      }
+    }
+
+    function handleDrop(event: DragEvent) {
+      if (!isDesktopViewport() || !canUploadNow || !hasFiles(event.dataTransfer)) {
+        return;
+      }
+
+      event.preventDefault();
+      dragDepthRef.current = 0;
+      setDragOverlayVisible(false);
+
+      const droppedFiles = Array.from(event.dataTransfer?.files ?? []);
+      if (!droppedFiles.length) return;
+
+      setPendingUploadFiles(droppedFiles);
+      setUploadOpen(true);
+    }
+
+    window.addEventListener("dragenter", handleDragEnter);
+    window.addEventListener("dragover", handleDragOver);
+    window.addEventListener("dragleave", handleDragLeave);
+    window.addEventListener("drop", handleDrop);
+
+    return () => {
+      window.removeEventListener("dragenter", handleDragEnter);
+      window.removeEventListener("dragover", handleDragOver);
+      window.removeEventListener("dragleave", handleDragLeave);
+      window.removeEventListener("drop", handleDrop);
+    };
+  }, [canUploadNow]);
+
   function handleUploadedItem(items: MediaItem[]) {
     if (!items.length) {
       setUploadOpen(false);
       return;
     }
 
-    startTransition(() => {
-      setLibraryItems((current) => {
-        const uploadedIds = new Set(items.map((item) => item.id));
-        const withoutDuplicate = current.filter(
-          (entry) => !uploadedIds.has(entry.id),
+      startTransition(() => {
+        setLibraryItems((current) => {
+          const uploadedIds = new Set(items.map((item) => item.id));
+          const withoutDuplicate = current.filter(
+            (entry) => !uploadedIds.has(entry.id),
         );
         return [...items.slice().reverse(), ...withoutDuplicate];
       });
       setUploadOpen(false);
+      setPendingUploadFiles([]);
       setActiveCategory("all");
       setSearch("");
     });
@@ -345,7 +423,11 @@ export function DashboardShell({
 
       <UploadModal
         open={uploadOpen}
-        onClose={() => setUploadOpen(false)}
+        initialFiles={pendingUploadFiles}
+        onClose={() => {
+          setUploadOpen(false);
+          setPendingUploadFiles([]);
+        }}
         onUploaded={handleUploadedItem}
       />
 
@@ -356,6 +438,26 @@ export function DashboardShell({
         previewTextError={previewTextError}
         previewTextLoading={previewTextLoading}
       />
+
+      {dragOverlayVisible ? (
+        <div className="pointer-events-none fixed inset-0 z-[60] hidden lg:block">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="absolute inset-8 rounded-[36px] border border-cyan-300/30 bg-cyan-400/10 shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_30px_120px_-48px_rgba(34,211,238,0.65)]" />
+          <div className="absolute inset-0 flex items-center justify-center p-10">
+            <div className="max-w-xl rounded-[32px] border border-cyan-300/26 bg-[#101116]/92 px-10 py-9 text-center shadow-[0_40px_120px_-56px_rgba(0,0,0,0.9)]">
+              <p className="text-[11px] uppercase tracking-[0.32em] text-cyan-100/60">
+                Drag And Drop
+              </p>
+              <h3 className="mt-3 text-3xl font-semibold text-white">
+                วางไฟล์ตรงนี้เพื่ออัปโหลด
+              </h3>
+              <p className="mt-3 text-sm leading-6 text-zinc-300">
+                ปล่อยเมาส์แล้วระบบจะเปิดหน้าอัปโหลดพร้อมแนบไฟล์ที่ลากมาให้ทันที
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

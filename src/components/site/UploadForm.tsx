@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/Input";
 import { CATEGORIES, type MediaItem } from "@/lib/media";
 
 export function UploadForm({
+  initialFiles,
   onUploaded,
 }: {
+  initialFiles?: File[];
   onUploaded?: (items: MediaItem[]) => void;
 }) {
   const [category, setCategory] = useState<string>("");
@@ -42,6 +44,14 @@ export function UploadForm({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!initialFiles?.length) return;
+
+    setFiles(initialFiles);
+    setError(null);
+    setMessage(null);
+  }, [initialFiles]);
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
