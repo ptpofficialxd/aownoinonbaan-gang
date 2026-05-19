@@ -1180,42 +1180,62 @@ function VideoThumbnail({ item }: { item: MediaItem }) {
     if (!isVisible || thumbnailSrc) return;
 
     let cancelled = false;
+    let captured = false;
     const video = document.createElement("video");
+    const appendedParent = containerRef.current ?? document.body;
 
-    video.preload = "metadata";
+    video.preload = "auto";
     video.muted = true;
     video.playsInline = true;
+    video.setAttribute("muted", "");
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "true");
     video.crossOrigin = "anonymous";
     video.src = `/api/media/${item.id}/content`;
+    video.style.position = "absolute";
+    video.style.width = "1px";
+    video.style.height = "1px";
+    video.style.opacity = "0";
+    video.style.pointerEvents = "none";
+    video.style.left = "-9999px";
+    video.style.top = "0";
+    appendedParent.appendChild(video);
 
     const cleanup = () => {
       video.pause();
       video.removeAttribute("src");
       video.load();
+      video.remove();
     };
 
     const captureFrame = () => {
-      if (cancelled || !video.videoWidth || !video.videoHeight) return;
+      if (cancelled || captured || !video.videoWidth || !video.videoHeight) {
+        return false;
+      }
 
       const canvas = document.createElement("canvas");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
 
       const context = canvas.getContext("2d");
-      if (!context) return;
+      if (!context) return false;
 
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       try {
         const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+        captured = true;
         videoThumbnailCache.set(item.id, dataUrl);
         if (!cancelled) {
           setThumbnailSrc(dataUrl);
         }
-      } catch {}
+        return true;
+      } catch {
+        return false;
+      }
     };
 
-    const handleLoadedData = () => {
+    const seekAndCapture = () => {
       const seekTime =
         Number.isFinite(video.duration) && video.duration > 0.4
           ? Math.min(0.35, video.duration / 3)
@@ -1233,14 +1253,35 @@ function VideoThumbnail({ item }: { item: MediaItem }) {
       }
     };
 
+    const handleLoadedMetadata = () => {
+      seekAndCapture();
+    };
+
+    const handleLoadedData = () => {
+      captureFrame();
+    };
+
+    const handleCanPlay = () => {
+      captureFrame();
+    };
+
+    const handleSeeked = () => {
+      captureFrame();
+    };
+
+    video.addEventListener("loadedmetadata", handleLoadedMetadata);
     video.addEventListener("loadeddata", handleLoadedData);
-    video.addEventListener("seeked", captureFrame, { once: true });
+    video.addEventListener("canplay", handleCanPlay);
+    video.addEventListener("seeked", handleSeeked);
     video.addEventListener("error", cleanup, { once: true });
+    video.load();
 
     return () => {
       cancelled = true;
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
       video.removeEventListener("loadeddata", handleLoadedData);
-      video.removeEventListener("seeked", captureFrame);
+      video.removeEventListener("canplay", handleCanPlay);
+      video.removeEventListener("seeked", handleSeeked);
       cleanup();
     };
   }, [isVisible, item.id, thumbnailSrc]);
