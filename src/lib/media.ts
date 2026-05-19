@@ -1,6 +1,7 @@
 import { sql } from "./db";
 
-export const CATEGORIES = [
+const BASE_CATEGORY_SECTIONS = {
+  CGM48: [
   "CHIFA",
   "ELSE",
   "EMMA",
@@ -21,7 +22,69 @@ export const CATEGORIES = [
   "SATANGPOUND",
   "SHENAE",
   "VALENTINES",
-] as const;
+  ],
+  BNK48: [
+    "ARLEE",
+    "BERRY",
+    "BLYTHE",
+    "CARTOON",
+    "EMMY",
+    "FAME",
+    "GALEYA",
+    "GRAPE",
+    "HOOP",
+    "INKCHA",
+    "JANRY",
+    "JEW",
+    "KHAIMOOK",
+    "KHOWJOW",
+    "L",
+    "LUKSORN",
+    "MAIL",
+    "MARINE",
+    "MAYJI",
+    "MICHA",
+    "MINT",
+    "MIRIN",
+    "MONET",
+    "NALL",
+    "NAMMONN",
+    "NEEN",
+    "NIYA",
+    "PALMMY",
+    "PANCAKE",
+    "PATT",
+    "PRAEW",
+    "PROUD",
+    "ROSE",
+    "SAONOI",
+    "SINDY",
+    "WAWA",
+    "YOGHURT",
+  ],
+  OTHER: ["อื่นๆ", "เสว"],
+} as const;
+
+export type BaseCategorySection = keyof typeof BASE_CATEGORY_SECTIONS;
+export type CategorySection = "ALL" | BaseCategorySection;
+export const SECTION_FILTER_PREFIX = "__section__:";
+
+export const CATEGORY_SECTIONS = {
+  ALL: Object.values(BASE_CATEGORY_SECTIONS).flat(),
+  ...BASE_CATEGORY_SECTIONS,
+} as const satisfies Record<CategorySection, readonly string[]>;
+
+export const CATEGORY_SECTION_NAMES = [
+  "ALL",
+  ...(Object.keys(BASE_CATEGORY_SECTIONS) as BaseCategorySection[]),
+] as const satisfies readonly CategorySection[];
+export const BASE_CATEGORY_SECTION_NAMES = Object.keys(
+  BASE_CATEGORY_SECTIONS,
+) as BaseCategorySection[];
+
+export const CATEGORIES = Object.values(BASE_CATEGORY_SECTIONS).flat() as Array<
+  (typeof BASE_CATEGORY_SECTIONS)[BaseCategorySection][number]
+>;
 
 export type Category = (typeof CATEGORIES)[number];
 
@@ -69,6 +132,38 @@ export function normalizeCategory(value: string) {
   );
 
   return matched ?? "ELSE";
+}
+
+export function getCategorySection(category: string): CategorySection | null {
+  const normalized = category.trim().toLowerCase();
+
+  for (const section of Object.keys(BASE_CATEGORY_SECTIONS) as BaseCategorySection[]) {
+    if (
+      BASE_CATEGORY_SECTIONS[section].some(
+        (entry) => entry.toLowerCase() === normalized,
+      )
+    ) {
+      return section;
+    }
+  }
+
+  return null;
+}
+
+export function getCategoriesForSection(section: CategorySection) {
+  return CATEGORY_SECTIONS[section];
+}
+
+export function createSectionFilterValue(section: CategorySection) {
+  return section === "ALL" ? "all" : `${SECTION_FILTER_PREFIX}${section}`;
+}
+
+export function parseSectionFilterValue(value: string): CategorySection | null {
+  if (value === "all") return "ALL";
+  if (!value.startsWith(SECTION_FILTER_PREFIX)) return null;
+
+  const section = value.slice(SECTION_FILTER_PREFIX.length) as CategorySection;
+  return CATEGORY_SECTION_NAMES.includes(section) ? section : null;
 }
 
 function mapMediaRow(row: MediaRow): MediaItem {

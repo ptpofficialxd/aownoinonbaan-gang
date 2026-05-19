@@ -438,15 +438,46 @@ async function getCategoryFolderId(
     files?: Array<{ id: string; name: string }>;
   };
 
-  const folderId = data.files?.[0]?.id;
-  if (!folderId) {
+  const existingFolderId = data.files?.[0]?.id;
+  if (existingFolderId) {
+    categoryFolderCache.set(cacheKey, existingFolderId);
+    return existingFolderId;
+  }
+
+  const createRes = await fetch(`${GOOGLE_DRIVE_API_URL}?supportsAllDrives=true`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json; charset=UTF-8",
+    },
+    body: JSON.stringify({
+      mimeType: "application/vnd.google-apps.folder",
+      name: normalizedCategory,
+      parents: [rootFolderId],
+    }),
+    cache: "no-store",
+  });
+
+  if (!createRes.ok) {
+    const detail = await createRes.text();
     throw new Error(
-      `Folder "${normalizedCategory}" was not found inside the configured Google Drive root folder.`,
+      `Drive folder create failed for "${normalizedCategory}": ${createRes.status} ${detail}`,
     );
   }
 
-  categoryFolderCache.set(cacheKey, folderId);
-  return folderId;
+  const createdFolder = (await createRes.json()) as {
+    id?: string;
+    name?: string;
+  };
+
+  if (!createdFolder.id) {
+    throw new Error(
+      `Drive folder create succeeded but no folder id was returned for "${normalizedCategory}".`,
+    );
+  }
+
+  categoryFolderCache.set(cacheKey, createdFolder.id);
+  return createdFolder.id;
 }
 
 export async function streamDriveFile(

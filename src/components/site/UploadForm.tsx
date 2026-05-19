@@ -5,7 +5,43 @@ import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
-import { CATEGORIES, type MediaItem } from "@/lib/media";
+import {
+  BASE_CATEGORY_SECTION_NAMES,
+  getCategoriesForSection,
+  getCategorySection,
+  type BaseCategorySection,
+  type MediaItem,
+} from "@/lib/media";
+
+function getSectionAccentClass(section: BaseCategorySection) {
+  if (section === "CGM48") {
+    return {
+      tab: "border-[#45baa8]/55 bg-[linear-gradient(180deg,rgba(69,186,168,0.22),rgba(69,186,168,0.08))] text-white shadow-[0_12px_28px_-18px_rgba(69,186,168,0.55)]",
+      option:
+        "border-[#45baa8]/30 bg-[linear-gradient(135deg,rgba(69,186,168,0.18),rgba(69,186,168,0.07))] text-white shadow-[0_16px_36px_-28px_rgba(69,186,168,0.45)]",
+      rail: "bg-gradient-to-r from-transparent via-[#45baa8]/70 to-transparent",
+      dot: "border-[#45baa8]/30 bg-[#45baa8]/18 text-[#9be2d8]",
+    };
+  }
+
+  if (section === "BNK48") {
+    return {
+      tab: "border-[#c492c2]/55 bg-[linear-gradient(180deg,rgba(196,146,194,0.24),rgba(196,146,194,0.1))] text-white shadow-[0_12px_28px_-18px_rgba(196,146,194,0.48)]",
+      option:
+        "border-[#c492c2]/30 bg-[linear-gradient(135deg,rgba(196,146,194,0.18),rgba(196,146,194,0.08))] text-white shadow-[0_16px_36px_-28px_rgba(196,146,194,0.42)]",
+      rail: "bg-gradient-to-r from-transparent via-[#c492c2]/70 to-transparent",
+      dot: "border-[#c492c2]/30 bg-[#c492c2]/18 text-[#e3bde0]",
+    };
+  }
+
+  return {
+    tab: "border-white/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] text-white shadow-[0_12px_28px_-18px_rgba(148,163,184,0.28)]",
+    option:
+      "border-white/14 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(148,163,184,0.05))] text-white shadow-[0_16px_36px_-28px_rgba(148,163,184,0.2)]",
+    rail: "bg-gradient-to-r from-transparent via-white/30 to-transparent",
+    dot: "border-white/14 bg-white/[0.08] text-zinc-200",
+  };
+}
 
 export function UploadForm({
   initialFiles,
@@ -15,6 +51,7 @@ export function UploadForm({
   onUploaded?: (items: MediaItem[]) => void;
 }) {
   const [category, setCategory] = useState<string>("");
+  const [categorySection, setCategorySection] = useState<BaseCategorySection>("CGM48");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
@@ -54,6 +91,13 @@ export function UploadForm({
   }, [initialFiles]);
 
   useEffect(() => {
+    const nextSection = getCategorySection(category);
+    if (nextSection && nextSection !== "ALL") {
+      setCategorySection(nextSection);
+    }
+  }, [category]);
+
+  useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
       const target = event.target as Node;
       if (
@@ -82,10 +126,23 @@ export function UploadForm({
   function openDropdown() {
     if (!categoryMenuOpen && categoryButtonRef.current) {
       const rect = categoryButtonRef.current.getBoundingClientRect();
+      const horizontalMargin = 16;
+      const viewportWidth = window.innerWidth;
+      const isMobile = viewportWidth < 640;
+      const width = isMobile
+        ? Math.min(Math.max(rect.width, 288), viewportWidth - horizontalMargin * 2)
+        : rect.width;
+      const left = isMobile
+        ? Math.min(
+            Math.max(rect.left, horizontalMargin),
+            viewportWidth - width - horizontalMargin,
+          )
+        : rect.left;
+
       setDropdownPos({
         bottom: window.innerHeight - rect.top + 8,
-        left: rect.left,
-        width: rect.width,
+        left,
+        width,
       });
     }
     setCategoryMenuOpen((open) => !open);
@@ -419,24 +476,51 @@ export function UploadForm({
         width: `${dropdownPos.width}px`,
         zIndex: 9999,
       }}
-      className="overflow-hidden rounded-[24px] border border-cyan-300/16 bg-[linear-gradient(180deg,rgba(7,12,18,0.98),rgba(5,8,15,0.98))] p-2 shadow-[0_30px_80px_-28px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.08)] backdrop-blur-xl"
+      className="overflow-hidden rounded-[22px] border border-cyan-300/16 bg-[linear-gradient(180deg,rgba(7,12,18,0.98),rgba(5,8,15,0.98))] p-2 shadow-[0_26px_72px_-30px_rgba(0,0,0,0.88),0_0_0_1px_rgba(255,255,255,0.04),0_0_28px_rgba(34,211,238,0.07)] backdrop-blur-xl"
     >
       <div className="mb-2 flex items-center justify-between px-2 pt-1">
-        <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-          เลือกหมวดหมู่
-        </p>
-        <p className="text-[11px] text-cyan-100/60">
-          {CATEGORIES.length} ตัวเลือก
-        </p>
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+            เลือกหมวดหมู่
+          </p>
+          <p className="mt-1 text-[11px] text-cyan-100/60">
+            {categorySection} · {getCategoriesForSection(categorySection).length} ตัวเลือก
+          </p>
+        </div>
+      </div>
+
+      <div className="mb-2.5 grid grid-cols-3 gap-1.5 px-2 sm:gap-2">
+        {BASE_CATEGORY_SECTION_NAMES.map((section) => {
+          const active = section === categorySection;
+          const accent = getSectionAccentClass(section);
+
+          return (
+            <button
+              key={section}
+              type="button"
+              onClick={() => setCategorySection(section)}
+              className={`min-w-0 rounded-[16px] border px-1.5 py-2 text-center transition-all duration-200 sm:rounded-[18px] sm:px-3 ${
+                active
+                  ? accent.tab
+                  : "border-white/8 bg-white/[0.03] text-zinc-300 hover:border-cyan-300/18 hover:bg-white/[0.05] hover:text-white"
+              }`}
+            >
+              <p className="whitespace-nowrap text-[12px] font-semibold tracking-[0.02em] sm:text-sm sm:tracking-[0.04em]">
+                {section}
+              </p>
+            </button>
+          );
+        })}
       </div>
 
       <div
         role="listbox"
         aria-labelledby={categoryId}
-        className="max-h-80 space-y-1 overflow-y-auto pr-1"
+        className="max-h-72 space-y-1.5 overflow-y-auto px-2 pb-2"
       >
-        {CATEGORIES.map((item) => {
+        {getCategoriesForSection(categorySection).map((item) => {
           const selected = item === category;
+          const accent = getSectionAccentClass(categorySection);
 
           return (
             <button
@@ -449,19 +533,39 @@ export function UploadForm({
                 setCategoryMenuOpen(false);
                 setError(null);
               }}
-              className={`flex w-full items-center justify-between rounded-[18px] px-3 py-3 text-left text-sm transition-all duration-150 ${
+              className={`relative w-full overflow-hidden rounded-[18px] border px-4 py-2.5 text-left text-sm transition-all duration-150 ${
                 selected
-                  ? "bg-[linear-gradient(90deg,rgba(34,211,238,0.2),rgba(59,130,246,0.08))] text-white ring-1 ring-inset ring-cyan-300/26"
-                  : "text-zinc-300 hover:bg-white/[0.05] hover:text-white"
+                  ? accent.option
+                  : "border-white/8 bg-white/[0.025] text-zinc-300 hover:border-cyan-300/16 hover:bg-white/[0.05] hover:text-white"
               }`}
             >
-              <span className="font-medium tracking-[0.08em]">{item}</span>
               <span
-                className={`inline-flex h-7 w-7 items-center justify-center rounded-full transition-all ${
-                  selected ? "bg-cyan-300/16 text-cyan-100" : "text-transparent"
+                className={`pointer-events-none absolute inset-x-0 top-0 h-px ${
+                  selected
+                    ? accent.rail
+                    : "bg-transparent"
+                }`}
+              />
+              <span className="block pr-10">
+                <span className="text-[11px] uppercase tracking-[0.24em] text-cyan-100/45">
+                  {categorySection}
+                </span>
+                <span className="mt-0.5 block font-semibold tracking-[0.08em]">
+                  {item}
+                </span>
+              </span>
+              <span
+                className={`pointer-events-none absolute bottom-2.5 right-2.5 inline-flex h-6 w-6 items-center justify-center rounded-full border transition-all ${
+                  selected
+                    ? accent.dot
+                    : "border-white/10 bg-white/[0.04] text-zinc-500"
                 }`}
               >
-                <Icon name="check" className="h-4 w-4" />
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    selected ? "bg-current shadow-[0_0_18px_currentColor]" : "border border-current"
+                  }`}
+                />
               </span>
             </button>
           );
@@ -542,7 +646,9 @@ export function UploadForm({
                 <Icon name="heart" className="h-4 w-4" />
               </div>
               <div className="min-w-0">
-                <p className={fieldEyebrowClass}>เมมเบอร์</p>
+                <p className={fieldEyebrowClass}>
+                  {category ? getCategorySection(category) ?? categorySection : categorySection}
+                </p>
                 <p
                   className={`${fieldValueClass} truncate ${
                     category ? "text-white" : "text-zinc-500"

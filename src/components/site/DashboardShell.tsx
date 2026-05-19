@@ -8,7 +8,11 @@ import {
   useRef,
   useState,
 } from "react";
-import type { MediaItem } from "@/lib/media";
+import {
+  getCategorySection,
+  parseSectionFilterValue,
+  type MediaItem,
+} from "@/lib/media";
 import { DashboardOverview } from "./dashboard/DashboardOverview";
 import { InsightsSection } from "./dashboard/InsightsSection";
 import { LibrarySection } from "./dashboard/LibrarySection";
@@ -117,8 +121,14 @@ export function DashboardShell({
   const filteredItems = useMemo(() => {
     const keyword = deferredSearch.trim().toLowerCase();
     return libraryItems.filter((item) => {
+      const activeSection = parseSectionFilterValue(activeCategory);
+      const itemSection = getCategorySection(item.category);
       const matchesCategory =
-        activeCategory === "all" || item.category === activeCategory;
+        activeCategory === "all"
+          ? true
+          : activeSection
+            ? itemSection === activeSection
+            : item.category === activeCategory;
       const haystack =
         `${item.fileName} ${item.description ?? ""} ${item.uploaderName} ${item.uploaderUsername} ${item.category}`.toLowerCase();
       const matchesSearch = !keyword || haystack.includes(keyword);

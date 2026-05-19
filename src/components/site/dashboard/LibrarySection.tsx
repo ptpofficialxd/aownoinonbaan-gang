@@ -1,14 +1,53 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
 import { formatBytes, formatDate, formatDateCompact } from "@/lib/format";
-import type { MediaItem } from "@/lib/media";
+import {
+  CATEGORY_SECTION_NAMES,
+  createSectionFilterValue,
+  getCategoriesForSection,
+  getCategorySection,
+  parseSectionFilterValue,
+  type CategorySection,
+  type MediaItem,
+} from "@/lib/media";
 import type { DashboardSummary } from "./types";
 import { getMimeBadgeLabel, getPreviewKind, isPreviewableFile } from "./utils";
 
 const videoThumbnailCache = new Map<string, string>();
+
+function getSectionAccentClass(section: CategorySection) {
+  if (section === "CGM48") {
+    return {
+      tab: "border-[#45baa8]/55 bg-[linear-gradient(180deg,rgba(69,186,168,0.22),rgba(69,186,168,0.08))] text-white shadow-[0_12px_28px_-18px_rgba(69,186,168,0.55)]",
+      option:
+        "border-[#45baa8]/30 bg-[linear-gradient(135deg,rgba(69,186,168,0.18),rgba(69,186,168,0.07))] text-white shadow-[0_16px_36px_-28px_rgba(69,186,168,0.45)]",
+      rail: "bg-gradient-to-r from-transparent via-[#45baa8]/70 to-transparent",
+      dot: "border-[#45baa8]/30 bg-[#45baa8]/18 text-[#9be2d8]",
+    };
+  }
+
+  if (section === "BNK48") {
+    return {
+      tab: "border-[#c492c2]/55 bg-[linear-gradient(180deg,rgba(196,146,194,0.24),rgba(196,146,194,0.1))] text-white shadow-[0_12px_28px_-18px_rgba(196,146,194,0.48)]",
+      option:
+        "border-[#c492c2]/30 bg-[linear-gradient(135deg,rgba(196,146,194,0.18),rgba(196,146,194,0.08))] text-white shadow-[0_16px_36px_-28px_rgba(196,146,194,0.42)]",
+      rail: "bg-gradient-to-r from-transparent via-[#c492c2]/70 to-transparent",
+      dot: "border-[#c492c2]/30 bg-[#c492c2]/18 text-[#e3bde0]",
+    };
+  }
+
+  return {
+    tab: "border-white/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] text-white shadow-[0_12px_28px_-18px_rgba(148,163,184,0.28)]",
+    option:
+      "border-white/14 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(148,163,184,0.05))] text-white shadow-[0_16px_36px_-28px_rgba(148,163,184,0.2)]",
+    rail: "bg-gradient-to-r from-transparent via-white/30 to-transparent",
+    dot: "border-white/14 bg-white/[0.08] text-zinc-200",
+  };
+}
 
 export function LibrarySection({
   activeCategory,
@@ -66,8 +105,19 @@ export function LibrarySection({
   const isSystemReady = canUploadNow;
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
   const [actionMenuOpen, setActionMenuOpen] = useState(false);
+  const [categorySection, setCategorySection] = useState<CategorySection>("ALL");
+  const [mounted, setMounted] = useState(false);
+  const [categoryDropdownPos, setCategoryDropdownPos] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+    maxHeight: 0,
+  });
+  const mobileToolbarRef = useRef<HTMLDivElement | null>(null);
   const mobileCategoryMenuRef = useRef<HTMLDivElement | null>(null);
   const desktopCategoryMenuRef = useRef<HTMLDivElement | null>(null);
+  const mobileCategoryButtonRef = useRef<HTMLButtonElement | null>(null);
+  const desktopCategoryButtonRef = useRef<HTMLButtonElement | null>(null);
   const actionMenuRef = useRef<HTMLDivElement | null>(null);
   const pageStart = filteredItems.length
     ? (currentPage - 1) * itemsPerPage + 1
@@ -83,15 +133,69 @@ export function LibrarySection({
     if (page === 1 || page === totalPages) return true;
     return Math.abs(page - currentPage) <= 1;
   });
+  const categoryCountMap = new Map(
+    dashboard.categories.map((category) => [category.name, category.count]),
+  );
+  const sectionCountMap = new Map(
+    CATEGORY_SECTION_NAMES.map((section) => [
+      section,
+      section === "ALL"
+        ? dashboard.totalItems
+        : dashboard.categories
+            .filter((category) => getCategorySection(category.name) === section)
+            .reduce((sum, category) => sum + category.count, 0),
+    ]),
+  );
+  const activeSectionFilter = parseSectionFilterValue(activeCategory);
   const activeCategorySummary =
     activeCategory === "all"
       ? {
           name: "ทั้งหมด",
           count: dashboard.totalItems,
         }
-      : dashboard.categories.find(
-          (category) => category.name === activeCategory,
-        );
+      : activeSectionFilter
+        ? {
+            name: "ทั้งหมด",
+            count: sectionCountMap.get(activeSectionFilter) ?? 0,
+          }
+        : {
+            name: activeCategory,
+            count:
+              dashboard.categories.find((category) => category.name === activeCategory)
+                ?.count ?? 0,
+          };
+  const sectionCategories = [...getCategoriesForSection(categorySection)] as string[];
+  const orderedSectionCategories =
+    !activeSectionFilter &&
+    activeCategory !== "all" &&
+    sectionCategories.includes(activeCategory)
+      ? [
+          activeCategory,
+          ...sectionCategories.filter((category) => category !== activeCategory),
+        ]
+      : sectionCategories;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const sectionFilter = parseSectionFilterValue(activeCategory);
+    if (sectionFilter) {
+      setCategorySection(sectionFilter);
+      return;
+    }
+
+    if (activeCategory === "all") {
+      setCategorySection("ALL");
+      return;
+    }
+
+    const nextSection = getCategorySection(activeCategory);
+    if (nextSection) {
+      setCategorySection(nextSection);
+    }
+  }, [activeCategory]);
   const uploadButton = canUploadNow ? (
     <button
       type="button"
@@ -116,9 +220,11 @@ export function LibrarySection({
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
       const clickedInsideMobileCategory =
-        mobileCategoryMenuRef.current?.contains(event.target as Node);
+        mobileCategoryMenuRef.current?.contains(event.target as Node) ||
+        mobileCategoryButtonRef.current?.contains(event.target as Node);
       const clickedInsideDesktopCategory =
-        desktopCategoryMenuRef.current?.contains(event.target as Node);
+        desktopCategoryMenuRef.current?.contains(event.target as Node) ||
+        desktopCategoryButtonRef.current?.contains(event.target as Node);
 
       if (!clickedInsideMobileCategory && !clickedInsideDesktopCategory) {
         setCategoryMenuOpen(false);
@@ -144,12 +250,157 @@ export function LibrarySection({
     };
   }, []);
 
+  function updateCategoryMenuPosition() {
+    const isDesktop = window.innerWidth >= 1024;
+    const button = isDesktop
+      ? desktopCategoryButtonRef.current
+      : mobileCategoryButtonRef.current;
+
+    if (!button) {
+      setCategoryMenuOpen(false);
+      return;
+    }
+
+    const rect = button.getBoundingClientRect();
+    if (rect.bottom < 0 || rect.top > window.innerHeight) {
+      setCategoryMenuOpen(false);
+      return;
+    }
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const spaceBelow = viewportHeight - rect.bottom - 20;
+    const maxHeight = Math.max(Math.min(spaceBelow, 460), 260);
+    const horizontalMargin = 16;
+    const mobileToolbarRect = mobileToolbarRef.current?.getBoundingClientRect();
+    const mobileWidth = Math.min(
+      Math.max(mobileToolbarRect?.width ?? rect.width, 280),
+      viewportWidth - horizontalMargin * 2,
+    );
+    const desktopWidth = Math.min(
+      Math.max(rect.width, 440),
+      viewportWidth - horizontalMargin * 2,
+    );
+    const width = isDesktop ? desktopWidth : mobileWidth;
+    const left = isDesktop
+      ? rect.left
+      : Math.min(
+          Math.max(mobileToolbarRect?.left ?? rect.left, horizontalMargin),
+          viewportWidth - width - horizontalMargin,
+        );
+
+    setCategoryDropdownPos({
+      top: rect.bottom + 12,
+      left,
+      width,
+      maxHeight,
+    });
+  }
+
+  function openCategoryMenu() {
+    if (!categoryMenuOpen) {
+      updateCategoryMenuPosition();
+    }
+
+    setCategoryMenuOpen((open) => !open);
+  }
+
+  useEffect(() => {
+    if (!categoryMenuOpen) return;
+
+    const handleViewportChange = () => {
+      updateCategoryMenuPosition();
+    };
+
+    window.addEventListener("resize", handleViewportChange);
+    window.addEventListener("scroll", handleViewportChange, true);
+
+    return () => {
+      window.removeEventListener("resize", handleViewportChange);
+      window.removeEventListener("scroll", handleViewportChange, true);
+    };
+  }, [categoryMenuOpen]);
+
+  const categoryDropdownContent = (
+    <div
+      ref={
+        typeof window !== "undefined" && window.innerWidth >= 1024
+          ? desktopCategoryMenuRef
+          : mobileCategoryMenuRef
+      }
+      style={{
+        position: "fixed",
+        top: `${categoryDropdownPos.top}px`,
+        left: `${categoryDropdownPos.left}px`,
+        width: `${categoryDropdownPos.width}px`,
+        zIndex: 9999,
+      }}
+      className="overflow-hidden rounded-[24px] border border-cyan-300/16 bg-[linear-gradient(180deg,rgba(7,12,18,0.985),rgba(5,8,15,0.985))] p-2 shadow-[0_34px_90px_-34px_rgba(0,0,0,0.92),0_0_0_1px_rgba(255,255,255,0.04),0_0_34px_rgba(34,211,238,0.08)] backdrop-blur-xl"
+    >
+      <div className="mb-2 flex items-center justify-between px-2 pt-1">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
+            เลือกหมวดหมู่
+          </p>
+          <p className="mt-1 text-[11px] text-cyan-100/60">
+            {categorySection} · {sectionCategories.length} ตัวเลือก
+          </p>
+        </div>
+        <p className="text-[11px] text-cyan-100/60">
+          {activeCategorySummary?.count ?? 0} ไฟล์
+        </p>
+      </div>
+
+      <div className="mb-2.5 grid grid-cols-4 gap-1.5 px-2 sm:gap-2">
+        {CATEGORY_SECTION_NAMES.map((section) => (
+          <SectionSwitchButton
+            key={section}
+            active={section === categorySection}
+            label={section}
+            onClick={() => setCategorySection(section)}
+          />
+        ))}
+      </div>
+
+      <div
+        role="listbox"
+        className="space-y-1.5 overflow-y-auto px-2 pb-2"
+        style={{ maxHeight: `${categoryDropdownPos.maxHeight}px` }}
+      >
+        <CategoryFilterOption
+          active={activeCategory === createSectionFilterValue(categorySection)}
+          count={sectionCountMap.get(categorySection) ?? 0}
+          label="ทั้งหมด"
+          accentSection={categorySection}
+          sectionLabel={categorySection === "ALL" ? "ALL" : `${categorySection} ทั้งหมด`}
+          onClick={() => {
+            onSetActiveCategory(createSectionFilterValue(categorySection));
+            setCategoryMenuOpen(false);
+          }}
+        />
+        {orderedSectionCategories.map((category) => (
+          <CategoryFilterOption
+            key={category}
+            active={activeCategory === category}
+            count={categoryCountMap.get(category) ?? 0}
+            label={category}
+            sectionLabel={getCategorySection(category) ?? categorySection}
+            onClick={() => {
+              onSetActiveCategory(category);
+              setCategoryMenuOpen(false);
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <>
       {/* biome-ignore lint/correctness/useUniqueElementIds: top-level page anchor */}
       <Card
         id="library"
-        className="scroll-mt-16.5 w-full min-w-0 rounded-[32px]"
+        className="scroll-mt-16.5 w-full min-w-0 overflow-visible rounded-[32px]"
       >
         <CardHeader className="border-b border-white/8 pb-5">
           <div className="flex flex-col gap-5">
@@ -182,17 +433,18 @@ export function LibrarySection({
               </div>
 
               <div className="w-full lg:flex lg:w-full lg:max-w-[44rem] lg:justify-end">
-                <div
-                  className={`relative lg:hidden ${categoryMenuOpen ? "z-40" : ""}`}
-                  ref={mobileCategoryMenuRef}
-                >
-                  <div className="flex items-stretch gap-2 sm:gap-3">
+                <div className={categoryMenuOpen ? "relative z-40 lg:hidden" : "lg:hidden"}>
+                  <div
+                    ref={mobileToolbarRef}
+                    className="flex items-stretch gap-2 sm:gap-3"
+                  >
                     <button
+                      ref={mobileCategoryButtonRef}
                       type="button"
                       aria-haspopup="listbox"
                       aria-expanded={categoryMenuOpen}
                       aria-label="เลือกหมวดหมู่ในคลัง"
-                      onClick={() => setCategoryMenuOpen((open) => !open)}
+                      onClick={() => openCategoryMenu()}
                       className="group inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] text-cyan-100 shadow-[0_16px_34px_-24px_rgba(34,211,238,0.45)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/20 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/35 sm:w-[12.5rem] sm:justify-between sm:px-3"
                     >
                       <span className="inline-flex items-center justify-center sm:h-8 sm:w-8 sm:rounded-2xl sm:bg-cyan-300/10 sm:ring-1 sm:ring-inset sm:ring-cyan-200/10">
@@ -247,70 +499,20 @@ export function LibrarySection({
 
                     {uploadButton}
                   </div>
-
-                  <div
-                    className={`absolute left-0 right-0 top-[calc(100%+0.75rem)] z-50 overflow-hidden rounded-[24px] border border-cyan-300/16 bg-[linear-gradient(180deg,rgba(7,12,18,0.98),rgba(5,8,15,0.98))] p-2 shadow-[0_30px_80px_-28px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.08)] backdrop-blur-xl transition-all duration-200 ${
-                      categoryMenuOpen
-                        ? "pointer-events-auto translate-y-0 opacity-100"
-                        : "pointer-events-none -translate-y-2 opacity-0"
-                    }`}
-                  >
-                    <div className="mb-2 flex items-center justify-between px-2 pt-1">
-                      <div>
-                        <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                          เลือกหมวดหมู่
-                        </p>
-                        <p className="mt-1 text-xs text-zinc-400">
-                          {activeCategorySummary?.name ?? "ทั้งหมด"} ·{" "}
-                          {activeCategorySummary?.count ?? 0} ไฟล์
-                        </p>
-                      </div>
-                      <p className="text-[11px] text-cyan-100/60">
-                        {dashboard.categories.length + 1} ตัวเลือก
-                      </p>
-                    </div>
-
-                    <div
-                      role="listbox"
-                      className="max-h-80 space-y-1 overflow-y-auto pr-1"
-                    >
-                      <CategoryFilterOption
-                        active={activeCategory === "all"}
-                        count={dashboard.totalItems}
-                        label="ทั้งหมด"
-                        onClick={() => {
-                          onSetActiveCategory("all");
-                          setCategoryMenuOpen(false);
-                        }}
-                      />
-                      {dashboard.categories.map((category) => (
-                        <CategoryFilterOption
-                          key={category.name}
-                          active={activeCategory === category.name}
-                          count={category.count}
-                          label={category.name}
-                          onClick={() => {
-                            onSetActiveCategory(category.name);
-                            setCategoryMenuOpen(false);
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
                 </div>
 
                 <div className="hidden w-full items-center gap-3 lg:flex">
                   <div
                     className={`w-[17.5rem] shrink-0 ${categoryMenuOpen ? "relative z-40" : ""}`}
-                    ref={desktopCategoryMenuRef}
                   >
                     <div className="relative">
                       <button
+                        ref={desktopCategoryButtonRef}
                         type="button"
                         aria-haspopup="listbox"
                         aria-expanded={categoryMenuOpen}
                         aria-label="เลือกหมวดหมู่ในคลัง"
-                        onClick={() => setCategoryMenuOpen((open) => !open)}
+                        onClick={() => openCategoryMenu()}
                         className="group flex h-12 w-full items-center justify-between rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] px-4 py-3 text-left text-white shadow-[0_16px_34px_-24px_rgba(34,211,238,0.45)] ring-1 ring-inset ring-white/8 transition-all duration-200 hover:border-cyan-300/20 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/35"
                       >
                         <div className="flex min-w-0 items-center gap-3">
@@ -322,7 +524,9 @@ export function LibrarySection({
                               {activeCategorySummary?.name ?? "ทั้งหมด"}
                             </p>
                             <p className="mt-1 text-[11px] tracking-[0.12em] text-zinc-500">
-                              {activeCategorySummary?.count ?? 0} ไฟล์
+                              {activeCategory === "all"
+                                ? `${activeCategorySummary?.count ?? 0} ไฟล์`
+                                : `${activeSectionFilter ?? getCategorySection(activeCategory) ?? categorySection} · ${activeCategorySummary?.count ?? 0} ไฟล์`}
                             </p>
                           </div>
                         </div>
@@ -350,49 +554,6 @@ export function LibrarySection({
                         </div>
                       </button>
 
-                      <div
-                        className={`absolute left-0 right-0 top-[calc(100%+0.75rem)] z-50 overflow-hidden rounded-[24px] border border-cyan-300/16 bg-[linear-gradient(180deg,rgba(7,12,18,0.98),rgba(5,8,15,0.98))] p-2 shadow-[0_30px_80px_-28px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.04),0_0_36px_rgba(34,211,238,0.08)] backdrop-blur-xl transition-all duration-200 ${
-                          categoryMenuOpen
-                            ? "pointer-events-auto translate-y-0 opacity-100"
-                            : "pointer-events-none -translate-y-2 opacity-0"
-                        }`}
-                      >
-                        <div className="mb-2 flex items-center justify-between px-2 pt-1">
-                          <p className="text-[11px] uppercase tracking-[0.24em] text-zinc-500">
-                            เลือกหมวดหมู่
-                          </p>
-                          <p className="text-[11px] text-cyan-100/60">
-                            {dashboard.categories.length + 1} ตัวเลือก
-                          </p>
-                        </div>
-
-                        <div
-                          role="listbox"
-                          className="max-h-80 space-y-1 overflow-y-auto pr-1"
-                        >
-                          <CategoryFilterOption
-                            active={activeCategory === "all"}
-                            count={dashboard.totalItems}
-                            label="ทั้งหมด"
-                            onClick={() => {
-                              onSetActiveCategory("all");
-                              setCategoryMenuOpen(false);
-                            }}
-                          />
-                          {dashboard.categories.map((category) => (
-                            <CategoryFilterOption
-                              key={category.name}
-                              active={activeCategory === category.name}
-                              count={category.count}
-                              label={category.name}
-                              onClick={() => {
-                                onSetActiveCategory(category.name);
-                                setCategoryMenuOpen(false);
-                              }}
-                            />
-                          ))}
-                        </div>
-                      </div>
                     </div>
                   </div>
 
@@ -740,42 +901,101 @@ export function LibrarySection({
           )}
         </CardBody>
       </Card>
+      {mounted && categoryMenuOpen && createPortal(categoryDropdownContent, document.body)}
     </>
   );
 }
 
 function CategoryFilterOption({
+  accentSection,
   active,
   count,
   label,
   onClick,
+  sectionLabel,
 }: {
+  accentSection?: CategorySection;
   active: boolean;
   count: number;
   label: string;
   onClick: () => void;
+  sectionLabel?: string;
 }) {
+  const normalizedSection =
+    sectionLabel === "CGM48" || sectionLabel === "BNK48" || sectionLabel === "OTHER"
+      ? sectionLabel
+      : null;
+  const accent = getSectionAccentClass(accentSection ?? normalizedSection ?? "OTHER");
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-center justify-between rounded-[18px] px-3 py-3 text-left text-sm transition-all ${
+      className={`relative w-full overflow-hidden rounded-[18px] border px-4 py-2.5 text-left text-sm transition-all ${
         active
-          ? "bg-[linear-gradient(90deg,rgba(34,211,238,0.2),rgba(59,130,246,0.08))] text-white ring-1 ring-inset ring-cyan-300/26"
-          : "text-zinc-300 hover:bg-white/[0.05] hover:text-white"
+          ? accent.option
+          : "border-white/8 bg-white/[0.025] text-zinc-300 hover:border-cyan-300/16 hover:bg-white/[0.05] hover:text-white"
       }`}
     >
-      <span className="font-medium tracking-[0.08em]">{label}</span>
       <span
-        className={`inline-flex items-center gap-2 rounded-full px-2 py-1 text-[11px] ${
+        className={`pointer-events-none absolute inset-x-0 top-0 h-px ${
           active
-            ? "bg-cyan-300/16 text-cyan-100"
-            : "bg-white/[0.04] text-zinc-500"
+            ? accent.rail
+            : "bg-transparent"
+        }`}
+      />
+      <span className="block pr-14">
+        {sectionLabel ? (
+          <span className="text-[11px] uppercase tracking-[0.24em] text-cyan-100/45">
+            {sectionLabel}
+          </span>
+        ) : null}
+        <span className="mt-0.5 block font-medium tracking-[0.08em]">{label}</span>
+        <span className="mt-1.5 inline-flex items-center gap-2 rounded-full border border-white/8 bg-black/20 px-2 py-0.5 text-[10px] text-zinc-400">
+          {count} ไฟล์
+        </span>
+      </span>
+      <span
+        className={`pointer-events-none absolute bottom-2.5 right-2.5 inline-flex h-6 w-6 items-center justify-center rounded-full border transition-all ${
+          active
+            ? accent.dot
+            : "border-white/10 bg-white/[0.04] text-zinc-500"
         }`}
       >
-        {count}
-        {active ? <Icon name="check" className="h-3.5 w-3.5" /> : null}
+        <span
+          className={`h-2 w-2 rounded-full ${
+            active ? "bg-current shadow-[0_0_18px_currentColor]" : "border border-current"
+          }`}
+        />
       </span>
+    </button>
+  );
+}
+
+function SectionSwitchButton({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: CategorySection;
+  onClick: () => void;
+}) {
+  const accent = getSectionAccentClass(label);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`min-w-0 rounded-[16px] border px-1.5 py-2 text-center transition-all duration-200 sm:rounded-[18px] sm:px-3 ${
+        active
+          ? accent.tab
+          : "border-white/8 bg-white/[0.03] text-zinc-300 hover:border-cyan-300/18 hover:bg-white/[0.05] hover:text-white"
+      }`}
+    >
+      <p className="whitespace-nowrap text-[12px] font-semibold tracking-[0.02em] sm:text-sm sm:tracking-[0.04em]">
+        {label}
+      </p>
     </button>
   );
 }
