@@ -21,7 +21,11 @@ import type { DashboardSummary } from "./dashboard/types";
 import { UploadModal } from "./dashboard/UploadModal";
 import { useCloudHealth } from "./dashboard/useCloudHealth";
 import { usePreviewText } from "./dashboard/usePreviewText";
-import { buildDashboardSummary, isPreviewableFile } from "./dashboard/utils";
+import {
+  buildDashboardSummary,
+  buildMediaSearchText,
+  isPreviewableFile,
+} from "./dashboard/utils";
 
 export function DashboardShell({
   canConnectDrive,
@@ -129,8 +133,7 @@ export function DashboardShell({
           : activeSection
             ? itemSection === activeSection
             : item.category === activeCategory;
-      const haystack =
-        `${item.fileName} ${item.description ?? ""} ${item.uploaderName} ${item.uploaderUsername} ${item.category}`.toLowerCase();
+      const haystack = buildMediaSearchText(item);
       const matchesSearch = !keyword || haystack.includes(keyword);
       return matchesCategory && matchesSearch;
     });

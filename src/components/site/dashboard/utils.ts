@@ -1,6 +1,20 @@
 import type { MediaItem } from "@/lib/media";
 import type { DashboardSummary } from "./types";
 
+function getFileExtension(fileName: string) {
+  const extension = fileName.split(".").pop()?.trim().toLowerCase() ?? "";
+  return extension && extension !== fileName.toLowerCase() ? extension : "";
+}
+
+function addAliasSet(target: Set<string>, values: string[]) {
+  for (const value of values) {
+    const normalized = value.trim().toLowerCase();
+    if (normalized) {
+      target.add(normalized);
+    }
+  }
+}
+
 export function mediaIconForMime(mimeType: string) {
   if (mimeType.startsWith("image/")) return "image";
   if (mimeType.startsWith("video/")) return "video";
@@ -67,6 +81,118 @@ export function getPreviewHint(mimeType: string) {
     return "แสดง document cover สำหรับไฟล์เอกสารชนิดนี้";
   }
   return "เปิดดูไฟล์ได้ใน popup นี้";
+}
+
+export function buildMediaSearchText(item: MediaItem) {
+  const normalizedMimeType = item.mimeType.trim().toLowerCase();
+  const [mimeGroup = "", mimeSubtype = ""] = normalizedMimeType.split("/");
+  const extension = getFileExtension(item.fileName);
+  const badgeLabel = getMimeBadgeLabel(item.mimeType).toLowerCase();
+  const previewKind = getPreviewKind(item.mimeType);
+  const aliases = new Set<string>();
+
+  addAliasSet(aliases, [
+    normalizedMimeType,
+    mimeGroup,
+    mimeSubtype,
+    mimeSubtype.replace(/[.+-]/g, " "),
+    badgeLabel,
+    extension,
+  ]);
+
+  if (previewKind) {
+    addAliasSet(aliases, [previewKind]);
+  }
+
+  if (mimeGroup === "image") {
+    addAliasSet(aliases, [
+      "image",
+      "images",
+      "photo",
+      "photos",
+      "picture",
+      "pictures",
+      "img",
+    ]);
+  }
+
+  if (mimeGroup === "video") {
+    addAliasSet(aliases, [
+      "video",
+      "videos",
+      "movie",
+      "movies",
+      "clip",
+      "clips",
+      "vdo",
+    ]);
+  }
+
+  if (mimeGroup === "audio") {
+    addAliasSet(aliases, [
+      "audio",
+      "sound",
+      "music",
+      "song",
+      "songs",
+      "voice",
+    ]);
+  }
+
+  if (mimeGroup === "text") {
+    addAliasSet(aliases, [
+      "text",
+      "txt",
+      "file",
+      "files",
+      "document",
+      "documents",
+    ]);
+  }
+
+  if (normalizedMimeType === "application/pdf") {
+    addAliasSet(aliases, ["pdf", "document", "documents", "file", "files"]);
+  }
+
+  if (
+    normalizedMimeType === "application/msword" ||
+    normalizedMimeType ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  ) {
+    addAliasSet(aliases, [
+      "doc",
+      "docx",
+      "document",
+      "documents",
+      "word",
+      "office",
+      "file",
+      "files",
+    ]);
+  }
+
+  if (mimeGroup === "application") {
+    addAliasSet(aliases, [
+      "application",
+      "app",
+      "file",
+      "files",
+      "document",
+      "documents",
+      "data",
+    ]);
+  }
+
+  return [
+    item.fileName,
+    item.description ?? "",
+    item.uploaderName,
+    item.uploaderUsername,
+    item.category,
+    ...aliases,
+  ]
+    .join(" ")
+    .toLowerCase();
 }
 
 export function formatLatency(latencyMs: number | null) {
