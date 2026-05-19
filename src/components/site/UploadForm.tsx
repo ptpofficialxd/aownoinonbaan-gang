@@ -178,6 +178,7 @@ export function UploadForm({
         fileSize: input.file.size,
         category: input.category,
         description: input.description,
+        uploadKind: "media",
       }),
     });
 
@@ -413,6 +414,7 @@ export function UploadForm({
         fileSize: input.file.size,
         category: input.category,
         description: input.description,
+        uploadKind: "thumbnail",
       }),
     });
 

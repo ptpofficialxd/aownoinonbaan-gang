@@ -12,6 +12,7 @@ const GOOGLE_DRIVE_UPLOAD_URL =
 const GOOGLE_DRIVE_API_URL = "https://www.googleapis.com/drive/v3/files";
 const GOOGLE_DRIVE_PROVIDER = "google_drive";
 export const GOOGLE_DRIVE_STATE_COOKIE = "aownoinonbaan_drive_oauth_state";
+const DRIVE_THUMBNAIL_SUBFOLDER_NAME = "thumbnail";
 
 type CachedToken = {
   accessToken: string;
@@ -349,12 +350,28 @@ export async function createDriveUploadSession(input: {
   fileSize: number;
   category?: string | null;
   description?: string | null;
+  uploadKind?: "media" | "thumbnail";
 }) {
   const token = await getAccessToken();
   const { rootFolderId } = getDriveFolderConfig();
-  const targetFolderId = input.category
-    ? await getCategoryFolderId(token, rootFolderId, input.category)
-    : rootFolderId;
+  let targetFolderId = rootFolderId;
+
+  if (input.category) {
+    const categoryFolderId = await getOrCreateDriveFolderId(
+      token,
+      rootFolderId,
+      input.category,
+    );
+
+    targetFolderId =
+      input.uploadKind === "thumbnail"
+        ? await getOrCreateDriveFolderId(
+            token,
+            categoryFolderId,
+            DRIVE_THUMBNAIL_SUBFOLDER_NAME,
+          )
+        : categoryFolderId;
+  }
 
   const metadata = {
     name: input.fileName,
@@ -395,13 +412,13 @@ export async function createDriveUploadSession(input: {
   return { sessionUrl };
 }
 
-async function getCategoryFolderId(
+async function getOrCreateDriveFolderId(
   token: string,
-  rootFolderId: string,
-  category: string,
+  parentFolderId: string,
+  folderName: string,
 ) {
-  const normalizedCategory = category.trim();
-  const cacheKey = `${rootFolderId}:${normalizedCategory.toLowerCase()}`;
+  const normalizedFolderName = folderName.trim();
+  const cacheKey = `${parentFolderId}:${normalizedFolderName.toLowerCase()}`;
   const cachedFolderId = categoryFolderCache.get(cacheKey);
   if (cachedFolderId) {
     return cachedFolderId;
@@ -416,8 +433,8 @@ async function getCategoryFolderId(
     "q",
     [
       "mimeType = 'application/vnd.google-apps.folder'",
-      `name = '${normalizedCategory.replace(/'/g, "\\'")}'`,
-      `'${rootFolderId}' in parents`,
+      `name = '${normalizedFolderName.replace(/'/g, "\\'")}'`,
+      `'${parentFolderId}' in parents`,
       "trashed = false",
     ].join(" and "),
   );
@@ -452,8 +469,8 @@ async function getCategoryFolderId(
     },
     body: JSON.stringify({
       mimeType: "application/vnd.google-apps.folder",
-      name: normalizedCategory,
-      parents: [rootFolderId],
+      name: normalizedFolderName,
+      parents: [parentFolderId],
     }),
     cache: "no-store",
   });
@@ -461,7 +478,7 @@ async function getCategoryFolderId(
   if (!createRes.ok) {
     const detail = await createRes.text();
     throw new Error(
-      `Drive folder create failed for "${normalizedCategory}": ${createRes.status} ${detail}`,
+      `Drive folder create failed for "${normalizedFolderName}": ${createRes.status} ${detail}`,
     );
   }
 
@@ -472,7 +489,7 @@ async function getCategoryFolderId(
 
   if (!createdFolder.id) {
     throw new Error(
-      `Drive folder create succeeded but no folder id was returned for "${normalizedCategory}".`,
+      `Drive folder create succeeded but no folder id was returned for "${normalizedFolderName}".`,
     );
   }
 

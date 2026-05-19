@@ -20,6 +20,7 @@ export async function POST(request: Request) {
     fileSize?: number;
     category?: string;
     description?: string;
+    uploadKind?: "media" | "thumbnail";
   } | null;
 
   if (!body?.fileName || !body.fileSize) {
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
       fileSize: body.fileSize,
       category: normalizeCategory(body.category || "ELSE"),
       description: body.description?.trim() || null,
+      uploadKind: body.uploadKind === "thumbnail" ? "thumbnail" : "media",
     });
 
     return NextResponse.json(upload);
