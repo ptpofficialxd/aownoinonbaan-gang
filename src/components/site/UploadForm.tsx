@@ -613,16 +613,16 @@ export function UploadForm({
 
       {busy ? (
         <div className="rounded-[24px] border border-cyan-300/16 bg-gradient-to-br from-cyan-400/10 via-sky-400/8 to-blue-500/10 p-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-white">
                 {progressLabel ?? "กำลังอัปโหลด"}
               </p>
-              <p className="mt-1 text-xs uppercase tracking-[0.2em] text-cyan-100/70">
+              <p className="mt-1 truncate text-xs uppercase tracking-[0.2em] text-cyan-100/70">
                 {currentFileName || "รอแปปนึงนะงื้อออออ"}
               </p>
             </div>
-            <div className="text-right">
+            <div className="shrink-0 text-right">
               <p className="text-2xl font-semibold text-cyan-100">
                 {progress}%
               </p>
@@ -637,7 +637,7 @@ export function UploadForm({
         </div>
       ) : null}
 
-      <div className="sticky bottom-0 -mx-2 flex flex-col items-center gap-3 rounded-[24px] border border-white/8 bg-[#101116]/92 px-3 pb-3 pt-4 text-center backdrop-blur-xl sm:static sm:mx-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-0 sm:pb-0 sm:pt-0 sm:text-left">
+      <div className="-mx-2 flex flex-col items-center gap-3 rounded-[24px] border border-white/8 bg-[#101116]/92 px-3 pb-3 pt-4 text-center backdrop-blur-xl sm:sticky sm:bottom-0 sm:mx-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-0 sm:pb-0 sm:pt-0 sm:text-left">
         <p className="text-sm text-zinc-500">ระบบจะบันทึกว่าไฟล์นี้ถูกอัปโหลดโดยคุณ</p>
         <div className="flex items-center justify-center sm:justify-end">
           <Button

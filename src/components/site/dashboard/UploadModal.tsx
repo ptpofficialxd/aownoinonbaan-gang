@@ -48,7 +48,7 @@ export function UploadModal({
           </div>
         </div>
 
-        <div className="overflow-hidden sm:overflow-y-auto px-6 py-6 sm:px-7">
+        <div className="overflow-y-auto px-6 py-6 sm:px-7">
           <UploadForm onUploaded={onUploaded} />
         </div>
       </div>
