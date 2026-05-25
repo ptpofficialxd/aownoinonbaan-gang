@@ -39,7 +39,10 @@ export async function GET(request: Request) {
     );
   }
 
-  const tokens = await exchangeCodeForRefreshToken(code);
+  const tokens = await exchangeCodeForRefreshToken(
+    code,
+    new URL(request.url).origin,
+  );
   if (!tokens.refresh_token) {
     return NextResponse.redirect(
       new URL("/?drive=no_refresh_token", request.url),

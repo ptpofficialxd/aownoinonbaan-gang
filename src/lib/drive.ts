@@ -43,22 +43,46 @@ function getDriveFolderConfig() {
   return { rootFolderId };
 }
 
-function getOAuthConfig() {
+function getOAuthClientConfig() {
   const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
-  const redirectUri = process.env.GOOGLE_OAUTH_REDIRECT_URI;
 
-  if (!clientId || !clientSecret || !redirectUri) {
+  if (!clientId || !clientSecret) {
     throw new Error(
-      "Missing Google OAuth env. Set GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, and GOOGLE_OAUTH_REDIRECT_URI.",
+      "Missing Google OAuth env. Set GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET.",
     );
   }
 
   return {
     clientId,
     clientSecret,
-    redirectUri,
   };
+}
+
+function resolveGoogleOAuthRedirectUri(requestOrigin?: string) {
+  const configuredRedirectUri = process.env.GOOGLE_OAUTH_REDIRECT_URI;
+
+  if (requestOrigin) {
+    const requestUrl = new URL(requestOrigin);
+    const configuredUrl = configuredRedirectUri
+      ? new URL(configuredRedirectUri)
+      : null;
+
+    const configuredIsLocalhost = configuredUrl?.hostname === "localhost";
+    const requestIsLocalhost = requestUrl.hostname === "localhost";
+
+    if (!configuredRedirectUri || (configuredIsLocalhost && !requestIsLocalhost)) {
+      return new URL("/api/google-drive/oauth/callback", requestOrigin).toString();
+    }
+  }
+
+  if (!configuredRedirectUri) {
+    throw new Error(
+      "Missing Google OAuth redirect URI. Set GOOGLE_OAUTH_REDIRECT_URI or call this flow from a request context.",
+    );
+  }
+
+  return configuredRedirectUri;
 }
 
 async function getStoredRefreshToken() {
@@ -176,8 +200,9 @@ export function createGoogleDriveOAuthState() {
   return randomUUID();
 }
 
-export function buildGoogleDriveAuthUrl(state: string) {
-  const { clientId, redirectUri } = getOAuthConfig();
+export function buildGoogleDriveAuthUrl(state: string, requestOrigin?: string) {
+  const { clientId } = getOAuthClientConfig();
+  const redirectUri = resolveGoogleOAuthRedirectUri(requestOrigin);
   const url = new URL(GOOGLE_AUTH_URL);
   url.searchParams.set("client_id", clientId);
   url.searchParams.set("redirect_uri", redirectUri);
@@ -190,8 +215,12 @@ export function buildGoogleDriveAuthUrl(state: string) {
   return url.toString();
 }
 
-export async function exchangeCodeForRefreshToken(code: string) {
-  const { clientId, clientSecret, redirectUri } = getOAuthConfig();
+export async function exchangeCodeForRefreshToken(
+  code: string,
+  requestOrigin?: string,
+) {
+  const { clientId, clientSecret } = getOAuthClientConfig();
+  const redirectUri = resolveGoogleOAuthRedirectUri(requestOrigin);
 
   const body = new URLSearchParams({
     code,
@@ -276,13 +305,12 @@ async function getAccessToken() {
     throw new Error("Google Drive is not connected yet.");
   }
 
-  const { clientId, clientSecret, redirectUri } = getOAuthConfig();
+  const { clientId, clientSecret } = getOAuthClientConfig();
   const body = new URLSearchParams({
     client_id: clientId,
     client_secret: clientSecret,
     refresh_token: stored.refresh_token,
     grant_type: "refresh_token",
-    redirect_uri: redirectUri,
   });
 
   const res = await fetch(GOOGLE_TOKEN_URL, {
