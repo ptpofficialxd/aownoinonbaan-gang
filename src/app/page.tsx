@@ -4,12 +4,15 @@ import { Hero } from "@/components/site/Hero";
 import {
   getGoogleDriveConnectionInfo,
   getGoogleDriveQuotaInfo,
+  isGoogleDriveRefreshTokenError,
 } from "@/lib/drive";
 import { getDashboardData } from "@/lib/media";
 import { getServerSession } from "@/lib/session";
 import { getActiveMemberCount } from "@/lib/users";
 
 export const dynamic = "force-dynamic";
+
+type DriveQuotaInfo = Awaited<ReturnType<typeof getGoogleDriveQuotaInfo>>;
 
 export default async function HomePage() {
   const session = await getServerSession();
@@ -21,10 +24,28 @@ export default async function HomePage() {
     getDashboardData(),
     getActiveMemberCount(),
   ]);
-  const [drive, driveQuota] = await Promise.all([
-    getGoogleDriveConnectionInfo(),
-    getGoogleDriveQuotaInfo(),
-  ]);
+  const drive = await getGoogleDriveConnectionInfo();
+
+  let resolvedDrive = drive;
+  let driveQuota: DriveQuotaInfo = {
+    limitBytes: null,
+    usageBytes: null,
+    remainingBytes: null,
+  };
+
+  try {
+    driveQuota = await getGoogleDriveQuotaInfo();
+  } catch (error) {
+    if (isGoogleDriveRefreshTokenError(error)) {
+      resolvedDrive = {
+        connected: false,
+        accountEmail: null,
+        scope: null,
+      };
+    } else {
+      throw error;
+    }
+  }
 
   return (
     <div className="relative w-full max-w-full overflow-x-hidden overflow-y-visible pb-4">
@@ -37,8 +58,8 @@ export default async function HomePage() {
       <DashboardShell
         canConnectDrive={session.role === "admin"}
         canManageDrive={true}
-        driveAccountEmail={drive.accountEmail}
-        driveConnected={drive.connected}
+        driveAccountEmail={resolvedDrive.accountEmail}
+        driveConnected={resolvedDrive.connected}
         items={dashboard.items}
         remainingDriveBytes={driveQuota.remainingBytes}
         totalMembers={memberCount}

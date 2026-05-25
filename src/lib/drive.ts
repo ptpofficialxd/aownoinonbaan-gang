@@ -25,6 +25,13 @@ type IntegrationTokenRow = {
   scope: string | null;
 };
 
+export class GoogleDriveRefreshTokenError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "GoogleDriveRefreshTokenError";
+  }
+}
+
 let cachedToken: CachedToken | null = null;
 const categoryFolderCache = new Map<string, string>();
 
@@ -287,6 +294,17 @@ async function getAccessToken() {
 
   if (!res.ok) {
     const detail = await res.text();
+    if (
+      res.status === 400 &&
+      (detail.includes('"error":"invalid_grant"') ||
+        detail.includes('"error": "invalid_grant"') ||
+        detail.includes("expired or revoked"))
+    ) {
+      throw new GoogleDriveRefreshTokenError(
+        `Google token refresh failed: ${res.status} ${detail}`,
+      );
+    }
+
     throw new Error(`Google token refresh failed: ${res.status} ${detail}`);
   }
 
@@ -301,6 +319,10 @@ async function getAccessToken() {
   };
 
   return data.access_token;
+}
+
+export function isGoogleDriveRefreshTokenError(error: unknown) {
+  return error instanceof GoogleDriveRefreshTokenError;
 }
 
 export async function uploadFileToDrive(input: {
