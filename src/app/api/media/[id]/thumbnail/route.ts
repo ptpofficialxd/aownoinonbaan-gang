@@ -1,5 +1,9 @@
-import { streamDriveFile, streamDriveThumbnail } from "@/lib/drive";
-import { getMediaRecord } from "@/lib/media";
+import {
+  findDriveCompanionThumbnail,
+  streamDriveFile,
+  streamDriveThumbnail,
+} from "@/lib/drive";
+import { getMediaRecord, updateMediaThumbnail } from "@/lib/media";
 import { getServerSession } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -206,6 +210,34 @@ export async function GET(
       }
     } catch {}
   }
+
+  try {
+    const companionThumbnail = await findDriveCompanionThumbnail({
+      category: record.category,
+      fileName: record.file_name,
+    });
+
+    if (companionThumbnail) {
+      await updateMediaThumbnail({
+        mediaId: record.id,
+        thumbnailDriveFileId: companionThumbnail.id,
+        thumbnailMimeType: companionThumbnail.mimeType,
+      });
+
+      const storedThumbnailRes = await streamDriveFile(companionThumbnail.id);
+      if (storedThumbnailRes?.body) {
+        return new Response(storedThumbnailRes.body, {
+          headers: {
+            "Content-Type":
+              storedThumbnailRes.headers.get("content-type") ||
+              companionThumbnail.mimeType ||
+              "image/jpeg",
+            "Cache-Control": THUMBNAIL_CACHE_CONTROL,
+          },
+        });
+      }
+    }
+  } catch {}
 
   try {
     const thumbnailRes = await streamDriveThumbnail(record.drive_file_id);

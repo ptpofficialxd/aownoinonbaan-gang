@@ -476,38 +476,11 @@ async function getOrCreateDriveFolderId(
     return cachedFolderId;
   }
 
-  const url = new URL(GOOGLE_DRIVE_API_URL);
-  url.searchParams.set("supportsAllDrives", "true");
-  url.searchParams.set("includeItemsFromAllDrives", "true");
-  url.searchParams.set("fields", "files(id,name)");
-  url.searchParams.set("pageSize", "10");
-  url.searchParams.set(
-    "q",
-    [
-      "mimeType = 'application/vnd.google-apps.folder'",
-      `name = '${normalizedFolderName.replace(/'/g, "\\'")}'`,
-      `'${parentFolderId}' in parents`,
-      "trashed = false",
-    ].join(" and "),
+  const existingFolderId = await findDriveFolderId(
+    token,
+    parentFolderId,
+    normalizedFolderName,
   );
-
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(`Drive folder lookup failed: ${res.status} ${detail}`);
-  }
-
-  const data = (await res.json()) as {
-    files?: Array<{ id: string; name: string }>;
-  };
-
-  const existingFolderId = data.files?.[0]?.id;
   if (existingFolderId) {
     categoryFolderCache.set(cacheKey, existingFolderId);
     return existingFolderId;
@@ -547,6 +520,119 @@ async function getOrCreateDriveFolderId(
 
   categoryFolderCache.set(cacheKey, createdFolder.id);
   return createdFolder.id;
+}
+
+async function findDriveFolderId(
+  token: string,
+  parentFolderId: string,
+  folderName: string,
+) {
+  const normalizedFolderName = folderName.trim();
+  const url = new URL(GOOGLE_DRIVE_API_URL);
+  url.searchParams.set("supportsAllDrives", "true");
+  url.searchParams.set("includeItemsFromAllDrives", "true");
+  url.searchParams.set("fields", "files(id,name)");
+  url.searchParams.set("pageSize", "10");
+  url.searchParams.set(
+    "q",
+    [
+      "mimeType = 'application/vnd.google-apps.folder'",
+      `name = '${normalizedFolderName.replace(/'/g, "\\'")}'`,
+      `'${parentFolderId}' in parents`,
+      "trashed = false",
+    ].join(" and "),
+  );
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`Drive folder lookup failed: ${res.status} ${detail}`);
+  }
+
+  const data = (await res.json()) as {
+    files?: Array<{ id: string; name: string }>;
+  };
+
+  return data.files?.[0]?.id ?? null;
+}
+
+export async function findDriveCompanionThumbnail(input: {
+  category: string;
+  fileName: string;
+}) {
+  const token = await getAccessToken();
+  const { rootFolderId } = getDriveFolderConfig();
+  const baseName = input.fileName.replace(/\.[^/.]+$/, "").trim();
+  if (!baseName) {
+    return null;
+  }
+
+  const categoryFolderId = await findDriveFolderId(
+    token,
+    rootFolderId,
+    input.category,
+  );
+  if (!categoryFolderId) {
+    return null;
+  }
+
+  const thumbnailFolderId = await findDriveFolderId(
+    token,
+    categoryFolderId,
+    DRIVE_THUMBNAIL_SUBFOLDER_NAME,
+  );
+  if (!thumbnailFolderId) {
+    return null;
+  }
+
+  const thumbnailName = `${baseName}.thumbnail.jpg`;
+  const url = new URL(GOOGLE_DRIVE_API_URL);
+  url.searchParams.set("supportsAllDrives", "true");
+  url.searchParams.set("includeItemsFromAllDrives", "true");
+  url.searchParams.set("fields", "files(id,name,mimeType)");
+  url.searchParams.set("pageSize", "5");
+  url.searchParams.set(
+    "q",
+    [
+      `name = '${thumbnailName.replace(/'/g, "\\'")}'`,
+      `'${thumbnailFolderId}' in parents`,
+      "trashed = false",
+    ].join(" and "),
+  );
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(
+      `Drive thumbnail companion lookup failed: ${res.status} ${detail}`,
+    );
+  }
+
+  const data = (await res.json()) as {
+    files?: Array<{ id: string; name: string; mimeType?: string }>;
+  };
+  const file = data.files?.[0];
+  if (!file?.id) {
+    return null;
+  }
+
+  return {
+    id: file.id,
+    mimeType: file.mimeType ?? "image/jpeg",
+    name: file.name,
+  };
 }
 
 export async function streamDriveFile(

@@ -132,6 +132,7 @@ type MediaRecordRow = {
   thumbnail_drive_file_id: string | null;
   file_name: string;
   mime_type: string;
+  category: string;
 };
 
 type MediaThumbnailBackfillRow = {
@@ -227,7 +228,13 @@ export async function listMediaItems() {
 
 export async function getMediaRecord(mediaId: string) {
   const rows = (await sql()`
-    SELECT id, drive_file_id, thumbnail_drive_file_id, file_name, mime_type
+    SELECT
+      id,
+      drive_file_id,
+      thumbnail_drive_file_id,
+      file_name,
+      mime_type,
+      category
     FROM media_items
     WHERE id = ${mediaId}
     LIMIT 1
